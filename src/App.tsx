@@ -167,7 +167,7 @@ function AppContent() {
     return (
       <>
         <div className="pb-16">
-          {activeTab === 'home' && <HomeScreen />}
+          {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} />}
 
           {activeTab === 'orders' && (
             <div className="min-h-screen bg-gray-50 pb-20">
@@ -215,7 +215,7 @@ function AppContent() {
   return (
     <>
       <div className="pb-16">
-        {activeTab === 'home' && <HomeScreen />}
+        {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} />}
 
         {activeTab === 'new-order' && user.store_id && (
           <>

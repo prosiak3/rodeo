@@ -18,7 +18,11 @@ interface RecentOrder {
   confirmed_at: string | null;
 }
 
-export default function HomeScreen() {
+interface HomeScreenProps {
+  onNavigate?: (tab: 'new-order' | 'orders') => void;
+}
+
+export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   const [stats, setStats] = useState<Stats>({
     todayOrders: 0,
     pendingOrders: 0,
@@ -114,10 +118,16 @@ export default function HomeScreen() {
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="font-semibold text-lg mb-4">Szybkie akcje</h3>
           <div className="space-y-3">
-            <button className="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow">
+            <button
+              onClick={() => onNavigate?.('new-order')}
+              className="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer"
+            >
               Nowe zamówienie głosowe
             </button>
-            <button className="w-full p-4 bg-white border-2 border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition">
+            <button
+              onClick={() => onNavigate?.('orders')}
+              className="w-full p-4 bg-white border-2 border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition cursor-pointer"
+            >
               Zobacz wszystkie zamówienia
             </button>
           </div>
