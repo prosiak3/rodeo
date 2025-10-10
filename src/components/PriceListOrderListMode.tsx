@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Plus, Trash2, Save, ArrowLeft, Check, LayoutGrid, AlignJustify } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft, Check, LayoutGrid, AlignJustify } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ProductCard from './ProductCard';
 
