@@ -55,7 +55,13 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
         }
       }
 
-      setTranscript(finalTranscript || interimTranscript);
+      const currentText = finalTranscript || interimTranscript;
+      setTranscript(currentText);
+
+      if (finalTranscript && finalTranscript.toLowerCase().includes('kg')) {
+        parseTranscript(finalTranscript);
+        setTranscript('');
+      }
     };
 
     recognition.onerror = (event: any) => {
@@ -76,9 +82,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       (window as any).currentRecognition.stop();
     }
     setIsListening(false);
-    if (transcript.trim()) {
-      await parseTranscript(transcript);
-    }
+    setTranscript('');
   };
 
   const parseTranscript = async (text: string) => {
@@ -453,7 +457,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
           <h2 className="text-2xl font-bold">Nowe zamówienie głosowe</h2>
         </div>
         <p className="text-white font-semibold">Weź byka za rogi</p>
-        <p className="text-amber-100 mt-1 text-sm">Naciśnij mikrofon i dyktuj zamówienie</p>
+        <p className="text-amber-100 mt-1 text-sm">Dyktuj pozycje linijka po linijce, końcowe słowo: "kg"</p>
       </div>
 
       <div className="p-6 space-y-6">
@@ -474,8 +478,13 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
               )}
             </button>
             <p className="mt-6 text-lg font-medium text-gray-700">
-              {isListening ? 'Nagrywanie... Kliknij aby zatrzymać' : 'Kliknij aby rozpocząć nagrywanie'}
+              {isListening ? 'Nagrywanie... Powiedz pozycję i zakończ słowem "kg"' : 'Kliknij aby rozpocząć nagrywanie'}
             </p>
+            {isListening && (
+              <p className="mt-2 text-sm text-gray-500 text-center">
+                Przykład: "5 kg schab" lub "3 kg kiełbasa"
+              </p>
+            )}
           </div>
 
           {transcript && (
