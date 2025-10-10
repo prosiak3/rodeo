@@ -112,6 +112,36 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
     }
   };
 
+  const sendOrder = async () => {
+    if (!order) return;
+    if (!confirm('Czy na pewno chcesz wysłać to zamówienie?')) return;
+
+    try {
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+        })
+        .eq('id', orderId);
+
+      if (updateError) throw updateError;
+
+      await supabase.from('order_history').insert({
+        order_id: orderId,
+        action: 'sent',
+        performed_by: userId,
+        details: {},
+      });
+
+      alert('Zamówienie zostało wysłane!');
+      loadOrderDetails();
+    } catch (error) {
+      console.error('Error sending order:', error);
+      alert('Błąd podczas wysyłania zamówienia');
+    }
+  };
+
   const rejectOrder = async () => {
     if (!order) return;
     if (!confirm('Czy na pewno chcesz odrzucić to zamówienie?')) return;
@@ -169,6 +199,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
     );
   }
 
+  const canSend = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canConfirm = (userRole === 'operator' || userRole === 'admin') &&
                      (order.status === 'sent' || order.status === 'pending_confirmation');
 
@@ -343,6 +374,18 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
             <span className="font-bold text-lg text-amber-600">{order.total_amount.toFixed(2)} PLN</span>
           </div>
         </div>
+
+        {canSend && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <button
+              onClick={sendOrder}
+              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <Package className="w-5 h-5" />
+              Złóż zamówienie
+            </button>
+          </div>
+        )}
 
         {canConfirm && (
           <div className="bg-white rounded-lg shadow p-3">
