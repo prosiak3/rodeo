@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Package, Users, ShoppingBag, Settings } from 'lucide-react';
+import { Package, Users, ShoppingBag, DollarSign } from 'lucide-react';
 import OrdersList from './OrdersList';
+import PriceListManager from './PriceListManager';
+import StoresManager from './StoresManager';
+import PriceList from './PriceList';
 
 interface AdminPanelProps {
   userId: string;
@@ -9,7 +12,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists'>('orders');
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -58,15 +61,15 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Produkty
           </button>
           <button
-            onClick={() => setActiveTab('settings')}
+            onClick={() => setActiveTab('pricelists')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
-              activeTab === 'settings'
+              activeTab === 'pricelists'
                 ? 'text-amber-600 border-b-2 border-amber-600'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            <Settings className="w-5 h-5" />
-            Ustawienia
+            <DollarSign className="w-5 h-5" />
+            Cenniki
           </button>
         </div>
       </div>
@@ -76,29 +79,11 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
           <OrdersList userRole={userRole} onSelectOrder={onSelectOrder} />
         )}
 
-        {activeTab === 'stores' && (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Zarządzanie sklepami</h3>
-            <p className="text-gray-500">Funkcja w przygotowaniu</p>
-          </div>
-        )}
+        {activeTab === 'stores' && <StoresManager />}
 
-        {activeTab === 'products' && (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Zarządzanie produktami</h3>
-            <p className="text-gray-500">Funkcja w przygotowaniu</p>
-          </div>
-        )}
+        {activeTab === 'products' && <PriceList />}
 
-        {activeTab === 'settings' && (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <Settings className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Ustawienia systemu</h3>
-            <p className="text-gray-500">Funkcja w przygotowaniu</p>
-          </div>
-        )}
+        {activeTab === 'pricelists' && <PriceListManager />}
       </div>
     </div>
   );
