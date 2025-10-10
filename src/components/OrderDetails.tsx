@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 
 interface OrderDetailsProps {
@@ -142,6 +142,36 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
     }
   };
 
+  const startProgress = async () => {
+    if (!order) return;
+    if (!confirm('Czy na pewno chcesz rozpocząć realizację tego zamówienia?')) return;
+
+    try {
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({
+          status: 'in_progress',
+          in_progress_at: new Date().toISOString(),
+        })
+        .eq('id', orderId);
+
+      if (updateError) throw updateError;
+
+      await supabase.from('order_history').insert({
+        order_id: orderId,
+        action: 'in_progress',
+        performed_by: userId,
+        details: {},
+      });
+
+      alert('Zamówienie w realizacji!');
+      loadOrderDetails();
+    } catch (error) {
+      console.error('Error starting order progress:', error);
+      alert('Błąd podczas rozpoczynania realizacji');
+    }
+  };
+
   const rejectOrder = async () => {
     if (!order) return;
     if (!confirm('Czy na pewno chcesz odrzucić to zamówienie?')) return;
@@ -200,8 +230,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
   }
 
   const canSend = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
+  const canStartProgress = (userRole === 'operator' || userRole === 'admin') && order.status === 'sent';
   const canConfirm = (userRole === 'operator' || userRole === 'admin') &&
-                     (order.status === 'sent' || order.status === 'pending_confirmation');
+                     (order.status === 'in_progress' || order.status === 'pending_confirmation');
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -236,6 +267,12 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
                 <div>
                   <span className="text-gray-500">Wysłano:</span>
                   <span className="ml-1 font-medium">{formatDate(order.sent_at)}</span>
+                </div>
+              )}
+              {(order as any).in_progress_at && (
+                <div>
+                  <span className="text-gray-500">W realizacji:</span>
+                  <span className="ml-1 font-medium">{formatDate((order as any).in_progress_at)}</span>
                 </div>
               )}
               {order.confirmed_at && (
@@ -383,6 +420,18 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
             >
               <Package className="w-5 h-5" />
               Złóż zamówienie
+            </button>
+          </div>
+        )}
+
+        {canStartProgress && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <button
+              onClick={startProgress}
+              className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <PlayCircle className="w-5 h-5" />
+              Rozpocznij realizację
             </button>
           </div>
         )}

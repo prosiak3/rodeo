@@ -16,6 +16,7 @@ export type UserRole = 'store_manager' | 'salesperson' | 'operator' | 'admin';
 export type OrderStatus =
   | 'draft'
   | 'sent'
+  | 'in_progress'
   | 'pending_confirmation'
   | 'confirmed'
   | 'partially_confirmed'

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send } from 'lucide-react';
 import { supabase, Order, OrderStatus } from '../lib/supabase';
 
 interface OrdersListProps {
@@ -8,14 +8,15 @@ interface OrdersListProps {
   onSelectOrder: (orderId: string) => void;
 }
 
-const statusConfig: Record<OrderStatus, { label: string; color: string; icon: any }> = {
-  draft: { label: 'Szkic', color: 'gray', icon: Clock },
-  sent: { label: 'Wysłane', color: 'blue', icon: Package },
-  pending_confirmation: { label: 'Oczekuje', color: 'yellow', icon: AlertCircle },
-  confirmed: { label: 'Potwierdzone', color: 'green', icon: CheckCircle },
-  partially_confirmed: { label: 'Częściowo potwierdzone', color: 'orange', icon: AlertCircle },
-  rejected: { label: 'Odrzucone', color: 'red', icon: XCircle },
-  archived: { label: 'Archiwum', color: 'gray', icon: Package },
+const statusConfig: Record<OrderStatus, { label: string; color: string; icon: any; bgColor: string }> = {
+  draft: { label: 'Szkic', color: 'text-gray-700', icon: FileText, bgColor: 'bg-gray-100' },
+  sent: { label: 'Wysłane', color: 'text-blue-700', icon: Send, bgColor: 'bg-blue-100' },
+  in_progress: { label: 'W realizacji', color: 'text-purple-700', icon: PlayCircle, bgColor: 'bg-purple-100' },
+  pending_confirmation: { label: 'Oczekuje', color: 'text-yellow-700', icon: AlertCircle, bgColor: 'bg-yellow-100' },
+  confirmed: { label: 'Potwierdzone', color: 'text-green-700', icon: CheckCircle, bgColor: 'bg-green-100' },
+  partially_confirmed: { label: 'Częściowo', color: 'text-orange-700', icon: AlertCircle, bgColor: 'bg-orange-100' },
+  rejected: { label: 'Odrzucone', color: 'text-red-700', icon: XCircle, bgColor: 'bg-red-100' },
+  archived: { label: 'Archiwum', color: 'text-gray-700', icon: Package, bgColor: 'bg-gray-100' },
 };
 
 export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersListProps) {
@@ -97,19 +98,23 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
         >
           Wszystkie
         </button>
-        {Object.entries(statusConfig).map(([status, config]) => (
-          <button
-            key={status}
-            onClick={() => setFilter(status as OrderStatus)}
-            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition ${
-              filter === status
-                ? 'bg-amber-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300'
-            }`}
-          >
-            {config.label}
-          </button>
-        ))}
+        {Object.entries(statusConfig).map(([status, config]) => {
+          const Icon = config.icon;
+          return (
+            <button
+              key={status}
+              onClick={() => setFilter(status as OrderStatus)}
+              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition flex items-center gap-2 ${
+                filter === status
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {config.label}
+            </button>
+          );
+        })}
       </div>
 
       {orders.length === 0 ? (
@@ -134,7 +139,7 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
                     <div className="flex items-center gap-3 mb-2">
                       <span className="font-bold text-lg text-gray-800">{order.order_number}</span>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 bg-${config.color}-100 text-${config.color}-700`}
+                        className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${config.bgColor} ${config.color}`}
                       >
                         <Icon className="w-3 h-3" />
                         {config.label}
