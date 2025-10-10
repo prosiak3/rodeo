@@ -12,6 +12,7 @@ import OrderDetails from './components/OrderDetails';
 import ProfileScreen from './components/ProfileScreen';
 import AdminPanel from './components/AdminPanel';
 import PriceList from './components/PriceList';
+import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import { supabase } from './lib/supabase';
 
@@ -42,6 +43,13 @@ function AppContent() {
         password: 'test123',
         full_name: 'Piotr Wiśniewski',
         role: 'operator',
+        store_code: null,
+      },
+      {
+        email: 'kierowca@hurtownia.pl',
+        password: 'test123',
+        full_name: 'Marek Nowicki',
+        role: 'driver',
         store_code: null,
       },
     ];
@@ -141,6 +149,23 @@ function AppContent() {
         userId={user.id}
         onBack={() => setSelectedOrderId(null)}
       />
+    );
+  }
+
+  if (user.role === 'driver') {
+    return (
+      <>
+        <div className="pb-16">
+          {activeTab === 'home' && (
+            <DriverScreen userId={user.id} />
+          )}
+
+          {activeTab === 'profile' && (
+            <ProfileScreen user={user} onSignOut={signOut} />
+          )}
+        </div>
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
+      </>
     );
   }
 

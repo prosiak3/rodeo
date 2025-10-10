@@ -33,7 +33,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
           ),
           store:store_id (
             name,
-            code
+            code,
+            address
           )
         `)
         .eq('id', orderId)
@@ -259,8 +260,27 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
               {order.store && (
                 <div className="col-span-2">
                   <span className="text-gray-500">Sklep:</span>
-                  <span className="ml-1 font-medium">{order.store.name}</span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.store.address || order.store.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-1 font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    {order.store.name}
+                  </a>
                   <span className="text-gray-400 text-xs ml-1">({order.store.code})</span>
+                  {order.store.address && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.store.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {order.store.address}
+                      </a>
+                    </div>
+                  )}
                 </div>
               )}
               {order.sent_at && (
