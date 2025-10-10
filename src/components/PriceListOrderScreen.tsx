@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import ProductCard from './ProductCard';
 
 interface Product {
   id: string;
@@ -63,7 +64,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
         `)
         .eq('active', true)
         .eq('special_prices.store_id', storeId)
-        .order('category', { ascending: true })
+        .order('display_category', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -75,6 +76,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
 
         return {
           ...p,
+          category: (p as any).display_category,
           your_price: yourPrice,
           promo_price: promoPrice,
           final_price: finalPrice,
@@ -490,28 +492,9 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
                 </div>
                 <div className="divide-y divide-gray-100">
                   {categoryProducts.map((product) => (
-                    <button
-                      key={product.id}
-                      onClick={() => selectProduct(product)}
-                      className="w-full px-3 py-3 hover:bg-amber-50 transition text-left"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-gray-800 truncate">
-                            {product.name}
-                          </p>
-                          {product.description && (
-                            <p className="text-xs text-gray-600 truncate">{product.description}</p>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end flex-shrink-0">
-                          <span className="font-bold text-amber-600">
-                            {product.base_price.toFixed(2)} PLN
-                          </span>
-                          <span className="text-xs text-gray-500">/{product.unit}</span>
-                        </div>
-                      </div>
-                    </button>
+                    <div key={product.id} className="p-2">
+                      <ProductCard product={product} onSelect={() => selectProduct(product)} />
+                    </div>
                   ))}
                 </div>
               </div>

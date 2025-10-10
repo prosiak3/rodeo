@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Save, X, Package } from 'lucide-react';
+import { Edit2, Save, X, Package, Tag } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import TagsManager from './TagsManager';
 
 interface Product {
   id: string;
@@ -21,6 +22,7 @@ export default function ProductManager() {
   const [editData, setEditData] = useState<Partial<Product>>({});
   const [filter, setFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [showTagsManager, setShowTagsManager] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -99,10 +101,23 @@ export default function ProductManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Package className="w-8 h-8 text-amber-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Zarządzanie produktami</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Package className="w-8 h-8 text-amber-600" />
+          <h2 className="text-2xl font-bold text-gray-800">Zarządzanie produktami</h2>
+        </div>
+        <button
+          onClick={() => setShowTagsManager(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
+        >
+          <Tag className="w-5 h-5" />
+          Zarządzaj tagami
+        </button>
       </div>
+
+      {showTagsManager && (
+        <TagsManager onClose={() => setShowTagsManager(false)} />
+      )}
 
       <div className="bg-white rounded-xl shadow p-6">
         <div className="space-y-4 mb-6">

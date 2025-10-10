@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Plus, Trash2, Save, ArrowLeft, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import ProductCard from './ProductCard';
 
 interface Product {
   id: string;
@@ -56,7 +57,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
       const { data, error } = await supabase
         .from('products')
         .select(`
-          id, code, name, category, unit, base_price, description, index, min_quantity, quantity_step,
+          id, code, name, display_category, original_category, unit, base_price, description, index, min_quantity, quantity_step, tags,
           special_prices!left (
             your_price,
             promo_price
@@ -64,7 +65,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
         `)
         .eq('active', true)
         .eq('special_prices.store_id', storeId)
-        .order('category', { ascending: true })
+        .order('display_category', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -76,6 +77,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
 
         return {
           ...p,
+          category: (p as any).display_category,
           your_price: yourPrice,
           promo_price: promoPrice,
           final_price: finalPrice,
@@ -372,34 +374,21 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
             {items.map((product) => {
               const isAdded = orderItems.some(item => item.productId === product.id);
               return (
-                <div
-                  key={product.id}
-                  className={`bg-white rounded-lg shadow p-4 transition ${
-                    isAdded ? 'opacity-50 border-2 border-green-500' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-800">{product.name}</h4>
-                      <p className="text-sm font-semibold text-gray-800 mt-1">
-                        {product.final_price.toFixed(2)} PLN/{product.unit}
-                      </p>
-                      {product.description && (
-                        <p className="text-xs text-gray-500 mt-1">{product.description}</p>
-                      )}
-                    </div>
+                <div key={product.id} className={`relative ${isAdded ? 'opacity-50' : ''}`}>
+                  <ProductCard product={product}>
                     <button
                       onClick={() => addToList(product)}
                       disabled={isAdded}
-                      className={`p-3 rounded-lg transition ${
+                      className={`w-full py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
                         isAdded
                           ? 'bg-green-100 text-green-600 cursor-not-allowed'
                           : 'bg-amber-600 text-white hover:bg-amber-700'
                       }`}
                     >
                       {isAdded ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                      {isAdded ? 'Dodano' : 'Dodaj do listy'}
                     </button>
-                  </div>
+                  </ProductCard>
                 </div>
               );
             })}

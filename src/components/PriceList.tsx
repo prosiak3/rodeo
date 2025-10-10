@@ -7,6 +7,7 @@ interface Product {
   code: string;
   name: string;
   category: string;
+  original_category?: string;
   unit: string;
   base_price: number;
   description: string;
@@ -15,13 +16,19 @@ interface Product {
   quantity_step: number;
   your_price?: number;
   promo_price?: number;
+  tags?: string[];
+  final_price?: number;
 }
+
+type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
 
 export default function PriceList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('name-asc');
 
   useEffect(() => {
     loadProducts();
@@ -42,24 +49,30 @@ export default function PriceList() {
       const { data, error } = await supabase
         .from('products')
         .select(`
-          id, code, name, category, unit, base_price, description, index, min_quantity, quantity_step,
+          id, code, name, display_category, original_category, unit, base_price, description, index, min_quantity, quantity_step, tags,
           special_prices!left (
             your_price,
             promo_price
           )
         `)
         .eq('active', true)
-        .eq('special_prices.store_id', userData?.store_id || '00000000-0000-0000-0000-000000000000')
-        .order('category', { ascending: true })
-        .order('name', { ascending: true });
+        .eq('special_prices.store_id', userData?.store_id || '00000000-0000-0000-0000-000000000000');
 
       if (error) throw error;
 
-      const productsWithPrices = (data || []).map(p => ({
-        ...p,
-        your_price: (p as any).special_prices?.[0]?.your_price,
-        promo_price: (p as any).special_prices?.[0]?.promo_price,
-      }));
+      const productsWithPrices = (data || []).map(p => {
+        const yourPrice = (p as any).special_prices?.[0]?.your_price;
+        const promoPrice = (p as any).special_prices?.[0]?.promo_price;
+        const finalPrice = promoPrice || yourPrice || p.base_price;
+
+        return {
+          ...p,
+          category: (p as any).display_category,
+          your_price: yourPrice,
+          promo_price: promoPrice,
+          final_price: finalPrice,
+        };
+      });
 
       setProducts(productsWithPrices);
     } catch (error) {
@@ -70,15 +83,33 @@ export default function PriceList() {
   };
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
+  const allTags = Array.from(new Set(products.flatMap(p => p.tags || [])));
+  const tags = ['all', ...allTags];
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
                          product.code.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesTag = selectedTag === 'all' || (product.tags && product.tags.includes(selectedTag));
+    return matchesSearch && matchesCategory && matchesTag;
   });
 
-  const groupedProducts = filteredProducts.reduce((acc, product) => {
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'price-asc':
+        return (a.final_price || a.base_price) - (b.final_price || b.base_price);
+      case 'price-desc':
+        return (b.final_price || b.base_price) - (a.final_price || a.base_price);
+      default:
+        return 0;
+    }
+  });
+
+  const groupedProducts = sortedProducts.reduce((acc, product) => {
     if (!acc[product.category]) {
       acc[product.category] = [];
     }
@@ -108,7 +139,7 @@ export default function PriceList() {
           />
         </div>
 
-        <div className="flex gap-1 overflow-x-auto pb-1">
+        <div className="flex gap-1 overflow-x-auto pb-1 mb-2">
           {categories.map((category) => (
             <button
               key={category}
@@ -122,6 +153,38 @@ export default function PriceList() {
               {category === 'all' ? 'Wszystkie' : category}
             </button>
           ))}
+        </div>
+
+        {tags.length > 1 && (
+          <div className="flex gap-1 overflow-x-auto pb-1 mb-2">
+            {tags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(tag)}
+                className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap transition ${
+                  selectedTag === tag
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                }`}
+              >
+                #{tag === 'all' ? 'wszystkie' : tag}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2 items-center text-xs">
+          <span className="text-gray-600">Sortuj:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="flex-1 px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-amber-500 focus:border-transparent"
+          >
+            <option value="name-asc">Nazwa A-Z</option>
+            <option value="name-desc">Nazwa Z-A</option>
+            <option value="price-asc">Cena rosnąco</option>
+            <option value="price-desc">Cena malejąco</option>
+          </select>
         </div>
       </div>
 
