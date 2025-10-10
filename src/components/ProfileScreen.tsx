@@ -79,14 +79,17 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
         </div>
 
         <button
-          onClick={async () => {
+          onClick={async (e) => {
+            e.preventDefault();
+            console.log('Logout button clicked');
             try {
               await onSignOut();
+              console.log('Logout successful');
             } catch (error) {
               console.error('Logout error:', error);
             }
           }}
-          className="w-full py-4 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition flex items-center justify-center gap-2 shadow-lg"
+          className="w-full py-4 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 active:bg-red-800 transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
         >
           <LogOut className="w-5 h-5" />
           Wyloguj się
