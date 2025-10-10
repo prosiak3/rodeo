@@ -13,6 +13,8 @@ interface Product {
   index?: string;
   min_quantity: number;
   quantity_step: number;
+  your_price?: number;
+  promo_price?: number;
 }
 
 export default function PriceList() {
@@ -28,15 +30,38 @@ export default function PriceList() {
   const loadProducts = async () => {
     setLoading(true);
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) throw new Error('Not authenticated');
+
+      const { data: userData } = await supabase
+        .from('users')
+        .select('store_id')
+        .eq('id', authData.user.id)
+        .single();
+
       const { data, error } = await supabase
         .from('products')
-        .select('id, code, name, category, unit, base_price, description, index, min_quantity, quantity_step')
+        .select(`
+          id, code, name, category, unit, base_price, description, index, min_quantity, quantity_step,
+          special_prices!left (
+            your_price,
+            promo_price
+          )
+        `)
         .eq('active', true)
+        .eq('special_prices.store_id', userData?.store_id || '00000000-0000-0000-0000-000000000000')
         .order('category', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;
-      setProducts(data || []);
+
+      const productsWithPrices = (data || []).map(p => ({
+        ...p,
+        your_price: (p as any).special_prices?.[0]?.your_price,
+        promo_price: (p as any).special_prices?.[0]?.promo_price,
+      }));
+
+      setProducts(productsWithPrices);
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -113,10 +138,12 @@ export default function PriceList() {
                 <h3 className="font-semibold text-sm text-amber-900">{category}</h3>
               </div>
               <div className="divide-y divide-gray-100">
-                {categoryProducts.map((product) => (
+                {categoryProducts.map((product) => {
+                  const hasPromo = product.promo_price && product.promo_price > 0;
+                  return (
                   <div
                     key={product.id}
-                    className="px-3 py-2 hover:bg-gray-50 transition"
+                    className={`px-3 py-2 hover:bg-gray-50 transition ${hasPromo ? 'bg-yellow-50' : ''}`}
                   >
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0 mr-2">
@@ -136,10 +163,29 @@ export default function PriceList() {
                           <span>Krok: {product.quantity_step} {product.unit}</span>
                         </div>
                       </div>
-                      <div className="flex items-baseline gap-1 flex-shrink-0">
-                        <span className="font-bold text-amber-600">
-                          {product.base_price.toFixed(2)}
-                        </span>
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-[10px] text-gray-400 uppercase">Normalna</span>
+                          <span className={`text-sm ${product.your_price || product.promo_price ? 'line-through text-gray-400' : 'font-bold text-amber-600'}`}>
+                            {product.base_price.toFixed(2)}
+                          </span>
+                        </div>
+                        {product.your_price && product.your_price > 0 && (
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-[10px] text-blue-600 uppercase font-medium">Twoja</span>
+                            <span className={`text-sm ${product.promo_price ? 'line-through text-gray-400' : 'font-bold text-blue-600'}`}>
+                              {product.your_price.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                        {product.promo_price && product.promo_price > 0 && (
+                          <div className="flex items-baseline gap-1 animate-pulse">
+                            <span className="text-[10px] text-red-600 uppercase font-bold">Specjalna</span>
+                            <span className="text-base font-bold text-red-600">
+                              {product.promo_price.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
                         <span className="text-xs text-gray-500">PLN/{product.unit}</span>
                       </div>
                     </div>
@@ -166,7 +212,8 @@ export default function PriceList() {
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}

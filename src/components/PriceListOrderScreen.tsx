@@ -13,6 +13,9 @@ interface Product {
   index?: string;
   min_quantity: number;
   quantity_step: number;
+  your_price?: number;
+  promo_price?: number;
+  final_price: number;
 }
 
 interface OrderItem {
@@ -51,13 +54,34 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(`
+          *,
+          special_prices!left (
+            your_price,
+            promo_price
+          )
+        `)
         .eq('active', true)
+        .eq('special_prices.store_id', storeId)
         .order('category', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;
-      setProducts(data || []);
+
+      const productsWithPrices = (data || []).map(p => {
+        const yourPrice = (p as any).special_prices?.[0]?.your_price;
+        const promoPrice = (p as any).special_prices?.[0]?.promo_price;
+        const finalPrice = promoPrice || yourPrice || p.base_price;
+
+        return {
+          ...p,
+          your_price: yourPrice,
+          promo_price: promoPrice,
+          final_price: finalPrice,
+        };
+      });
+
+      setProducts(productsWithPrices);
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -114,7 +138,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
       return;
     }
 
-    const totalPrice = qty * selectedProduct.base_price;
+    const totalPrice = qty * selectedProduct.final_price;
 
     const existingItemIndex = orderItems.findIndex(item => item.productId === selectedProduct.id);
 
@@ -130,7 +154,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
         productIndex: selectedProduct.index,
         quantity: qty,
         unit: selectedProduct.unit,
-        unitPrice: selectedProduct.base_price,
+        unitPrice: selectedProduct.final_price,
         totalPrice,
       }]);
     }

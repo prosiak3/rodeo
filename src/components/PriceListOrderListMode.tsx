@@ -13,6 +13,9 @@ interface Product {
   index?: string;
   min_quantity: number;
   quantity_step: number;
+  your_price?: number;
+  promo_price?: number;
+  final_price: number;
 }
 
 interface OrderItem {
@@ -52,13 +55,34 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, code, name, category, unit, base_price, description, index, min_quantity, quantity_step')
+        .select(`
+          id, code, name, category, unit, base_price, description, index, min_quantity, quantity_step,
+          special_prices!left (
+            your_price,
+            promo_price
+          )
+        `)
         .eq('active', true)
+        .eq('special_prices.store_id', storeId)
         .order('category', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;
-      setProducts(data || []);
+
+      const productsWithPrices = (data || []).map(p => {
+        const yourPrice = (p as any).special_prices?.[0]?.your_price;
+        const promoPrice = (p as any).special_prices?.[0]?.promo_price;
+        const finalPrice = promoPrice || yourPrice || p.base_price;
+
+        return {
+          ...p,
+          your_price: yourPrice,
+          promo_price: promoPrice,
+          final_price: finalPrice,
+        };
+      });
+
+      setProducts(productsWithPrices);
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -96,8 +120,8 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
       productIndex: product.index,
       quantity: product.min_quantity,
       unit: product.unit,
-      unitPrice: product.base_price,
-      totalPrice: product.min_quantity * product.base_price,
+      unitPrice: product.final_price,
+      totalPrice: product.min_quantity * product.final_price,
       minQuantity: product.min_quantity,
       quantityStep: product.quantityStep,
     }]);
@@ -357,8 +381,8 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-800">{product.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {product.base_price.toFixed(2)} PLN/{product.unit}
+                      <p className="text-sm font-semibold text-gray-800 mt-1">
+                        {product.final_price.toFixed(2)} PLN/{product.unit}
                       </p>
                       {product.description && (
                         <p className="text-xs text-gray-500 mt-1">{product.description}</p>
