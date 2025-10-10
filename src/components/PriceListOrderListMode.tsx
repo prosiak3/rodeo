@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft, Check, LayoutGrid, AlignJustify } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft, Check, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownAZ, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ProductCard from './ProductCard';
 
@@ -350,25 +350,58 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
             />
           </div>
 
-          <div className="flex gap-2 items-center justify-between mb-3">
-            <div className="flex gap-2 items-center text-sm flex-1 min-w-0">
-              <span className="text-gray-600 flex-shrink-0">Sortuj:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-amber-500 focus:outline-none"
+          <div className="flex gap-2 items-center justify-between">
+            <div className="flex gap-1 border-2 border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+              <button
+                onClick={() => setSortBy('name-asc')}
+                className={`p-2 transition-all duration-200 ${
+                  sortBy === 'name-asc'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Nazwa A-Z"
               >
-                <option value="name-asc">Nazwa A-Z</option>
-                <option value="name-desc">Nazwa Z-A</option>
-                <option value="price-asc">Cena rosnąco</option>
-                <option value="price-desc">Cena malejąco</option>
-              </select>
+                <ArrowUpAZ className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setSortBy('name-desc')}
+                className={`p-2 transition-all duration-200 ${
+                  sortBy === 'name-desc'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Nazwa Z-A"
+              >
+                <ArrowDownAZ className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setSortBy('price-asc')}
+                className={`p-2 transition-all duration-200 ${
+                  sortBy === 'price-asc'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Cena rosnąco"
+              >
+                <ArrowUp className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setSortBy('price-desc')}
+                className={`p-2 transition-all duration-200 ${
+                  sortBy === 'price-desc'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Cena malejąco"
+              >
+                <ArrowDown className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="flex gap-1 border-2 border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
               <button
                 onClick={() => setPriceLayout('horizontal')}
-                className={`p-2 transition ${
+                className={`p-2 transition-all duration-200 ${
                   priceLayout === 'horizontal'
                     ? 'bg-amber-600 text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-100'
@@ -379,7 +412,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
               </button>
               <button
                 onClick={() => setPriceLayout('vertical')}
-                className={`p-2 transition ${
+                className={`p-2 transition-all duration-200 ${
                   priceLayout === 'vertical'
                     ? 'bg-amber-600 text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-100'
@@ -389,22 +422,6 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
                 <LayoutGrid className="w-5 h-5" />
               </button>
             </div>
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition ${
-                  selectedCategory === cat
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {cat === 'all' ? 'Wszystkie' : cat}
-              </button>
-            ))}
           </div>
         </div>
 

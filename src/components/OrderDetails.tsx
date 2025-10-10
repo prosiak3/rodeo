@@ -58,6 +58,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
         .eq('order_id', orderId);
 
       if (itemsError) throw itemsError;
+      console.log('OrderDetails - loaded items:', itemsData);
       setItems(itemsData || []);
 
       const { data: historyData, error: historyError } = await supabase
@@ -398,34 +399,40 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
 
         <div className="bg-white rounded-lg shadow p-3">
           <h3 className="font-semibold text-base mb-2">Produkty ({items.length})</h3>
-          <div className="space-y-1">
-            {items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition text-sm">
-                <div className="flex-1 min-w-0 mr-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                      item.status === 'confirmed' ? 'bg-green-500 text-white' :
-                      item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
-                      item.status === 'rejected' ? 'bg-red-500 text-white' :
-                      'bg-gray-300 text-gray-600'
-                    }`}>
-                      {item.status === 'confirmed' ? '✓' :
-                       item.status === 'partially_confirmed' ? '~' :
-                       item.status === 'rejected' ? '✗' :
-                       '○'}
-                    </span>
-                    <span className="font-medium text-gray-800 truncate">{item.products?.name || 'Produkt'}</span>
+          {items.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-sm">Brak produktów w zamówieniu</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition text-sm">
+                  <div className="flex-1 min-w-0 mr-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                        item.status === 'confirmed' ? 'bg-green-500 text-white' :
+                        item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
+                        item.status === 'rejected' ? 'bg-red-500 text-white' :
+                        'bg-gray-300 text-gray-600'
+                      }`}>
+                        {item.status === 'confirmed' ? '✓' :
+                         item.status === 'partially_confirmed' ? '~' :
+                         item.status === 'rejected' ? '✗' :
+                         '○'}
+                      </span>
+                      <span className="font-medium text-gray-800 truncate">{item.products?.name || 'Produkt'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-gray-600 flex-shrink-0">
+                    <span className="font-medium">{item.quantity} {item.unit}</span>
+                    <span className="text-gray-400">×</span>
+                    <span>{item.unit_price.toFixed(2)}</span>
+                    <span className="font-bold text-amber-600 min-w-[60px] text-right">{item.total_price.toFixed(2)} PLN</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-gray-600 flex-shrink-0">
-                  <span className="font-medium">{item.quantity} {item.unit}</span>
-                  <span className="text-gray-400">×</span>
-                  <span>{item.unit_price.toFixed(2)}</span>
-                  <span className="font-bold text-amber-600 min-w-[60px] text-right">{item.total_price.toFixed(2)} PLN</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center text-sm">
             <span className="font-semibold text-gray-700">Razem:</span>
             <span className="font-bold text-lg text-amber-600">{order.total_amount.toFixed(2)} PLN</span>
