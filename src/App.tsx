@@ -5,6 +5,7 @@ import HomeScreen from './components/HomeScreen';
 import VoiceOrderScreen from './components/VoiceOrderScreen';
 import ManualOrderScreen from './components/ManualOrderScreen';
 import CopyOrderScreen from './components/CopyOrderScreen';
+import PriceListOrderScreen from './components/PriceListOrderScreen';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
 import ProfileScreen from './components/ProfileScreen';
@@ -17,7 +18,7 @@ function AppContent() {
   const { session, user, loading, signIn, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile'>('home');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | null>(null);
+  const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
 
   const createTestUsers = async () => {
     const testUsers = [
@@ -258,12 +259,27 @@ function AppContent() {
                   </button>
 
                   <button
+                    onClick={() => setOrderMode('pricelist')}
+                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <span className="text-2xl">📋</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800">Z cennika</h3>
+                        <p className="text-sm text-gray-600">Wybierz produkty z listy cenowej</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
                     onClick={() => setOrderMode('copy')}
                     className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">📋</span>
+                        <span className="text-2xl">🔄</span>
                       </div>
                       <div>
                         <h3 className="font-bold text-lg text-gray-800">Kopiuj zamówienie</h3>
@@ -288,6 +304,18 @@ function AppContent() {
 
             {orderMode === 'manual' && (
               <ManualOrderScreen
+                storeId={user.store_id}
+                userId={user.id}
+                onOrderSent={() => {
+                  setOrderMode(null);
+                  setActiveTab('orders');
+                }}
+                onCancel={() => setOrderMode(null)}
+              />
+            )}
+
+            {orderMode === 'pricelist' && (
+              <PriceListOrderScreen
                 storeId={user.store_id}
                 userId={user.id}
                 onOrderSent={() => {
