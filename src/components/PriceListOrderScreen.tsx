@@ -11,6 +11,8 @@ interface Product {
   base_price: number;
   description: string;
   index?: string;
+  min_quantity: number;
+  quantity_step: number;
 }
 
 interface OrderItem {
@@ -82,7 +84,14 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
 
   const selectProduct = (product: Product) => {
     setSelectedProduct(product);
-    setQuantity('');
+    setQuantity(product.min_quantity.toString());
+  };
+
+  const adjustQuantity = (delta: number) => {
+    if (!selectedProduct) return;
+    const currentQty = parseFloat(quantity) || selectedProduct.min_quantity;
+    const newQty = Math.max(selectedProduct.min_quantity, currentQty + delta);
+    setQuantity(newQty.toString());
   };
 
   const addToOrder = () => {
@@ -91,6 +100,17 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
     const qty = parseFloat(quantity);
     if (isNaN(qty) || qty <= 0) {
       alert('Podaj prawidłową ilość');
+      return;
+    }
+
+    if (qty < selectedProduct.min_quantity) {
+      alert(`Minimalna ilość zamówienia: ${selectedProduct.min_quantity} ${selectedProduct.unit}`);
+      return;
+    }
+
+    const remainder = (qty - selectedProduct.min_quantity) % selectedProduct.quantity_step;
+    if (remainder !== 0) {
+      alert(`Ilość musi być wielokrotnością ${selectedProduct.quantity_step} ${selectedProduct.unit} (od minimalnej ilości ${selectedProduct.min_quantity})`);
       return;
     }
 
@@ -254,16 +274,40 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
 
           <div className="bg-white rounded-xl shadow-lg p-6">
             <label className="block mb-2 font-medium">Ilość ({selectedProduct.unit})</label>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder="Wprowadź ilość"
-              step="0.1"
-              min="0"
-              className="w-full p-4 text-xl border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
-              autoFocus
-            />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
+              <p className="text-blue-800">
+                <span className="font-medium">Minimalna ilość:</span> {selectedProduct.min_quantity} {selectedProduct.unit}
+              </p>
+              <p className="text-blue-800">
+                <span className="font-medium">Krok zamówienia:</span> {selectedProduct.quantity_step} {selectedProduct.unit}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => adjustQuantity(-selectedProduct.quantity_step)}
+                className="p-4 bg-gray-200 hover:bg-gray-300 rounded-lg transition"
+                type="button"
+              >
+                <Minus className="w-6 h-6" />
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="Wprowadź ilość"
+                step={selectedProduct.quantity_step}
+                min={selectedProduct.min_quantity}
+                className="flex-1 p-4 text-xl text-center border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                autoFocus
+              />
+              <button
+                onClick={() => adjustQuantity(selectedProduct.quantity_step)}
+                className="p-4 bg-gray-200 hover:bg-gray-300 rounded-lg transition"
+                type="button"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </div>
             {quantity && parseFloat(quantity) > 0 && (
               <div className="mt-4 p-3 bg-amber-50 rounded-lg">
                 <p className="text-sm text-gray-600">Wartość pozycji</p>

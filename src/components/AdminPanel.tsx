@@ -4,6 +4,7 @@ import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresManager from './StoresManager';
 import PriceList from './PriceList';
+import ProductManager from './ProductManager';
 
 interface AdminPanelProps {
   userId: string;
@@ -81,7 +82,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
 
         {activeTab === 'stores' && <StoresManager />}
 
-        {activeTab === 'products' && <PriceList />}
+        {activeTab === 'products' && <ProductManager />}
 
         {activeTab === 'pricelists' && <PriceListManager />}
       </div>
