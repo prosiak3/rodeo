@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mic, MicOff, Plus, Check, Edit2, Send, X } from 'lucide-react';
+import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Product {
@@ -210,6 +210,18 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
   const removeItem = (index: number) => {
     setOrderItems(orderItems.filter((_, i) => i !== index));
+  };
+
+  const updateQuantity = (index: number, quantity: number) => {
+    const updated = [...orderItems];
+    updated[index].quantity = Math.max(0.1, quantity);
+    setOrderItems(updated);
+  };
+
+  const adjustQuantity = (index: number, delta: number) => {
+    const updated = [...orderItems];
+    updated[index].quantity = Math.max(0.1, updated[index].quantity + delta);
+    setOrderItems(updated);
   };
 
   const selectSuggestion = (itemIndex: number, product: Product) => {
@@ -552,8 +564,8 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
         <p className="text-amber-100 mt-1 text-sm">Dyktuj pozycje linijka po linijce, końcowe słowo: "kg"</p>
       </div>
 
-      <div className="p-6 space-y-6">
-        <div className="bg-white rounded-xl shadow-lg p-8">
+      <div className="p-4 space-y-4">
+        <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex flex-col items-center">
             <button
               onClick={isListening ? stopListening : startListening}
@@ -589,46 +601,82 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
         {orderItems.length > 0 && (
           <>
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="font-semibold text-lg mb-4">Rozpoznane pozycje ({orderItems.length})</h3>
-              <div className="space-y-2">
+            <div className="bg-white rounded-xl shadow-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <ShoppingCart className="w-5 h-5" />
+                  Rozpoznane pozycje
+                </h3>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Pozycje</p>
+                  <p className="font-bold text-amber-600 text-lg">{orderItems.length}</p>
+                </div>
+              </div>
+              <div className="space-y-2 mb-4 max-h-[400px] overflow-y-auto">
                 {orderItems.map((item, index) => (
-                  <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium">{item.productName}</p>
-                      <p className="text-sm text-gray-600">
+                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{item.productName}</p>
+                      <p className="text-xs text-gray-600">
                         {item.quantity} {item.unit}
                       </p>
                       {item.productIndex && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <svg className="w-20 h-8" viewBox="0 0 100 35">
+                        <div className="mt-1 flex items-center gap-1">
+                          <svg className="w-16 h-6" viewBox="0 0 80 25">
                             {item.productIndex.split('').map((digit, i) => (
                               <rect
                                 key={i}
-                                x={i * 7.5}
-                                y="4"
-                                width={i % 2 === 0 ? "2.5" : "3.5"}
-                                height="24"
+                                x={i * 6}
+                                y="3"
+                                width={i % 2 === 0 ? "2" : "3"}
+                                height="18"
                                 fill="#000"
                               />
                             ))}
                           </svg>
-                          <span className="font-mono text-xs text-gray-600">{item.productIndex}</span>
+                          <span className="font-mono text-[10px] text-gray-500">{item.productIndex}</span>
                         </div>
                       )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => adjustQuantity(index, -1)}
+                        className="p-1 bg-gray-200 hover:bg-gray-300 rounded transition"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateQuantity(index, parseFloat(e.target.value) || 0.1)}
+                        className="w-16 p-1 text-center text-sm border border-gray-300 rounded focus:border-amber-500 focus:outline-none"
+                        step="1"
+                        min="0.1"
+                      />
+                      <button
+                        onClick={() => adjustQuantity(index, 1)}
+                        className="p-1 bg-gray-200 hover:bg-gray-300 rounded transition"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => removeItem(index)}
+                        className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
+              <button
+                onClick={() => setStage('confirmation')}
+                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
+              >
+                <Check className="w-5 h-5" />
+                Przejdź do potwierdzenia
+              </button>
             </div>
-
-            <button
-              onClick={() => setStage('confirmation')}
-              className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg"
-            >
-              <Check className="w-5 h-5" />
-              Przejdź do potwierdzenia
-            </button>
           </>
         )}
       </div>
