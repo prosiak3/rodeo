@@ -233,14 +233,14 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
                 <div>
                   <p className="text-sm text-gray-600 mb-2">Kod produktu</p>
                   <div className="flex items-center gap-2">
-                    <svg className="w-20 h-10" viewBox="0 0 100 50">
+                    <svg className="w-32 h-14" viewBox="0 0 160 60">
                       {selectedProduct.index.split('').map((digit, i) => (
                         <rect
                           key={i}
-                          x={i * 7.5}
-                          y="5"
-                          width={i % 2 === 0 ? "2.5" : "4"}
-                          height="35"
+                          x={i * 12}
+                          y="8"
+                          width={i % 2 === 0 ? "4" : "6"}
+                          height="40"
                           fill="#000"
                         />
                       ))}

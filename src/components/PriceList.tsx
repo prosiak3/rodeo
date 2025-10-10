@@ -139,14 +139,14 @@ export default function PriceList() {
                     </div>
                     {product.index && (
                       <div className="mt-2 flex items-center gap-1 text-xs">
-                        <svg className="w-16 h-8" viewBox="0 0 80 40">
+                        <svg className="w-28 h-10" viewBox="0 0 140 45">
                           {product.index.split('').map((digit, i) => (
                             <rect
                               key={i}
-                              x={i * 6}
-                              y="5"
-                              width={i % 2 === 0 ? "2" : "3"}
-                              height="25"
+                              x={i * 10.5}
+                              y="6"
+                              width={i % 2 === 0 ? "3.5" : "5"}
+                              height="28"
                               fill="#000"
                             />
                           ))}

@@ -346,14 +346,14 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
                       </p>
                       {item.productIndex && (
                         <div className="mt-2 flex items-center gap-2">
-                          <svg className="w-12 h-6" viewBox="0 0 60 30">
+                          <svg className="w-24 h-10" viewBox="0 0 120 40">
                             {item.productIndex.split('').map((digit, i) => (
                               <rect
                                 key={i}
-                                x={i * 4.5}
-                                y="3"
-                                width={i % 2 === 0 ? "1.5" : "2"}
-                                height="18"
+                                x={i * 9}
+                                y="5"
+                                width={i % 2 === 0 ? "3" : "4.5"}
+                                height="25"
                                 fill="#000"
                               />
                             ))}
@@ -466,14 +466,14 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
                       </p>
                       {item.productIndex && (
                         <div className="mt-2 flex items-center gap-2">
-                          <svg className="w-14 h-7" viewBox="0 0 70 35">
+                          <svg className="w-28 h-12" viewBox="0 0 140 50">
                             {item.productIndex.split('').map((digit, i) => (
                               <rect
                                 key={i}
-                                x={i * 5.2}
-                                y="4"
-                                width={i % 2 === 0 ? "1.8" : "2.5"}
-                                height="20"
+                                x={i * 10.5}
+                                y="8"
+                                width={i % 2 === 0 ? "3.5" : "5"}
+                                height="30"
                                 fill="#000"
                               />
                             ))}
@@ -601,14 +601,14 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
                       </p>
                       {item.productIndex && (
                         <div className="mt-2 flex items-center gap-2">
-                          <svg className="w-10 h-5" viewBox="0 0 50 25">
+                          <svg className="w-20 h-8" viewBox="0 0 100 35">
                             {item.productIndex.split('').map((digit, i) => (
                               <rect
                                 key={i}
-                                x={i * 3.8}
-                                y="2"
-                                width={i % 2 === 0 ? "1.2" : "1.8"}
-                                height="16"
+                                x={i * 7.5}
+                                y="4"
+                                width={i % 2 === 0 ? "2.5" : "3.5"}
+                                height="24"
                                 fill="#000"
                               />
                             ))}
