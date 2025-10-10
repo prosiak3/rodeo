@@ -11,6 +11,8 @@ interface Product {
   base_price: number;
   description: string;
   index?: string;
+  min_quantity: number;
+  quantity_step: number;
 }
 
 export default function PriceList() {
@@ -28,7 +30,7 @@ export default function PriceList() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, code, name, category, unit, base_price, description, index, min_quantity, quantity_step')
         .eq('active', true)
         .order('category', { ascending: true })
         .order('name', { ascending: true });
@@ -129,6 +131,10 @@ export default function PriceList() {
                         {product.description && (
                           <p className="text-xs text-gray-600 truncate">{product.description}</p>
                         )}
+                        <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                          <span>Min: {product.min_quantity} {product.unit}</span>
+                          <span>Krok: {product.quantity_step} {product.unit}</span>
+                        </div>
                       </div>
                       <div className="flex items-baseline gap-1 flex-shrink-0">
                         <span className="font-bold text-amber-600">
@@ -138,20 +144,25 @@ export default function PriceList() {
                       </div>
                     </div>
                     {product.index && (
-                      <div className="mt-2 flex items-center gap-1 text-xs">
-                        <svg className="w-28 h-10" viewBox="0 0 140 45">
-                          {product.index.split('').map((digit, i) => (
-                            <rect
-                              key={i}
-                              x={i * 10.5}
-                              y="6"
-                              width={i % 2 === 0 ? "3.5" : "5"}
-                              height="28"
-                              fill="#000"
-                            />
-                          ))}
+                      <div className="mt-2 flex flex-col gap-1">
+                        <svg className="w-full h-16" viewBox="0 0 300 70" preserveAspectRatio="xMinYMin meet">
+                          {product.index.split('').map((digit, i) => {
+                            const barWidth = i % 2 === 0 ? 6 : 10;
+                            const x = i * 22;
+                            return (
+                              <g key={i}>
+                                <rect
+                                  x={x}
+                                  y="5"
+                                  width={barWidth}
+                                  height="50"
+                                  fill="#000"
+                                />
+                              </g>
+                            );
+                          })}
                         </svg>
-                        <span className="font-mono text-gray-700">{product.index}</span>
+                        <span className="font-mono text-sm text-gray-800 text-center tracking-wider">{product.index}</span>
                       </div>
                     )}
                   </div>

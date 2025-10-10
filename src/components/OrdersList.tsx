@@ -42,7 +42,9 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
           ),
           store:store_id (
             name,
-            code
+            code,
+            address,
+            phone
           )
         `)
         .order('created_at', { ascending: false });
@@ -138,12 +140,15 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <span className="font-bold text-lg text-gray-800">{order.order_number}</span>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${config.bgColor} ${config.color}`}
+                      <div
+                        className={`p-2 rounded-full ${config.bgColor} ${config.color} relative group cursor-help`}
+                        title={config.label}
                       >
-                        <Icon className="w-3 h-3" />
-                        {config.label}
-                      </span>
+                        <Icon className="w-4 h-4" />
+                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          {config.label}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-sm text-gray-600 mb-1">
                       Utworzono: {formatDate(order.created_at)}
@@ -154,9 +159,21 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
                       </p>
                     )}
                     {order.store && (
-                      <p className="text-sm text-gray-600 mb-1">
-                        🏪 {order.store.name}
-                      </p>
+                      <div className="text-sm text-gray-600 mb-1 space-y-1">
+                        <p className="font-medium">🏪 {order.store.name}</p>
+                        {(order.store as any).address && (
+                          <p className="text-xs pl-5">📍 {(order.store as any).address}</p>
+                        )}
+                        {(order.store as any).phone && (
+                          <a
+                            href={`tel:${(order.store as any).phone}`}
+                            className="text-xs pl-5 text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 w-fit"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            📞 {(order.store as any).phone}
+                          </a>
+                        )}
+                      </div>
                     )}
                     {order.sent_at && (
                       <p className="text-sm text-gray-600">Wysłano: {formatDate(order.sent_at)}</p>

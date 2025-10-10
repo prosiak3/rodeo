@@ -251,20 +251,25 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
               {selectedProduct.index && (
                 <div>
                   <p className="text-sm text-gray-600 mb-2">Kod produktu</p>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-32 h-14" viewBox="0 0 160 60">
-                      {selectedProduct.index.split('').map((digit, i) => (
-                        <rect
-                          key={i}
-                          x={i * 12}
-                          y="8"
-                          width={i % 2 === 0 ? "4" : "6"}
-                          height="40"
-                          fill="#000"
-                        />
-                      ))}
+                  <div className="flex flex-col gap-2">
+                    <svg className="w-full h-20" viewBox="0 0 300 80" preserveAspectRatio="xMinYMin meet">
+                      {selectedProduct.index.split('').map((digit, i) => {
+                        const barWidth = i % 2 === 0 ? 7 : 12;
+                        const x = i * 24;
+                        return (
+                          <g key={i}>
+                            <rect
+                              x={x}
+                              y="8"
+                              width={barWidth}
+                              height="55"
+                              fill="#000"
+                            />
+                          </g>
+                        );
+                      })}
                     </svg>
-                    <span className="font-mono text-sm">{selectedProduct.index}</span>
+                    <span className="font-mono text-base text-center tracking-wider">{selectedProduct.index}</span>
                   </div>
                 </div>
               )}
