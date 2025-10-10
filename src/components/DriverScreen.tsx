@@ -134,10 +134,10 @@ export default function DriverScreen({ userId }: DriverScreenProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
         <div className="flex items-center gap-3 mb-4">
           <Truck className="w-8 h-8" />
-          <h1 className="text-2xl font-bold">Moje Dostawy</h1>
+          <h1 className="text-xl font-bold">Moje Dostawy</h1>
         </div>
         <p className="text-amber-100">Panel kierowcy</p>
       </div>

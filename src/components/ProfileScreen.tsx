@@ -39,11 +39,11 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
         <div className="flex items-center gap-3">
           <span className="text-4xl">🐃</span>
           <div>
-            <h2 className="text-2xl font-bold">Profil użytkownika</h2>
+            <h2 className="text-xl font-bold">Profil użytkownika</h2>
             <p className="text-amber-100 text-sm">Weź byka za rogi</p>
           </div>
         </div>

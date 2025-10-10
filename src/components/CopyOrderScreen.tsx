@@ -181,8 +181,8 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
   if (!selectedOrder) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
-          <h2 className="text-2xl font-bold">Kopiuj zamówienie</h2>
+        <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
+          <h2 className="text-xl font-bold">Kopiuj zamówienie</h2>
           <p className="text-amber-100 text-sm mt-1">Wybierz wcześniejsze zamówienie do skopiowania</p>
         </div>
 
@@ -235,8 +235,8 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
-        <h2 className="text-2xl font-bold">Edytuj zamówienie</h2>
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
+        <h2 className="text-xl font-bold">Edytuj zamówienie</h2>
         <p className="text-amber-100 text-sm mt-1">
           Kopiowanie z: {selectedOrder.order_number}
         </p>

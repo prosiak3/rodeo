@@ -268,7 +268,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
   if (selectedProduct) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
           <button
             onClick={() => setSelectedProduct(null)}
             className="flex items-center gap-2 text-white mb-4 hover:text-amber-100 transition"
@@ -276,7 +276,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
             <ArrowLeft className="w-5 h-5" />
             Wróć do cennika
           </button>
-          <h2 className="text-2xl font-bold">Dodaj produkt</h2>
+          <h2 className="text-xl font-bold">Dodaj produkt</h2>
           <p className="text-amber-100 text-sm mt-1">Wprowadź ilość produktu</p>
         </div>
 
@@ -361,7 +361,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
             {quantity && parseFloat(quantity) > 0 && (
               <div className="mt-4 p-3 bg-amber-50 rounded-lg">
                 <p className="text-sm text-gray-600">Wartość pozycji</p>
-                <p className="text-2xl font-bold text-amber-600">
+                <p className="text-xl font-bold text-amber-600">
                   {(parseFloat(quantity) * selectedProduct.base_price).toFixed(2)} PLN
                 </p>
               </div>
@@ -391,7 +391,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
         <button
           onClick={onCancel}
           className="flex items-center gap-2 text-white mb-4 hover:text-amber-100 transition"
@@ -401,7 +401,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
         </button>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Zamówienie z cennika</h2>
+            <h2 className="text-xl font-bold">Zamówienie z cennika</h2>
             <p className="text-amber-100 text-sm mt-1">Wybierz produkty i wprowadź ilości</p>
           </div>
           {orderItems.length > 0 && (

@@ -176,8 +176,8 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
-        <h2 className="text-2xl font-bold">Nowe zamówienie</h2>
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
+        <h2 className="text-xl font-bold">Nowe zamówienie</h2>
         <p className="text-amber-100 text-sm mt-1">Wprowadź zamówienie ręcznie</p>
       </div>
 

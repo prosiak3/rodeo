@@ -92,11 +92,12 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
       <div className="flex gap-2 overflow-x-auto pb-2">
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition ${
+          className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition ${
             filter === 'all'
               ? 'bg-amber-600 text-white'
               : 'bg-white text-gray-700 border border-gray-300'
           }`}
+          title="Wszystkie"
         >
           Wszystkie
         </button>
@@ -106,14 +107,14 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
             <button
               key={status}
               onClick={() => setFilter(status as OrderStatus)}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition flex items-center gap-2 ${
+              className={`p-2 rounded-lg transition flex items-center justify-center ${
                 filter === status
                   ? 'bg-amber-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               }`}
+              title={config.label}
             >
-              <Icon className="w-4 h-4" />
-              {config.label}
+              <Icon className="w-5 h-5" />
             </button>
           );
         })}

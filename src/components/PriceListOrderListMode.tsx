@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Plus, Trash2, Save, ArrowLeft, Check } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Trash2, Save, ArrowLeft, Check, LayoutGrid, AlignJustify } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ProductCard from './ProductCard';
 
@@ -18,6 +18,9 @@ interface Product {
   promo_price?: number;
   final_price: number;
 }
+
+type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
+type PriceLayout = 'horizontal' | 'vertical';
 
 interface OrderItem {
   productId: string;
@@ -45,6 +48,8 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [saving, setSaving] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('name-asc');
+  const [priceLayout, setPriceLayout] = useState<PriceLayout>('horizontal');
 
   useEffect(() => {
     loadProducts();
@@ -93,11 +98,26 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
-  const filteredProducts = products.filter(product => {
+  let filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
                          product.code.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
+  });
+
+  filteredProducts.sort((a, b) => {
+    switch (sortBy) {
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'price-asc':
+        return a.final_price - b.final_price;
+      case 'price-desc':
+        return b.final_price - a.final_price;
+      default:
+        return 0;
+    }
   });
 
   const groupedProducts = filteredProducts.reduce((acc, product) => {
@@ -252,6 +272,47 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
             />
           </div>
 
+          <div className="flex gap-2 items-center justify-between mb-3">
+            <div className="flex gap-2 items-center text-sm flex-1 min-w-0">
+              <span className="text-gray-600 flex-shrink-0">Sortuj:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm focus:border-amber-500 focus:outline-none"
+              >
+                <option value="name-asc">Nazwa A-Z</option>
+                <option value="name-desc">Nazwa Z-A</option>
+                <option value="price-asc">Cena rosnąco</option>
+                <option value="price-desc">Cena malejąco</option>
+              </select>
+            </div>
+
+            <div className="flex gap-1 border-2 border-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+              <button
+                onClick={() => setPriceLayout('horizontal')}
+                className={`p-2 transition ${
+                  priceLayout === 'horizontal'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Układ poziomy"
+              >
+                <AlignJustify className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setPriceLayout('vertical')}
+                className={`p-2 transition ${
+                  priceLayout === 'vertical'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+                title="Układ pionowy"
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
           <div className="flex gap-2 overflow-x-auto pb-2">
             {categories.map(cat => (
               <button
@@ -276,7 +337,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
               const isAdded = orderItems.some(item => item.productId === product.id);
               return (
                 <div key={product.id} className={`relative ${isAdded ? 'opacity-50' : ''}`}>
-                  <ProductCard product={product}>
+                  <ProductCard product={product} priceLayout={priceLayout}>
                     <button
                       onClick={() => addToList(product)}
                       disabled={isAdded}
