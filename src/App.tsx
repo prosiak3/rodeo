@@ -158,7 +158,56 @@ function AppContent() {
             <ProfileScreen user={user} onSignOut={signOut} />
           )}
         </div>
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
+      </>
+    );
+  }
+
+  if (user.role === 'salesperson') {
+    return (
+      <>
+        <div className="pb-16">
+          {activeTab === 'home' && <HomeScreen />}
+
+          {activeTab === 'orders' && (
+            <div className="min-h-screen bg-gray-50 pb-20">
+              <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl">🐃</span>
+                  <h2 className="text-2xl font-bold">Zamówienia</h2>
+                </div>
+                <p className="text-amber-100 text-sm mt-1">Wszystkie zamówienia sklepów</p>
+              </div>
+              <div className="p-6">
+                <OrdersList
+                  userRole={user.role}
+                  onSelectOrder={setSelectedOrderId}
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'prices' && (
+            <div className="min-h-screen bg-gray-50 pb-20">
+              <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-4xl">🐃</span>
+                  <h2 className="text-2xl font-bold">Cennik</h2>
+                </div>
+                <p className="text-white font-semibold">Weź byka za rogi</p>
+                <p className="text-amber-100 mt-1 text-sm">Aktualny cennik produktów</p>
+              </div>
+              <div className="p-3">
+                <PriceList />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <ProfileScreen user={user} onSignOut={signOut} />
+          )}
+        </div>
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
       </>
     );
   }
