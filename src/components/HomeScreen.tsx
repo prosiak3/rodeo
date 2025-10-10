@@ -23,13 +23,13 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
               onClick={() => onNavigate?.('new-order')}
               className="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer"
             >
-              Nowe zamówienie głosowe
+              Nowe zamówienie
             </button>
             <button
               onClick={() => onNavigate?.('orders')}
               className="w-full p-4 bg-white border-2 border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition cursor-pointer"
             >
-              Zobacz wszystkie zamówienia
+              Pokaż aktualne zamówienia
             </button>
           </div>
         </div>
