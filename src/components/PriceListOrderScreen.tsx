@@ -280,8 +280,8 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
           <p className="text-amber-100 text-sm mt-1">Wprowadź ilość produktu</p>
         </div>
 
-        <div className="p-6 space-y-6">
-          <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="p-4 space-y-4 max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl shadow-lg p-4">
             <h3 className="font-semibold text-lg mb-4">{selectedProduct.name}</h3>
             <div className="space-y-3">
               <div>
@@ -322,7 +322,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-white rounded-xl shadow-lg p-4">
             <label className="block mb-2 font-medium">Ilość ({selectedProduct.unit})</label>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
               <p className="text-blue-800">
@@ -413,7 +413,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
         </div>
       </div>
 
-      <div className="p-3 space-y-3 max-w-2xl mx-auto">
+      <div className="p-3 space-y-3">
         {orderItems.length > 0 && (
           <div className="bg-white rounded-lg shadow-lg p-4">
             <div className="flex items-center justify-between mb-3">
