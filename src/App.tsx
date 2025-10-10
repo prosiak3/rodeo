@@ -6,6 +6,7 @@ import VoiceOrderScreen from './components/VoiceOrderScreen';
 import ManualOrderScreen from './components/ManualOrderScreen';
 import CopyOrderScreen from './components/CopyOrderScreen';
 import PriceListOrderScreen from './components/PriceListOrderScreen';
+import PriceListOrderListMode from './components/PriceListOrderListMode';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
 import ProfileScreen from './components/ProfileScreen';
@@ -315,15 +316,27 @@ function AppContent() {
             )}
 
             {orderMode === 'pricelist' && (
-              <PriceListOrderScreen
-                storeId={user.store_id}
-                userId={user.id}
-                onOrderSent={() => {
-                  setOrderMode(null);
-                  setActiveTab('orders');
-                }}
-                onCancel={() => setOrderMode(null)}
-              />
+              (user as any).order_mode === 'list' ? (
+                <PriceListOrderListMode
+                  storeId={user.store_id}
+                  userId={user.id}
+                  onOrderSaved={() => {
+                    setOrderMode(null);
+                    setActiveTab('orders');
+                  }}
+                  onCancel={() => setOrderMode(null)}
+                />
+              ) : (
+                <PriceListOrderScreen
+                  storeId={user.store_id}
+                  userId={user.id}
+                  onOrderSent={() => {
+                    setOrderMode(null);
+                    setActiveTab('orders');
+                  }}
+                  onCancel={() => setOrderMode(null)}
+                />
+              )
             )}
 
             {orderMode === 'copy' && (

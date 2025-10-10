@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Plus, Minus, Trash2, Send, ArrowLeft } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Product {
@@ -171,11 +171,10 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
           order_number: orderNumber,
           store_id: storeId,
           created_by: userId,
-          status: 'sent',
+          status: 'draft',
           requires_confirmation: false,
           total_amount: totalAmount,
-          notes: 'Zamówienie utworzone z cennika',
-          sent_at: new Date().toISOString(),
+          notes: 'Zamówienie utworzone z cennika - tryb ilości',
         })
         .select()
         .single();
@@ -204,11 +203,11 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
         performed_by: userId,
         details: {
           items_count: orderItems.length,
-          source: 'price_list',
+          source: 'price_list_quantity_mode',
         },
       });
 
-      alert(`Zamówienie ${orderNumber} zostało wysłane!`);
+      alert('Zamówienie zapisane jako szkic!');
       onOrderSent();
     } catch (error) {
       console.error('Error sending order:', error);
@@ -414,8 +413,8 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
               disabled={sending}
               className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow disabled:opacity-50"
             >
-              <Send className="w-5 h-5" />
-              {sending ? 'Wysyłanie...' : 'Wyślij zamówienie'}
+              <Save className="w-5 h-5" />
+              {sending ? 'Zapisywanie...' : 'Zapisz jako szkic'}
             </button>
           </div>
         )}
