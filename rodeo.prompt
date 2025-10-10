@@ -1,0 +1,262 @@
+# RODEO - System Zarządzania Zamówieniami Mięsno-Wędliniarskimi
+
+## Opis Aplikacji
+
+RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Umożliwia kierownikom sklepów składanie zamówień różnymi metodami, a handlowcom i operatorom hurtowni ich przetwarzanie.
+
+## Funkcjonalności
+
+### Dla Kierowników Sklepów (store_manager)
+
+1. **Trzy sposoby składania zamówień:**
+   - **Zamówienie głosowe** - dyktowanie zamówienia przez mikrofon z wykorzystaniem Web Speech API
+   - **Wprowadzanie ręczne** - wybieranie produktów z listy i określanie ilości
+   - **Kopiowanie zamówienia** - wykorzystanie wcześniejszych zamówień jako szablonu
+
+2. **Zarządzanie zamówieniami:**
+   - Przeglądanie historii zamówień
+   - Szczegóły zamówienia z możliwością sprawdzenia statusu
+   - Filtrowanie zamówień po statusie
+
+3. **Cennik:**
+   - Przeglądanie aktualnych cen produktów
+   - Podział na kategorie (mięso, wędliny, drób, ryby, dodatki)
+   - Wyszukiwanie produktów
+   - Wyświetlanie cen specjalnych dla sklepu
+
+4. **Profil:**
+   - Informacje o użytkowniku i sklepie
+   - Wylogowanie
+
+### Dla Handlowców (salesperson)
+
+1. **Zarządzanie zamówieniami przypisanych sklepów:**
+   - Przeglądanie zamówień ze wszystkich obsługiwanych sklepów
+   - Potwierdzanie/odrzucanie zamówień
+   - Modyfikacja ilości w pozycjach zamówienia
+   - Dodawanie uwag
+
+2. **Filtrowanie:**
+   - Po statusie zamówienia
+   - Po sklepie
+
+### Dla Operatorów i Adminów (operator/admin)
+
+1. **Panel administracyjny:**
+   - Przeglądanie wszystkich zamówień w systemie
+   - Zarządzanie zamówieniami
+   - Statystyki i raporty
+
+## Technologie
+
+### Frontend
+- **React 18** z TypeScript
+- **Vite** jako bundler
+- **Tailwind CSS** do stylowania
+- **Lucide React** dla ikon
+- **Web Speech API** do rozpoznawania mowy
+
+### Backend & Baza Danych
+- **Supabase** jako backend-as-a-service
+  - PostgreSQL jako baza danych
+  - Supabase Auth do autentykacji
+  - Row Level Security (RLS) do zabezpieczeń
+  - Realtime subscriptions (opcjonalnie)
+
+### PWA
+- Manifest.json dla instalacji jako aplikacja
+- Service Worker (opcjonalnie)
+- Responsywny design
+
+## Struktura Bazy Danych
+
+### Tabele
+
+1. **stores** - Sklepy
+   - id, name, code, address, phone, active
+   - Przechowuje informacje o sklepach
+
+2. **users** - Użytkownicy
+   - id (referencja do auth.users), email, full_name, role, store_id, active
+   - Role: store_manager, salesperson, operator, admin
+
+3. **products** - Produkty
+   - id, name, code (barcode), category, unit, base_price, image_url, description, active, index
+   - Katalog produktów mięsno-wędliniarskich
+
+4. **special_prices** - Ceny Specjalne
+   - id, store_id, product_id, special_price, valid_from, valid_to
+   - Ceny promocyjne dla konkretnych sklepów
+
+5. **orders** - Zamówienia
+   - id, order_number, store_id, created_by, status, requires_confirmation
+   - total_amount, voice_transcript, notes, sent_at, confirmed_at, delivery_date
+   - Statusy: draft, sent, pending_confirmation, confirmed, partially_confirmed, rejected, archived
+
+6. **order_items** - Pozycje Zamówienia
+   - id, order_id, product_id, quantity_ordered, unit, price_per_unit, total_price
+   - confirmed_quantity, status
+
+7. **order_history** - Historia Zamówień
+   - id, order_id, action, performed_by, details
+   - Audit log wszystkich akcji na zamówieniach
+
+8. **salesperson_stores** - Przypisania Handlowców
+   - salesperson_id, store_id
+   - Określa które sklepy obsługuje dany handlowiec
+
+### Zabezpieczenia (RLS)
+
+Każda tabela ma włączone Row Level Security z politykami:
+- Kierownicy widzą tylko dane swojego sklepu
+- Handlowcy widzą dane sklepów, które obsługują
+- Operatorzy i admini mają pełny dostęp
+- Wszystkie polityki sprawdzają auth.uid() i role użytkownika
+
+## Komponenty Aplikacji
+
+### Główne Komponenty
+
+1. **App.tsx** - Główny komponent z routingiem i logiką nawigacji
+2. **AuthContext.tsx** - Kontekst autentykacji z zarządzaniem sesją
+3. **BottomNav.tsx** - Dolna nawigacja (Home, Nowe, Zamówienia, Cennik, Profil)
+
+### Ekrany
+
+1. **LoginScreen.tsx** - Ekran logowania
+2. **HomeScreen.tsx** - Ekran powitalny z logo i informacjami
+3. **VoiceOrderScreen.tsx** - Składanie zamówienia głosem
+4. **ManualOrderScreen.tsx** - Ręczne wprowadzanie zamówienia
+5. **CopyOrderScreen.tsx** - Kopiowanie wcześniejszego zamówienia
+6. **OrdersList.tsx** - Lista zamówień z filtrowaniem
+7. **OrderDetails.tsx** - Szczegóły zamówienia z możliwością edycji
+8. **PriceList.tsx** - Cennik produktów z wyszukiwaniem
+9. **ProfileScreen.tsx** - Profil użytkownika
+10. **AdminPanel.tsx** - Panel administracyjny
+
+## Przepływ Pracy
+
+### Składanie Zamówienia (Kierownik)
+
+1. Logowanie do aplikacji
+2. Kliknięcie "Nowe" w dolnej nawigacji
+3. Wybór metody składania zamówienia:
+   - **Głosowe**: Naciśnięcie mikrofonu, dyktowanie, potwierdzenie, wysłanie
+   - **Ręczne**: Wyszukanie produktów, dodanie do koszyka, określenie ilości, wysłanie
+   - **Kopiowanie**: Wybór wcześniejszego zamówienia, modyfikacja, wysłanie
+4. Zamówienie otrzymuje status "sent"
+5. Można sprawdzić status w zakładce "Zamówienia"
+
+### Przetwarzanie Zamówienia (Handlowiec)
+
+1. Logowanie do aplikacji
+2. Przeglądanie nowych zamówień
+3. Kliknięcie na zamówienie -> szczegóły
+4. Przegląd pozycji zamówienia
+5. Opcje:
+   - Potwierdzenie całego zamówienia
+   - Modyfikacja ilości w poszczególnych pozycjach
+   - Częściowe potwierdzenie
+   - Odrzucenie zamówienia
+6. Dodanie uwag (opcjonalnie)
+7. Zapisanie zmian
+8. Zamówienie zmienia status na "confirmed" lub "partially_confirmed"
+
+### Rozpoznawanie Mowy (Voice Order)
+
+Aplikacja wykorzystuje Web Speech API do rozpoznawania poleceń:
+- Nasłuchuje polskich nazw produktów i ilości
+- Parsuje frazy typu: "szynka 5 kilogramów", "kiełbasa 2 kilo"
+- Wyświetla wykryte produkty do potwierdzenia
+- Pozwala na edycję przed wysłaniem
+
+## Dane Testowe
+
+### Użytkownicy:
+- **Kierownik**: kierownik@sklep.pl / test123
+- **Handlowiec**: handlowiec@hurtownia.pl / test123
+- **Operator**: operator@hurtownia.pl / test123
+
+### Sklepy:
+- Sklep Mięsny "U Wojtka" (SHOP001)
+- Delikatesy "Smak" (SHOP002)
+
+### Produkty:
+Ponad 50 produktów w kategoriach:
+- Mięso (schab, karkówka, żeberka, łopatka)
+- Wędliny (szynka, kiełbasa, parówki, salami)
+- Drób (kurczak, indyk, kaczka)
+- Ryby (łosoś, dorsz, pstrąg)
+- Dodatki (przyprawy, sosy)
+
+## Zmienne Środowiskowe
+
+```env
+VITE_SUPABASE_URL=https://[your-project].supabase.co
+VITE_SUPABASE_ANON_KEY=[your-anon-key]
+```
+
+## Instalacja i Uruchomienie
+
+```bash
+# Instalacja zależności
+npm install
+
+# Uruchomienie w trybie deweloperskim
+npm run dev
+
+# Build do produkcji
+npm run build
+
+# Podgląd buildu
+npm run preview
+
+# Sprawdzanie typów
+npm run typecheck
+```
+
+## Przyszłe Funkcjonalności
+
+1. **Powiadomienia push** - o nowych zamówieniach i zmianach statusu
+2. **Eksport do PDF/Excel** - generowanie raportów
+3. **Statystyki** - wykresy sprzedaży, najpopularniejsze produkty
+4. **Harmonogram dostaw** - planowanie tras i terminów
+5. **Chat** - komunikacja między kierownikami a handlowcami
+6. **Skanowanie kodów kreskowych** - przy składaniu zamówień
+7. **Historia cen** - śledzenie zmian cen produktów
+8. **Ulubione zestawy** - zapisywanie często zamawianych kombinacji
+
+## Deployment
+
+Aplikacja jest gotowa do deploymentu na platformach:
+- Vercel
+- Netlify
+- Bolt.new
+- Własny serwer (nginx + node)
+
+Wymagania:
+- Node.js 18+
+- Konto Supabase z utworzonymi tabelami
+- Zmienne środowiskowe ustawione w platformie hostingowej
+
+## Wsparcie
+
+Aplikacja wspiera:
+- Przeglądarki: Chrome, Edge, Safari, Firefox (najnowsze wersje)
+- Urządzenia: Desktop, Tablet, Mobile
+- Systemy: Windows, macOS, Linux, iOS, Android
+- Rozpoznawanie mowy: Chrome, Edge (tylko na HTTPS)
+
+## Bezpieczeństwo
+
+- Wszystkie zapytania przez Supabase RLS
+- Hasła hashowane przez Supabase Auth
+- HTTPS wymagane w produkcji
+- Tokeny JWT do autoryzacji
+- Walidacja danych po stronie backendu
+- Ochrona przed SQL injection (Supabase)
+- Rate limiting (Supabase)
+
+## Licencja
+
+Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do automatyzacji procesu zamawiania towarów.
