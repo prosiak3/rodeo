@@ -2,11 +2,21 @@ import { useState, useEffect } from 'react';
 import { Mic, MicOff, Plus, Check, Edit2, Send, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+interface Product {
+  id: string;
+  name: string;
+  index: string;
+  base_price: number;
+}
+
 interface OrderItem {
   productName: string;
   quantity: number;
   unit: string;
   productIndex?: string;
+  productId?: string;
+  matched?: boolean;
+  suggestions?: Product[];
 }
 
 interface VoiceOrderScreenProps {
@@ -19,6 +29,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [stage, setStage] = useState<'recording' | 'confirmation' | 'summary'>('recording');
   const [requiresConfirmation, setRequiresConfirmation] = useState(false);
   const [notes, setNotes] = useState('');
@@ -28,7 +39,48 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy. Użyj Chrome lub Edge.');
     }
+    loadProducts();
   }, []);
+
+  const loadProducts = async () => {
+    try {
+      const { data } = await supabase
+        .from('products')
+        .select('id, name, index, base_price')
+        .eq('active', true);
+      if (data) {
+        setAllProducts(data);
+      }
+    } catch (error) {
+      console.error('Error loading products:', error);
+    }
+  };
+
+  const findSimilarProducts = (searchName: string, limit = 3): Product[] => {
+    const normalized = searchName.toLowerCase().trim();
+    const scored = allProducts.map(product => {
+      const productName = product.name.toLowerCase();
+      let score = 0;
+
+      if (productName === normalized) score = 100;
+      else if (productName.includes(normalized)) score = 80;
+      else if (normalized.includes(productName)) score = 70;
+      else {
+        const words = normalized.split(' ');
+        words.forEach(word => {
+          if (word.length > 2 && productName.includes(word)) score += 20;
+        });
+      }
+
+      return { product, score };
+    });
+
+    return scored
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(item => item.product);
+  };
 
   const startListening = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -100,35 +152,32 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       }
 
       if (productName && productName.length > 2) {
-        items.push({
-          productName,
-          quantity,
-          unit,
+        const normalizedName = productName.toLowerCase().trim();
+        const product = allProducts.find(p => {
+          const pName = p.name.toLowerCase();
+          return pName.includes(normalizedName) || normalizedName.includes(pName);
         });
-      }
-    }
 
-    // Dopasuj produkty i uzupełnij indeksy
-    try {
-      const { data: allProducts } = await supabase
-        .from('products')
-        .select('*')
-        .eq('active', true);
-
-      if (allProducts) {
-        items.forEach(item => {
-          const normalizedName = item.productName.toLowerCase().trim();
-          const product = allProducts.find(p => {
-            const productName = p.name.toLowerCase();
-            return productName.includes(normalizedName) || normalizedName.includes(productName);
+        if (product) {
+          items.push({
+            productName: product.name,
+            quantity,
+            unit,
+            productIndex: product.index,
+            productId: product.id,
+            matched: true,
           });
-          if (product) {
-            item.productIndex = product.index;
-          }
-        });
+        } else {
+          const suggestions = findSimilarProducts(productName);
+          items.push({
+            productName,
+            quantity,
+            unit,
+            matched: false,
+            suggestions,
+          });
+        }
       }
-    } catch (error) {
-      console.error('Error matching products:', error);
     }
 
     setOrderItems(prev => [...prev, ...items]);
@@ -136,6 +185,13 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   };
 
   const confirmOrder = () => {
+    const unmatchedItems = orderItems.filter(item => !item.matched);
+    if (unmatchedItems.length > 0) {
+      const confirmed = window.confirm(
+        `Uwaga! ${unmatchedItems.length} pozycji nie zostało dopasowanych do cennika. Przejdź do podsumowania i usuń te pozycje lub wróć i wybierz sugestie.`
+      );
+      if (!confirmed) return;
+    }
     setStage('summary');
   };
 
@@ -156,31 +212,39 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     setOrderItems(orderItems.filter((_, i) => i !== index));
   };
 
+  const selectSuggestion = (itemIndex: number, product: Product) => {
+    const updated = [...orderItems];
+    updated[itemIndex] = {
+      ...updated[itemIndex],
+      productName: product.name,
+      productIndex: product.index,
+      productId: product.id,
+      matched: true,
+      suggestions: undefined,
+    };
+    setOrderItems(updated);
+  };
+
   const sendOrder = async () => {
     if (orderItems.length === 0) {
       alert('Dodaj pozycje do zamówienia');
       return;
     }
 
+    const unmatchedItems = orderItems.filter(item => !item.matched);
+    if (unmatchedItems.length > 0) {
+      alert(`Nie wszystkie produkty zostały dopasowane. Wybierz sugestie lub usuń niedopasowane pozycje (${unmatchedItems.length} pozycji).`);
+      return;
+    }
+
     setSending(true);
     try {
-      const { data: allProducts, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('active', true);
+      const matchedItems = orderItems
+        .filter(item => item.matched && item.productId)
+        .map(item => {
+          const product = allProducts.find(p => p.id === item.productId);
+          if (!product) return null;
 
-      if (productsError) throw productsError;
-
-      const matchedItems = orderItems.map(item => {
-        const normalizedName = item.productName.toLowerCase().trim();
-
-        const product = allProducts.find(p => {
-          const productName = p.name.toLowerCase();
-          const similarity = productName.includes(normalizedName) || normalizedName.includes(productName);
-          return similarity;
-        });
-
-        if (product) {
           const unitPrice = Number(product.base_price);
           const totalPrice = Number((item.quantity * unitPrice).toFixed(2));
 
@@ -192,10 +256,8 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
             total_price: totalPrice,
             productIndex: product.index,
           };
-        }
-
-        return null;
-      }).filter(Boolean);
+        })
+        .filter(Boolean);
 
       if (matchedItems.length === 0) {
         alert('Nie udało się dopasować żadnego produktu z cennika. Sprawdź nazwy produktów.');
@@ -383,10 +445,22 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
               <p className="text-gray-500 text-center py-8">Brak pozycji w zamówieniu</p>
             ) : (
               orderItems.map((item, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                <div key={index} className={`p-4 rounded-lg ${item.matched ? 'bg-gray-50' : 'bg-yellow-50 border-2 border-yellow-300'}`}>
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <p className="font-medium text-lg">{item.productName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-lg">{item.productName}</p>
+                        {!item.matched && (
+                          <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
+                            Nie znaleziono
+                          </span>
+                        )}
+                        {item.matched && (
+                          <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">
+                            ✓ Dopasowano
+                          </span>
+                        )}
+                      </div>
                       <p className="text-gray-600">
                         {item.quantity} {item.unit}
                       </p>
@@ -405,6 +479,24 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
                             ))}
                           </svg>
                           <span className="font-mono text-xs text-gray-600">{item.productIndex}</span>
+                        </div>
+                      )}
+
+                      {!item.matched && item.suggestions && item.suggestions.length > 0 && (
+                        <div className="mt-3 p-3 bg-white rounded-lg border border-yellow-200">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Czy chodziło o:</p>
+                          <div className="space-y-1">
+                            {item.suggestions.map((suggestion) => (
+                              <button
+                                key={suggestion.id}
+                                onClick={() => selectSuggestion(index, suggestion)}
+                                className="w-full text-left p-2 text-sm bg-gray-50 hover:bg-blue-50 rounded border border-gray-200 hover:border-blue-300 transition"
+                              >
+                                <span className="font-medium text-blue-600">{suggestion.name}</span>
+                                <span className="text-gray-500 ml-2">({suggestion.index})</span>
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
