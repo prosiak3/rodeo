@@ -145,11 +145,19 @@ function AppContent() {
   if (user.role === 'admin' || user.role === 'operator') {
     return (
       <>
-        <AdminPanel
-          userId={user.id}
-          userRole={user.role}
-          onSelectOrder={setSelectedOrderId}
-        />
+        <div className="pb-16">
+          {activeTab === 'home' && (
+            <AdminPanel
+              userId={user.id}
+              userRole={user.role}
+              onSelectOrder={setSelectedOrderId}
+            />
+          )}
+
+          {activeTab === 'profile' && (
+            <ProfileScreen user={user} onSignOut={signOut} />
+          )}
+        </div>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </>
     );
