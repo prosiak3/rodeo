@@ -30,7 +30,8 @@ export default function PriceList() {
         .from('products')
         .select('*')
         .eq('active', true)
-        .order('index', { ascending: true, nullsFirst: false });
+        .order('category', { ascending: true })
+        .order('name', { ascending: true });
 
       if (error) throw error;
       setProducts(data || []);
