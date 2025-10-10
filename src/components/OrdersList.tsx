@@ -8,15 +8,15 @@ interface OrdersListProps {
   onSelectOrder: (orderId: string) => void;
 }
 
-const statusConfig: Record<OrderStatus, { label: string; color: string; icon: any; bgColor: string }> = {
-  draft: { label: 'Szkic', color: 'text-gray-700', icon: FileText, bgColor: 'bg-gray-100' },
-  sent: { label: 'Wysłane', color: 'text-blue-700', icon: Send, bgColor: 'bg-blue-100' },
-  in_progress: { label: 'W realizacji', color: 'text-purple-700', icon: PlayCircle, bgColor: 'bg-purple-100' },
-  pending_confirmation: { label: 'Oczekuje', color: 'text-yellow-700', icon: AlertCircle, bgColor: 'bg-yellow-100' },
-  confirmed: { label: 'Potwierdzone', color: 'text-green-700', icon: CheckCircle, bgColor: 'bg-green-100' },
-  partially_confirmed: { label: 'Częściowo', color: 'text-orange-700', icon: AlertCircle, bgColor: 'bg-orange-100' },
-  rejected: { label: 'Odrzucone', color: 'text-red-700', icon: XCircle, bgColor: 'bg-red-100' },
-  archived: { label: 'Archiwum', color: 'text-gray-700', icon: Package, bgColor: 'bg-gray-100' },
+const statusConfig: Record<OrderStatus, { label: string; color: string; icon: any; bgColor: string; hoverColor: string }> = {
+  draft: { label: 'Szkic', color: 'text-gray-700', icon: FileText, bgColor: 'bg-gray-100', hoverColor: 'hover:text-gray-700 hover:bg-gray-200' },
+  sent: { label: 'Wysłane', color: 'text-blue-700', icon: Send, bgColor: 'bg-blue-100', hoverColor: 'hover:text-blue-700 hover:bg-blue-200' },
+  in_progress: { label: 'W realizacji', color: 'text-purple-700', icon: PlayCircle, bgColor: 'bg-purple-100', hoverColor: 'hover:text-purple-700 hover:bg-purple-200' },
+  pending_confirmation: { label: 'Oczekuje', color: 'text-yellow-700', icon: AlertCircle, bgColor: 'bg-yellow-100', hoverColor: 'hover:text-yellow-700 hover:bg-yellow-200' },
+  confirmed: { label: 'Potwierdzone', color: 'text-green-700', icon: CheckCircle, bgColor: 'bg-green-100', hoverColor: 'hover:text-green-700 hover:bg-green-200' },
+  partially_confirmed: { label: 'Częściowo', color: 'text-orange-700', icon: AlertCircle, bgColor: 'bg-orange-100', hoverColor: 'hover:text-orange-700 hover:bg-orange-200' },
+  rejected: { label: 'Odrzucone', color: 'text-red-700', icon: XCircle, bgColor: 'bg-red-100', hoverColor: 'hover:text-red-700 hover:bg-red-200' },
+  archived: { label: 'Archiwum', color: 'text-gray-700', icon: Package, bgColor: 'bg-gray-100', hoverColor: 'hover:text-gray-700 hover:bg-gray-200' },
 };
 
 export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersListProps) {
@@ -107,10 +107,10 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
             <button
               key={status}
               onClick={() => setFilter(status as OrderStatus)}
-              className={`p-2 rounded-lg transition flex items-center justify-center ${
+              className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
                 filter === status
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
+                  : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
               }`}
               title={config.label}
             >

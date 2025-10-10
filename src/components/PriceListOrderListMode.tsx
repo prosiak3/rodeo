@@ -245,21 +245,99 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4 sticky top-0 z-10">
-        <button onClick={onCancel} className="flex items-center gap-2 mb-2 text-white">
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
+        <button onClick={onCancel} className="flex items-center gap-2 mb-2 text-white hover:text-amber-100 transition">
           <ArrowLeft className="w-5 h-5" />
-          <span>Anuluj</span>
+          <span>Wróć</span>
         </button>
-        <h2 className="text-xl font-bold">Buduj zamówienie z cennika</h2>
-        <div className="flex items-center gap-2 mt-2">
-          <ShoppingCart className="w-5 h-5" />
-          <span className="text-amber-100">Wybrano: {orderItems.length}</span>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold">Buduj zamówienie z cennika</h2>
+            <p className="text-amber-100 text-sm mt-1">Dodaj produkty do listy</p>
+          </div>
+          {orderItems.length > 0 && (
+            <div className="bg-white/20 rounded-lg px-3 py-2 text-right">
+              <p className="text-xs text-amber-100">Produkty</p>
+              <p className="font-bold text-lg">{orderItems.length}</p>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-4 p-4">
-        <div className="flex-1 space-y-4">
+      <div className="p-3 space-y-3">
+        {orderItems.length > 0 && (
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5" />
+                Twoje zamówienie
+              </h3>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Wartość</p>
+                <p className="font-bold text-amber-600 text-lg">{totalAmount.toFixed(2)} PLN</p>
+              </div>
+            </div>
+            <div className="space-y-2 mb-4 max-h-[400px] overflow-y-auto">
+              {orderItems.map((item) => (
+                <div key={item.productId} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{item.productName}</p>
+                    <p className="text-xs text-gray-600">
+                      {item.unitPrice.toFixed(2)} PLN/{item.unit}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => adjustQuantity(item.productId, -item.quantityStep)}
+                      className="p-1 bg-gray-200 hover:bg-gray-300 rounded transition"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => updateQuantity(item.productId, parseFloat(e.target.value) || item.minQuantity)}
+                      className="w-16 p-1 text-center text-sm border border-gray-300 rounded focus:border-amber-500 focus:outline-none"
+                      step={item.quantityStep}
+                      min={item.minQuantity}
+                    />
+                    <button
+                      onClick={() => adjustQuantity(item.productId, item.quantityStep)}
+                      className="p-1 bg-gray-200 hover:bg-gray-300 rounded transition"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => removeFromList(item.productId)}
+                      className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={saveAsDraft}
+              disabled={saving}
+              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Zapisywanie...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  Zapisz jako szkic
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-lg p-4">
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -360,91 +438,6 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
         {filteredProducts.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             Nie znaleziono produktów
-          </div>
-        )}
-        </div>
-
-        {orderItems.length > 0 && (
-          <div className="w-96 space-y-3 sticky top-24 h-fit">
-            <div className="bg-white rounded-lg shadow-lg p-4">
-              <h3 className="font-semibold text-gray-800 mb-3">Lista produktów</h3>
-              <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
-                {orderItems.map((item) => (
-                  <div key={item.productId} className="bg-gray-50 rounded-lg p-3 space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm text-gray-800">{item.productName}</h4>
-                        <p className="text-xs text-gray-600">
-                          {item.unitPrice.toFixed(2)} PLN/{item.unit}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Min: {item.minQuantity} • Krok: {item.quantityStep}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => removeFromList(item.productId)}
-                        className="p-1 text-red-600 hover:bg-red-100 rounded transition"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => adjustQuantity(item.productId, -item.quantityStep)}
-                        className="p-2 bg-gray-200 hover:bg-gray-300 rounded transition"
-                      >
-                        <Plus className="w-4 h-4 rotate-45" />
-                      </button>
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => updateQuantity(item.productId, parseFloat(e.target.value) || item.minQuantity)}
-                        className="flex-1 p-2 text-center border-2 border-gray-300 rounded focus:border-amber-500 focus:outline-none"
-                        step={item.quantityStep}
-                        min={item.minQuantity}
-                      />
-                      <button
-                        onClick={() => adjustQuantity(item.productId, item.quantityStep)}
-                        className="p-2 bg-gray-200 hover:bg-gray-300 rounded transition"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="text-center p-2 bg-amber-50 rounded">
-                      <span className="text-sm font-bold text-amber-600">
-                        {item.totalPrice.toFixed(2)} PLN
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-4">
-              <div className="flex justify-between items-center mb-3">
-                <span className="font-semibold text-gray-700">Suma:</span>
-                <span className="text-xl font-bold text-amber-600">{totalAmount.toFixed(2)} PLN</span>
-              </div>
-              <button
-                onClick={saveAsDraft}
-                disabled={saving}
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Zapisywanie...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5" />
-                    Zapisz jako szkic
-                  </>
-                )}
-              </button>
-            </div>
           </div>
         )}
       </div>
