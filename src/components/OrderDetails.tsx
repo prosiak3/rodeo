@@ -260,7 +260,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const convertToDraft = async () => {
     if (!order || order.status !== 'notatnik') return;
-    if (!confirm('Czy na pewno chcesz przekształcić to zamówienie w szkic? Będziesz mógł je wtedy edytować.')) return;
+    if (!confirm('Czy na pewno chcesz przekształcić to zamówienie w szkic? Zostaniesz przeniesiony do edycji.')) return;
 
     try {
       const { error: updateError } = await supabase
@@ -277,8 +277,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         details: { from_status: 'notatnik' },
       });
 
-      alert('Zamówienie przekształcone w szkic. Możesz je teraz edytować.');
-      loadOrderDetails();
+      if (onEdit) {
+        onEdit();
+      }
     } catch (error) {
       console.error('Error converting to draft:', error);
       alert('Błąd podczas przekształcania zamówienia');
