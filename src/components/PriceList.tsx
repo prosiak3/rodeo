@@ -352,8 +352,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     }
 
     try {
-      setNotebookItems([...notebookItems, product.id]);
-
       let orderId: string | undefined;
 
       // If we're adding to an existing notebook order
@@ -369,6 +367,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           .maybeSingle();
 
         if (existingItem) {
+          setNotebookItems([...notebookItems, product.id]);
           return;
         }
       } else if (notebookMode === 'multiple') {
@@ -406,7 +405,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
             .maybeSingle();
 
           if (existingItem) {
-            console.log('Product already in notebook, skipping');
+            setNotebookItems([...notebookItems, product.id]);
             return;
           }
         }
@@ -447,9 +446,10 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         });
 
       if (itemError) throw itemError;
+
+      setNotebookItems([...notebookItems, product.id]);
     } catch (error) {
       console.error('Error adding to notebook:', error);
-      setNotebookItems(items => items.filter(id => id !== product.id));
     }
   };
 
