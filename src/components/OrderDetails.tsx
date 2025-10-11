@@ -8,9 +8,10 @@ interface OrderDetailsProps {
   userId: string;
   onBack: () => void;
   onEdit?: () => void;
+  onOrderSent?: () => void;
 }
 
-export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit }: OrderDetailsProps) {
+export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit, onOrderSent }: OrderDetailsProps) {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [history, setHistory] = useState<OrderHistory[]>([]);
@@ -144,8 +145,12 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         details: {},
       });
 
-      alert('Zamówienie zostało wysłane!');
-      loadOrderDetails();
+      alert('Zamówienie zostało wysłane do hurtowni!');
+      if (onOrderSent) {
+        onOrderSent();
+      } else {
+        onBack();
+      }
     } catch (error) {
       console.error('Error sending order:', error);
       alert('Błąd podczas wysyłania zamówienia');
@@ -462,7 +467,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
             >
               <Package className="w-5 h-5" />
-              Złóż zamówienie
+              Zamów w hurtowni
             </button>
           </div>
         )}

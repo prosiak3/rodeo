@@ -173,6 +173,10 @@ function AppContent() {
           setEditingOrderId(selectedOrderId);
           setSelectedOrderId(null);
         }}
+        onOrderSent={() => {
+          setSelectedOrderId(null);
+          setActiveTab('orders');
+        }}
       />
     );
   }
