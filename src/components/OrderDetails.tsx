@@ -634,7 +634,13 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         </div>
 
         {(canAddMore || canConvertToDraft) && (
-          <div className="bg-white rounded-lg shadow p-3">
+          <div className="bg-white rounded-lg shadow p-3 space-y-3">
+            {canConvertToDraft && (
+              <div className="bg-blue-600 text-white p-3 rounded-lg text-sm">
+                <p className="font-medium">Przekształć w szkic aby móc wysłać zamówienie</p>
+                <p className="text-xs mt-1 opacity-90">Po kliknięciu "Dalej" zamówienie zostanie przekształcone w szkic i będzie można je edytować oraz wysłać do hurtowni.</p>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {canAddMore && (
                 <button
