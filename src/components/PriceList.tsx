@@ -587,20 +587,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                     setSwipedProduct(null);
                   }}
                 >
-                    {!isDisabled && (
-                      <button
-                        onPointerDown={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          addToNotebook(product);
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 active:bg-green-700 transition shadow-lg pointer-events-auto"
-                        style={{ touchAction: 'none' }}
-                        title="Dodaj do notatnika"
-                      >
-                        <Plus className="w-6 h-6" />
-                      </button>
-                    )}
                     <div
                       className={`px-3 py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
                       style={{
