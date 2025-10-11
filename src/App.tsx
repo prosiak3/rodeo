@@ -377,13 +377,13 @@ function AppContent() {
         {activeTab === 'new-order' && user.store_id && (
           <>
             {orderMode === null && (
-              <div className="p-6 space-y-4">
+              <div className={`p-6 ${(user as any).order_mode_layout === 'grid' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}`}>
                 {((user as any).enable_voice_orders ?? true) && (
                   <button
                     onClick={() => setOrderMode('voice')}
                     className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-center gap-3 text-center">
                       <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                         <span className="text-2xl">🎤</span>
                       </div>
@@ -403,7 +403,7 @@ function AppContent() {
                     }}
                     className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-center gap-3 text-center">
                       <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                         <span className="text-2xl">📋</span>
                       </div>
@@ -420,7 +420,7 @@ function AppContent() {
                     onClick={() => setOrderMode('copy')}
                     className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-center gap-3 text-center">
                       <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
                         <span className="text-2xl">🔄</span>
                       </div>
@@ -437,7 +437,7 @@ function AppContent() {
                     onClick={() => setOrderMode('manual')}
                     className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-center gap-3 text-center">
                       <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                         <span className="text-2xl">✏️</span>
                       </div>

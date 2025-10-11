@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { showAlert } from '../lib/alerts';
@@ -30,6 +30,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [enablePricelistOrders, setEnablePricelistOrders] = useState<boolean>((user as any).enable_pricelist_orders ?? true);
   const [enableCopyOrders, setEnableCopyOrders] = useState<boolean>((user as any).enable_copy_orders ?? true);
   const [enableManualOrders, setEnableManualOrders] = useState<boolean>((user as any).enable_manual_orders ?? true);
+  const [orderModeLayout, setOrderModeLayout] = useState<'list' | 'grid'>((user as any).order_mode_layout || 'list');
   const [saving, setSaving] = useState(false);
 
   const handleShowAllFiltersToggle = async () => {
@@ -163,6 +164,28 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
       }, 1500);
     } catch (error) {
       console.error('Error updating order mode settings:', error);
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleOrderModeLayoutChange = async (layout: 'list' | 'grid') => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ order_mode_layout: layout })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setOrderModeLayout(layout);
+      showAlert('Ustawienia zapisane!', 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error('Error updating order mode layout:', error);
       showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
@@ -349,6 +372,50 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 />
               </button>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Settings className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Układ przycisków zamówień</h3>
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600 mb-3">Jak wyświetlać przyciski w karcie &quot;Nowe zamówienie&quot;?</p>
+            <button
+              onClick={() => handleOrderModeLayoutChange('list')}
+              disabled={saving}
+              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                orderModeLayout === 'list'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <List className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800 mb-1">Lista (domyślnie)</div>
+                  <div className="text-sm text-gray-600">Przyciski ułożone jeden pod drugim</div>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => handleOrderModeLayoutChange('grid')}
+              disabled={saving}
+              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                orderModeLayout === 'grid'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Grid3x3 className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800 mb-1">Siatka</div>
+                  <div className="text-sm text-gray-600">Przyciski ułożone w siatce 2 kolumny</div>
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 
