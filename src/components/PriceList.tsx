@@ -375,12 +375,12 @@ export default function PriceList() {
               const hasPromo = product.promo_price && product.promo_price > 0;
               const isAdding = notebookItems.includes(product.id);
               const swipeOffset = getSwipeTransform(product.id);
-              const isPriceZero = product.base_price === 0 && !product.your_price && !product.promo_price;
+              const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
               const isDisabled = isPriceZero;
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-40 bg-gray-100' : 'touch-none select-none cursor-grab active:cursor-grabbing'}`}
+                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-40 bg-gray-100 cursor-not-allowed' : 'touch-none select-none cursor-grab active:cursor-grabbing'}`}
                   onPointerDown={isDisabled ? undefined : (e) => handlePointerStart(e, product.id)}
                   onPointerMove={isDisabled ? undefined : handlePointerMove}
                   onPointerUp={isDisabled ? undefined : (e) => handlePointerEnd(e, product)}
