@@ -60,9 +60,9 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     }
   };
 
-  const findSimilarProducts = (searchName: string, limit = 3): Product[] => {
+  const findSimilarProducts = (searchName: string, products: Product[], limit = 3): Product[] => {
     const normalized = searchName.toLowerCase().trim();
-    const scored = allProducts.map(product => {
+    const scored = products.map(product => {
       const productName = product.name.toLowerCase();
       let score = 0;
 
@@ -91,9 +91,11 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       clearTimeout(inactivityTimer);
     }
     const timer = setTimeout(() => {
-      stopListening();
-      setNotification('⏱️ Nasłuchiwanie zatrzymane po 30 sekundach bezczynności');
-      setTimeout(() => setNotification(''), 4000);
+      if ((window as any).shouldContinueListening) {
+        stopListening();
+        setNotification('⏱️ Nasłuchiwanie zatrzymane po 30 sekundach bezczynności');
+        setTimeout(() => setNotification(''), 4000);
+      }
     }, 30000);
     setInactivityTimer(timer);
   };
@@ -132,9 +134,13 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       setTranscript(currentText);
 
       if (finalTranscript && (finalTranscript.toLowerCase().includes('kg') || finalTranscript.toLowerCase().includes('szt'))) {
-        parseTranscript(finalTranscript);
-        setTranscript('');
-        resetInactivityTimer();
+        console.log('Final transcript with kg/szt:', finalTranscript);
+        const capturedProducts = allProducts;
+        setTimeout(() => {
+          parseTranscript(finalTranscript, capturedProducts);
+          setTranscript('');
+          resetInactivityTimer();
+        }, 200);
       }
     };
 
@@ -189,13 +195,15 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     setTranscript('');
   };
 
-  const parseTranscript = async (text: string) => {
+  const parseTranscript = async (text: string, products: Product[]) => {
     console.log('Parsing transcript:', text);
+    console.log('Available products:', products.length);
     const items: OrderItem[] = [];
     const pattern = /(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)\s+([a-ząćęłńóśźż\s]+)/gi;
 
     let match;
     while ((match = pattern.exec(text)) !== null) {
+      console.log('Regex match:', match);
       const quantity = parseFloat(match[1].replace(',', '.'));
       let unit = 'kg';
       const productName = match[3]?.trim();
@@ -206,8 +214,8 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
       if (productName && productName.length > 2) {
         const normalizedName = productName.toLowerCase().trim();
-        console.log('Looking for product:', normalizedName, 'in', allProducts.length, 'products');
-        const product = allProducts.find(p => {
+        console.log('Looking for product:', normalizedName, 'in', products.length, 'products');
+        const product = products.find(p => {
           const pName = p.name.toLowerCase();
           return pName.includes(normalizedName) || normalizedName.includes(pName);
         });
@@ -224,7 +232,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
           });
         } else {
           console.log('Product not found, finding suggestions');
-          const suggestions = findSimilarProducts(productName);
+          const suggestions = findSimilarProducts(productName, products);
           if (suggestions.length > 0) {
             items.push({
               productName,
