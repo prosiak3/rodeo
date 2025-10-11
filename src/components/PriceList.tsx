@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown, ArrowLeft, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
@@ -42,6 +42,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchCurrent, setTouchCurrent] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const mouseStateRef = useRef({
+    isDragging: false,
+    startX: 0,
+    currentX: 0,
+    productId: null as string | null
+  });
   const [notebookItems, setNotebookItems] = useState<string[]>([]);
   const [storeId, setStoreId] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
@@ -284,48 +291,44 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
     console.log('🖱️ MOUSE DOWN:', e.clientX, 'productId:', productId);
-    setIsDragging(true);
+    mouseStateRef.current = {
+      isDragging: true,
+      startX: e.clientX,
+      currentX: e.clientX,
+      productId
+    };
+    setSwipedProduct(productId);
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
-    setSwipedProduct(productId);
-    console.log('🖱️ State updated - isDragging will be true');
   };
 
   useEffect(() => {
-    console.log('🖱️ useEffect triggered - isDragging:', isDragging);
-
     const handleDocumentMouseMove = (e: MouseEvent) => {
-      if (!isDragging || touchStart === null || swipedProduct === null) {
-        console.log('🖱️ MOUSE MOVE SKIPPED:', { isDragging, touchStart, swipedProduct });
+      if (!mouseStateRef.current.isDragging) {
         return;
       }
       e.preventDefault();
-      console.log('🖱️ MOUSE MOVE:', e.clientX, 'distance:', e.clientX - touchStart);
+      mouseStateRef.current.currentX = e.clientX;
+      console.log('🖱️ MOUSE MOVE:', e.clientX, 'distance:', e.clientX - mouseStateRef.current.startX);
       setTouchCurrent(e.clientX);
     };
 
     const handleDocumentMouseUp = async () => {
-      console.log('🖱️ MOUSE UP called, isDragging:', isDragging);
-      if (!isDragging) return;
+      if (!mouseStateRef.current.isDragging) return;
 
-      console.log('🖱️ MOUSE UP:', { touchStart, touchCurrent, swipedProduct });
-      setIsDragging(false);
+      console.log('🖱️ MOUSE UP:', mouseStateRef.current);
 
-      if (touchStart === null || touchCurrent === null || !swipedProduct) {
-        setTouchStart(null);
-        setTouchCurrent(null);
-        setSwipedProduct(null);
-        return;
-      }
+      const { startX, currentX, productId } = mouseStateRef.current;
+      mouseStateRef.current.isDragging = false;
 
-      const swipeDistance = touchCurrent - touchStart;
+      const swipeDistance = currentX - startX;
       const screenWidth = window.innerWidth;
       const swipeThreshold = screenWidth * 0.5;
 
       console.log('🖱️ MOUSE RESULT:', { swipeDistance, screenWidth, swipeThreshold, willAdd: swipeDistance > swipeThreshold });
 
-      if (swipeDistance > swipeThreshold) {
-        const product = products.find(p => p.id === swipedProduct);
+      if (swipeDistance > swipeThreshold && productId) {
+        const product = products.find(p => p.id === productId);
         if (product) {
           console.log('🖱️ ADDING TO NOTEBOOK via mouse:', product.name);
           await addToNotebook(product);
@@ -337,16 +340,14 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       setSwipedProduct(null);
     };
 
-    if (isDragging) {
-      document.addEventListener('mousemove', handleDocumentMouseMove);
-      document.addEventListener('mouseup', handleDocumentMouseUp);
-    }
+    document.addEventListener('mousemove', handleDocumentMouseMove);
+    document.addEventListener('mouseup', handleDocumentMouseUp);
 
     return () => {
       document.removeEventListener('mousemove', handleDocumentMouseMove);
       document.removeEventListener('mouseup', handleDocumentMouseUp);
     };
-  }, [isDragging, touchStart, touchCurrent, swipedProduct, products]);
+  }, [products]);
 
   const addToNotebook = async (product: Product) => {
     if (!storeId || !userId) {
