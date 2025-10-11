@@ -37,62 +37,80 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
             <span className="text-xs text-gray-500">{product.code}</span>
           </div>
         {priceLayout === 'horizontal' ? (
-          <div className="flex flex-col items-end gap-1 flex-shrink-0">
-            <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {!product.your_price && !product.promo_price && (
               <div className="flex items-center gap-1">
-                <span className="text-[11px] text-gray-500 font-medium">N:</span>
-                <span
-                  className={`text-base font-bold ${
-                    product.your_price || product.promo_price ? 'line-through text-gray-400' : 'text-amber-600'
-                  }`}
-                >
+                <span className="text-base font-bold text-amber-600">
                   {product.base_price.toFixed(2)}
                 </span>
+                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
               </div>
-              {product.your_price && product.your_price > 0 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-blue-600 font-bold">T:</span>
-                  <span className={`text-base font-bold ${product.promo_price ? 'line-through text-gray-400' : 'text-blue-600'}`}>
-                    {product.your_price.toFixed(2)}
+            )}
+            {(product.your_price || product.promo_price) && (
+              <>
+                <div className="flex flex-col items-end">
+                  <span className="text-[9px] text-gray-400 uppercase leading-none">Norm.</span>
+                  <span className="text-xs line-through text-gray-400">
+                    {product.base_price.toFixed(2)}
                   </span>
                 </div>
-              )}
-              {product.promo_price && product.promo_price > 0 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-[11px] text-red-600 font-bold">S:</span>
-                  <span className="text-lg font-bold text-red-600">{product.promo_price.toFixed(2)}</span>
-                </div>
-              )}
-            </div>
-            <span className="text-xs text-gray-500 font-medium">PLN/{product.unit}</span>
+                {product.your_price && product.your_price > 0 && (
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] text-blue-600 uppercase font-medium leading-none">Twoja</span>
+                    <span className={`text-sm font-bold ${product.promo_price ? 'line-through text-gray-400' : 'text-blue-600'}`}>
+                      {product.your_price.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {product.promo_price && product.promo_price > 0 && (
+                  <div className="flex flex-col items-end animate-pulse">
+                    <span className="text-[9px] text-red-600 uppercase font-bold leading-none">Specj.</span>
+                    <span className="text-base font-bold text-red-600">
+                      {product.promo_price.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+              </>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-end gap-1 flex-shrink-0">
-            <div className="text-right">
-              <div className="text-[10px] text-gray-500 uppercase">Normalna</div>
-              <div
-                className={`text-base font-bold ${
-                  product.your_price || product.promo_price ? 'line-through text-gray-400' : 'text-amber-600'
-                }`}
-              >
-                {product.base_price.toFixed(2)}
+            {!product.your_price && !product.promo_price && (
+              <div className="flex items-baseline gap-1">
+                <span className="text-base font-bold text-amber-600">
+                  {product.base_price.toFixed(2)}
+                </span>
+                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
               </div>
-            </div>
-            {product.your_price && product.your_price > 0 && (
-              <div className="text-right">
-                <div className="text-[10px] text-blue-600 uppercase font-medium">Twoja</div>
-                <div className={`text-base font-bold ${product.promo_price ? 'line-through text-gray-400' : 'text-blue-600'}`}>
-                  {product.your_price.toFixed(2)}
+            )}
+            {(product.your_price || product.promo_price) && (
+              <>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[10px] text-gray-400 uppercase">Normalna</span>
+                  <span className="text-sm line-through text-gray-400">
+                    {product.base_price.toFixed(2)}
+                  </span>
                 </div>
-              </div>
+                {product.your_price && product.your_price > 0 && (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[10px] text-blue-600 uppercase font-medium">Twoja</span>
+                    <span className={`text-sm ${product.promo_price ? 'line-through text-gray-400' : 'font-bold text-blue-600'}`}>
+                      {product.your_price.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {product.promo_price && product.promo_price > 0 && (
+                  <div className="flex items-baseline gap-1 animate-pulse">
+                    <span className="text-[10px] text-red-600 uppercase font-bold">Specjalna</span>
+                    <span className="text-base font-bold text-red-600">
+                      {product.promo_price.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+              </>
             )}
-            {product.promo_price && product.promo_price > 0 && (
-              <div className="text-right">
-                <div className="text-[10px] text-red-600 uppercase font-bold">Specjalna</div>
-                <div className="text-lg font-bold text-red-600">{product.promo_price.toFixed(2)}</div>
-              </div>
-            )}
-            <span className="text-xs text-gray-500 font-medium mt-1">PLN/{product.unit}</span>
           </div>
         )}
       </div>
