@@ -615,13 +615,32 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 <div
                   key={product.id}
                   className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'select-none cursor-grab active:cursor-grabbing'}`}
-                  onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
-                  onTouchMove={isDisabled ? undefined : handleTouchMove}
-                  onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
-                  onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
-                  onMouseMove={isDisabled ? undefined : handleMouseMove}
-                  onMouseUp={isDisabled ? undefined : () => handleMouseUp(product)}
+                  onTouchStart={isDisabled ? undefined : (e) => {
+                    console.log('🟢🟢🟢 TOUCH START CALLED!', product.name);
+                    handleTouchStart(e, product.id);
+                  }}
+                  onTouchMove={isDisabled ? undefined : (e) => {
+                    console.log('🔵🔵🔵 TOUCH MOVE CALLED!');
+                    handleTouchMove(e);
+                  }}
+                  onTouchEnd={isDisabled ? undefined : () => {
+                    console.log('🟡🟡🟡 TOUCH END CALLED!', product.name);
+                    handleTouchEnd(product);
+                  }}
+                  onMouseDown={isDisabled ? undefined : (e) => {
+                    console.log('🖱️🖱️🖱️ MOUSE DOWN CALLED!', product.name);
+                    handleMouseDown(e, product.id);
+                  }}
+                  onMouseMove={isDisabled ? undefined : (e) => {
+                    console.log('🖱️🖱️🖱️ MOUSE MOVE CALLED!');
+                    handleMouseMove(e);
+                  }}
+                  onMouseUp={isDisabled ? undefined : () => {
+                    console.log('🖱️🖱️🖱️ MOUSE UP CALLED!', product.name);
+                    handleMouseUp(product);
+                  }}
                   onMouseLeave={isDisabled ? undefined : () => {
+                    console.log('🖱️🖱️🖱️ MOUSE LEAVE CALLED!');
                     setTouchStart(null);
                     setTouchCurrent(null);
                     setSwipedProduct(null);
