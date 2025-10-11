@@ -24,7 +24,7 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; icon: an
 export default function OrdersList({ storeId, userRole, onSelectOrder, showLimitedFilters = false }: OrdersListProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'draft' : 'all');
+  const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'notatnik' : 'all');
   const [sortAscending, setSortAscending] = useState(false);
 
   useEffect(() => {
@@ -108,20 +108,20 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
         <div className={showLimitedFilters ? "flex gap-3 flex-1" : "flex gap-2 overflow-x-auto pb-2 flex-1"}>
           {showLimitedFilters ? (
             <>
-              {(['draft', 'sent'] as const).map((status) => {
+              {(['notatnik', 'draft', 'sent'] as const).map((status) => {
                 const config = statusConfig[status];
                 const Icon = config.icon;
                 return (
                   <button
                     key={status}
                     onClick={() => setFilter(status)}
-                    className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                    className={`flex-1 px-3 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 text-sm ${
                       filter === status
                         ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
                         : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-4 h-4" />
                     <span>{config.label}</span>
                   </button>
                 );
