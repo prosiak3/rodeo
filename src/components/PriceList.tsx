@@ -284,47 +284,65 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
     console.log('🖱️ MOUSE DOWN:', e.clientX);
+    e.preventDefault();
     setIsDragging(true);
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
     setSwipedProduct(productId);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || touchStart === null || swipedProduct === null) {
-      return;
-    }
-    e.preventDefault();
-    console.log('🖱️ MOUSE MOVE:', e.clientX, 'distance:', e.clientX - touchStart);
-    setTouchCurrent(e.clientX);
-  };
+  useEffect(() => {
+    const handleDocumentMouseMove = (e: MouseEvent) => {
+      if (!isDragging || touchStart === null || swipedProduct === null) {
+        return;
+      }
+      e.preventDefault();
+      console.log('🖱️ MOUSE MOVE:', e.clientX, 'distance:', e.clientX - touchStart);
+      setTouchCurrent(e.clientX);
+    };
 
-  const handleMouseUp = async (product: Product) => {
-    console.log('🖱️ MOUSE UP:', { touchStart, touchCurrent });
-    setIsDragging(false);
+    const handleDocumentMouseUp = async () => {
+      if (!isDragging) return;
 
-    if (touchStart === null || touchCurrent === null) {
+      console.log('🖱️ MOUSE UP:', { touchStart, touchCurrent, swipedProduct });
+      setIsDragging(false);
+
+      if (touchStart === null || touchCurrent === null || !swipedProduct) {
+        setTouchStart(null);
+        setTouchCurrent(null);
+        setSwipedProduct(null);
+        return;
+      }
+
+      const swipeDistance = touchCurrent - touchStart;
+      const screenWidth = window.innerWidth;
+      const swipeThreshold = screenWidth * 0.5;
+
+      console.log('🖱️ MOUSE RESULT:', { swipeDistance, screenWidth, swipeThreshold, willAdd: swipeDistance > swipeThreshold });
+
+      if (swipeDistance > swipeThreshold) {
+        const product = products.find(p => p.id === swipedProduct);
+        if (product) {
+          console.log('🖱️ ADDING TO NOTEBOOK via mouse:', product.name);
+          await addToNotebook(product);
+        }
+      }
+
       setTouchStart(null);
       setTouchCurrent(null);
       setSwipedProduct(null);
-      return;
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleDocumentMouseMove);
+      document.addEventListener('mouseup', handleDocumentMouseUp);
     }
 
-    const swipeDistance = touchCurrent - touchStart;
-    const screenWidth = window.innerWidth;
-    const swipeThreshold = screenWidth * 0.5;
-
-    console.log('🖱️ MOUSE RESULT:', { swipeDistance, screenWidth, swipeThreshold, willAdd: swipeDistance > swipeThreshold });
-
-    if (swipeDistance > swipeThreshold) {
-      console.log('🖱️ ADDING TO NOTEBOOK via mouse:', product.name);
-      await addToNotebook(product);
-    }
-
-    setTouchStart(null);
-    setTouchCurrent(null);
-    setSwipedProduct(null);
-  };
+    return () => {
+      document.removeEventListener('mousemove', handleDocumentMouseMove);
+      document.removeEventListener('mouseup', handleDocumentMouseUp);
+    };
+  }, [isDragging, touchStart, touchCurrent, swipedProduct, products]);
 
   const addToNotebook = async (product: Product) => {
     if (!storeId || !userId) {
@@ -585,13 +603,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
                   onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
                   onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
-                  onMouseMove={isDisabled ? undefined : handleMouseMove}
-                  onMouseUp={isDisabled ? undefined : () => handleMouseUp(product)}
-                  onMouseLeave={isDisabled ? undefined : () => {
-                    setTouchStart(null);
-                    setTouchCurrent(null);
-                    setSwipedProduct(null);
-                  }}
                 >
                     <div
                       className={`px-3 py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
