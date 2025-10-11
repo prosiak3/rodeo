@@ -87,6 +87,28 @@ export default function PriceList() {
       });
 
       setProducts(productsWithPrices);
+
+      // Load existing notebook items
+      if (userData?.store_id && authData.user.id) {
+        const { data: notebookOrder } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('store_id', userData.store_id)
+          .eq('created_by', authData.user.id)
+          .eq('status', 'notatnik')
+          .maybeSingle();
+
+        if (notebookOrder) {
+          const { data: items } = await supabase
+            .from('order_items')
+            .select('product_id')
+            .eq('order_id', notebookOrder.id);
+
+          if (items) {
+            setNotebookItems(items.map(item => item.product_id));
+          }
+        }
+      }
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -97,7 +119,8 @@ export default function PriceList() {
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
                          (product.index && product.index.toLowerCase().includes(search.toLowerCase()));
-    return matchesSearch;
+    const notInNotebook = !notebookItems.includes(product.id);
+    return matchesSearch && notInNotebook;
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -143,10 +166,12 @@ export default function PriceList() {
 
     const currentX = e.clientX;
     const swipeDistance = currentX - touchStart;
+    const screenWidth = window.innerWidth;
+    const swipeThreshold = screenWidth * 0.66;
 
-    console.log('Swipe distance:', swipeDistance, 'from', touchStart, 'to', currentX);
+    console.log('Swipe distance:', swipeDistance, 'threshold:', swipeThreshold, 'screen width:', screenWidth);
 
-    if (swipeDistance > 100) {
+    if (swipeDistance > swipeThreshold) {
       await addToNotebook(product);
     }
 
