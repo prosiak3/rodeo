@@ -52,6 +52,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
         .select('id, name, index, base_price')
         .eq('active', true);
       if (data) {
+        console.log('Loaded products:', data.length);
         setAllProducts(data);
       }
     } catch (error) {
@@ -91,9 +92,9 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     }
     const timer = setTimeout(() => {
       stopListening();
-      setNotification('⏱️ Nasłuchiwanie zatrzymane po 15 sekundach bezczynności');
+      setNotification('⏱️ Nasłuchiwanie zatrzymane po 30 sekundach bezczynności');
       setTimeout(() => setNotification(''), 4000);
-    }, 15000);
+    }, 30000);
     setInactivityTimer(timer);
   };
 
@@ -189,6 +190,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   };
 
   const parseTranscript = async (text: string) => {
+    console.log('Parsing transcript:', text);
     const items: OrderItem[] = [];
     const pattern = /(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)\s+([a-ząćęłńóśźż\s]+)/gi;
 
@@ -204,12 +206,14 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
       if (productName && productName.length > 2) {
         const normalizedName = productName.toLowerCase().trim();
+        console.log('Looking for product:', normalizedName, 'in', allProducts.length, 'products');
         const product = allProducts.find(p => {
           const pName = p.name.toLowerCase();
           return pName.includes(normalizedName) || normalizedName.includes(pName);
         });
 
         if (product) {
+          console.log('Found product:', product.name);
           items.push({
             productName: product.name,
             quantity,
@@ -219,6 +223,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
             matched: true,
           });
         } else {
+          console.log('Product not found, finding suggestions');
           const suggestions = findSimilarProducts(productName);
           if (suggestions.length > 0) {
             items.push({
@@ -241,8 +246,15 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       }
     }
 
+    console.log('Parsed items:', items);
+
     if (items.length > 0) {
-      setOrderItems(prev => [...prev, ...items]);
+      console.log('Adding items to orderItems');
+      setOrderItems(prev => {
+        const newList = [...prev, ...items];
+        console.log('New orderItems list:', newList);
+        return newList;
+      });
 
       const unmatchedCount = items.filter(item => !item.matched).length;
       if (unmatchedCount > 0) {
@@ -692,7 +704,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
                   Przykład: "5 kg schab" lub "3 kg kiełbasa"
                 </p>
                 <p className="mt-1 text-xs text-gray-400 text-center">
-                  Automatyczne zatrzymanie po 15 sekundach bezczynności
+                  Automatyczne zatrzymanie po 30 sekundach bezczynności
                 </p>
               </>
             )}
