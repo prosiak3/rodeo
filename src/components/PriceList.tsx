@@ -113,6 +113,12 @@ export default function PriceList() {
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (selectedCategory === 'all') {
+      const categoryOrder = ['Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
+      const categoryCompare = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+      if (categoryCompare !== 0) return categoryCompare;
+    }
+
     switch (sortBy) {
       case 'name-asc':
         return a.name.localeCompare(b.name);
@@ -127,8 +133,20 @@ export default function PriceList() {
     }
   });
 
+  const groupedProducts: { [key: string]: Product[] } = {};
+  if (selectedCategory === 'all') {
+    sortedProducts.forEach(product => {
+      const category = product.category || 'Inne';
+      if (!groupedProducts[category]) {
+        groupedProducts[category] = [];
+      }
+      groupedProducts[category].push(product);
+    });
+  } else {
+    groupedProducts[selectedCategory] = sortedProducts;
+  }
+
   const handlePointerStart = (e: React.PointerEvent, productId: string) => {
-    e.preventDefault();
     const target = e.currentTarget as HTMLElement;
     target.setPointerCapture(e.pointerId);
     setTouchStart(e.clientX);
@@ -138,14 +156,11 @@ export default function PriceList() {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (touchStart === null || swipedProduct === null) return;
-    e.preventDefault();
     const currentX = e.clientX;
     setTouchCurrent(currentX);
   };
 
   const handlePointerEnd = async (e: React.PointerEvent, product: Product) => {
-    e.preventDefault();
-
     if (touchStart === null) {
       setTouchStart(null);
       setTouchCurrent(null);
@@ -389,9 +404,16 @@ export default function PriceList() {
           <p className="text-gray-500">Nie znaleziono produktów</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow">
-          <div className="divide-y divide-gray-100">
-            {sortedProducts.map((product) => {
+        <div className="space-y-3">
+          {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
+            <div key={category} className="bg-white rounded-lg shadow overflow-hidden">
+              {selectedCategory === 'all' && (
+                <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 sticky top-[140px] z-5">
+                  <h3 className="text-white font-bold text-sm">{category}</h3>
+                </div>
+              )}
+              <div className="divide-y divide-gray-100">
+                {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
               const isAdding = notebookItems.includes(product.id);
               const swipeOffset = getSwipeTransform(product.id);
@@ -517,7 +539,9 @@ export default function PriceList() {
                   </div>
                 );
               })}
-          </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
