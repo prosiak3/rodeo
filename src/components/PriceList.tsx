@@ -209,14 +209,6 @@ export default function PriceList() {
     return distance > 0 ? distance : 0;
   };
 
-  const groupedProducts = sortedProducts.reduce((acc, product) => {
-    if (!acc[product.category]) {
-      acc[product.category] = [];
-    }
-    acc[product.category].push(product);
-    return acc;
-  }, {} as Record<string, Product[]>);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -238,7 +230,6 @@ export default function PriceList() {
             className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-amber-500 focus:border-transparent"
           />
         </div>
-
 
         <div className="flex gap-2 items-center justify-between">
           <div className="flex gap-2 items-center text-xs flex-1">
@@ -288,25 +279,20 @@ export default function PriceList() {
           <p className="text-gray-500">Nie znaleziono produktów</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-            <div key={category} className="bg-white rounded-lg shadow">
-              <div className="bg-amber-50 px-3 py-2 border-b border-amber-100">
-                <h3 className="font-semibold text-sm text-amber-900">{category}</h3>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {categoryProducts.map((product) => {
-                  const hasPromo = product.promo_price && product.promo_price > 0;
-                  const isAdding = notebookItems.includes(product.id);
-                  const swipeOffset = getSwipeTransform(product.id);
-                  return (
-                  <div
-                    key={product.id}
-                    className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''}`}
-                    onTouchStart={(e) => handleTouchStart(e, product.id)}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={() => handleTouchEnd(product)}
-                  >
+        <div className="bg-white rounded-lg shadow">
+          <div className="divide-y divide-gray-100">
+            {sortedProducts.map((product) => {
+              const hasPromo = product.promo_price && product.promo_price > 0;
+              const isAdding = notebookItems.includes(product.id);
+              const swipeOffset = getSwipeTransform(product.id);
+              return (
+                <div
+                  key={product.id}
+                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''}`}
+                  onTouchStart={(e) => handleTouchStart(e, product.id)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={() => handleTouchEnd(product)}
+                >
                     <div
                       className={`px-3 py-2 hover:bg-gray-50 transition ${isAdding ? 'opacity-0' : 'opacity-100'}`}
                       style={{
@@ -385,11 +371,9 @@ export default function PriceList() {
                     </div>
                     </div>
                   </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+                );
+              })}
+          </div>
         </div>
       )}
 
