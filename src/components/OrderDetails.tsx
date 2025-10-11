@@ -379,7 +379,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                       </div>
                       <div className="text-blue-600 font-medium">{order.creator.full_name}</div>
                       <div className="text-gray-500">
-                        {order.creator.role === 'store_manager' ? 'Kierownik sklepu' :
+                        {order.creator.role === 'store_manager' ? 'Ekspedient' :
                          order.creator.role === 'salesperson' ? 'Handlowiec' :
                          order.creator.role === 'operator' ? 'Operator' :
                          order.creator.role}
@@ -397,7 +397,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         {history.filter(h => h.action.toLowerCase().includes('wysłano')).map(h => h.users).filter(Boolean)[0]?.full_name}
                       </div>
                       <div className="text-gray-500">
-                        {history.filter(h => h.action.toLowerCase().includes('wysłano')).map(h => h.users).filter(Boolean)[0]?.role === 'store_manager' ? 'Kierownik sklepu' :
+                        {history.filter(h => h.action.toLowerCase().includes('wysłano')).map(h => h.users).filter(Boolean)[0]?.role === 'store_manager' ? 'Ekspedient' :
                          history.filter(h => h.action.toLowerCase().includes('wysłano')).map(h => h.users).filter(Boolean)[0]?.role === 'salesperson' ? 'Handlowiec' :
                          history.filter(h => h.action.toLowerCase().includes('wysłano')).map(h => h.users).filter(Boolean)[0]?.role === 'operator' ? 'Operator' :
                          history.filter(h => h.action.toLowerCase().includes('wysłano')).map(h => h.users).filter(Boolean)[0]?.role}
@@ -454,7 +454,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               <span className="text-gray-500">{formatDate(mod.created_at)}</span>
                             </div>
                             <div className="text-gray-500 text-xs">
-                              {mod.users?.role === 'store_manager' ? 'Kierownik sklepu' :
+                              {mod.users?.role === 'store_manager' ? 'Ekspedient' :
                                mod.users?.role === 'salesperson' ? 'Handlowiec' :
                                mod.users?.role}
                             </div>

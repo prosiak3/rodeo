@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Package, Users, ShoppingBag, DollarSign, Settings } from 'lucide-react';
+import { Package, Users, ShoppingBag, DollarSign, Settings, UserCog } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresManager from './StoresManager';
 import PriceList from './PriceList';
 import ProductManager from './ProductManager';
 import SystemSettings from './SystemSettings';
+import UsersManager from './UsersManager';
 
 interface AdminPanelProps {
   userId: string;
@@ -14,7 +15,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'users' | 'settings'>('orders');
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -74,6 +75,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Cenniki
           </button>
           <button
+            onClick={() => setActiveTab('users')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'users'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <UserCog className="w-5 h-5" />
+            Użytkownicy
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'settings'
@@ -97,6 +109,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'products' && <ProductManager />}
 
         {activeTab === 'pricelists' && <PriceListManager />}
+
+        {activeTab === 'users' && <UsersManager />}
 
         {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>

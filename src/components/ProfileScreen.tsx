@@ -8,10 +8,11 @@ interface ProfileScreenProps {
 }
 
 const roleLabels: Record<string, string> = {
-  store_manager: 'Kierownik sklepu',
+  store_manager: 'Ekspedient',
   salesperson: 'Handlowiec',
-  operator: 'Operator',
+  operator: 'Hurtownia',
   admin: 'Administrator',
+  driver: 'Kierowca',
 };
 
 export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {

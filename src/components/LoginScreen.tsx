@@ -7,9 +7,9 @@ interface LoginScreenProps {
 }
 
 const testUsers = [
-  { email: 'kierownik@sklep.pl', password: 'test123', role: 'Kierownik sklepu' },
+  { email: 'kierownik@sklep.pl', password: 'test123', role: 'Ekspedient' },
   { email: 'handlowiec@hurtownia.pl', password: 'test123', role: 'Handlowiec' },
-  { email: 'operator@hurtownia.pl', password: 'test123', role: 'Operator hurtowni' },
+  { email: 'operator@hurtownia.pl', password: 'test123', role: 'Hurtownia' },
 ];
 
 export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenProps) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2 } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3 } from 'lucide-react';
 import { supabase, Order, OrderStatus } from '../lib/supabase';
 
 interface OrdersListProps {
@@ -10,7 +10,7 @@ interface OrdersListProps {
 }
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: any; bgColor: string; hoverColor: string }> = {
-  draft: { label: 'Szkic', color: 'text-gray-700', icon: FileText, bgColor: 'bg-gray-100', hoverColor: 'hover:text-gray-700 hover:bg-gray-200' },
+  draft: { label: 'Szkic', color: 'text-amber-700', icon: Edit3, bgColor: 'bg-amber-100', hoverColor: 'hover:text-amber-700 hover:bg-amber-200' },
   sent: { label: 'Wysłane', color: 'text-blue-700', icon: Send, bgColor: 'bg-blue-100', hoverColor: 'hover:text-blue-700 hover:bg-blue-200' },
   in_progress: { label: 'W realizacji', color: 'text-purple-700', icon: PlayCircle, bgColor: 'bg-purple-100', hoverColor: 'hover:text-purple-700 hover:bg-purple-200' },
   pending_confirmation: { label: 'Oczekuje', color: 'text-yellow-700', icon: AlertCircle, bgColor: 'bg-yellow-100', hoverColor: 'hover:text-yellow-700 hover:bg-yellow-200' },
