@@ -2,30 +2,44 @@
 
 ## Opis Aplikacji
 
-RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Umożliwia kierownikom sklepów składanie zamówień różnymi metodami, a handlowcom i operatorom hurtowni ich przetwarzanie.
+RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Umożliwia kierownikom sklepów składanie zamówień różnymi metodami, handlowcom i operatorom hurtowni ich przetwarzanie, a kierowcom realizację dostaw.
 
 ## Funkcjonalności
 
 ### Dla Kierowników Sklepów (store_manager)
 
-1. **Trzy sposoby składania zamówień:**
-   - **Zamówienie głosowe** - dyktowanie zamówienia przez mikrofon z wykorzystaniem Web Speech API
-   - **Wprowadzanie ręczne** - wybieranie produktów z listy i określanie ilości
+1. **Dwa tryby zamawiania:**
+   - **Tryb ilościowy (quantity)** - standardowe wprowadzanie ilości produktów
+   - **Tryb listowy (list)** - szybkie zaznaczanie produktów bez podawania ilości
+
+2. **Trzy sposoby składania zamówień:**
+   - **Z cennika** - wybieranie produktów bezpośrednio z aktywnego cennika
+   - **Wprowadzanie ręczne** - wybieranie produktów z pełnej listy
    - **Kopiowanie zamówienia** - wykorzystanie wcześniejszych zamówień jako szablonu
 
-2. **Zarządzanie zamówieniami:**
-   - Przeglądanie historii zamówień
-   - Szczegóły zamówienia z możliwością sprawdzenia statusu
-   - Filtrowanie zamówień po statusie
+3. **Zarządzanie zamówieniami:**
+   - Przeglądanie historii zamówień z filtrowaniem
+   - Szkice zamówień (draft) - można edytować i usuwać
+   - Wysłane zamówienia (sent) - widoczne w historii
+   - Szczegóły zamówienia z datami utworzenia i modyfikacji
+   - Możliwość usunięcia szkicu zamówienia
+   - Status zamówienia śledzony przez cały proces
 
-3. **Cennik:**
+4. **Cennik:**
    - Przeglądanie aktualnych cen produktów
-   - Podział na kategorie (mięso, wędliny, drób, ryby, dodatki)
+   - Podział na kategorie wyświetlania
+   - System tagów do grupowania produktów
    - Wyszukiwanie produktów
-   - Wyświetlanie cen specjalnych dla sklepu
+   - Wyświetlanie trzech rodzajów cen:
+     - Cena bazowa (base_price)
+     - Twoja cena (your_price) - indywidualna cena dla sklepu
+     - Cena promocyjna (promo_price) - najniższa cena specjalna
+   - Produkty z limitami ilościowymi (min_quantity, quantity_step)
 
-4. **Profil:**
+5. **Profil:**
    - Informacje o użytkowniku i sklepie
+   - Zmiana trybu zamawiania
+   - Przełączanie widoku filtrów zamówień (uproszczone/wszystkie)
    - Wylogowanie
 
 ### Dla Handlowców (salesperson)
@@ -35,6 +49,7 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - Potwierdzanie/odrzucanie zamówień
    - Modyfikacja ilości w pozycjach zamówienia
    - Dodawanie uwag
+   - Tworzenie zamówień dla sklepów które obsługują
 
 2. **Filtrowanie:**
    - Po statusie zamówienia
@@ -43,9 +58,28 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
 ### Dla Operatorów i Adminów (operator/admin)
 
 1. **Panel administracyjny:**
+   - Zarządzanie produktami (dodawanie, edycja, archiwizacja)
+   - Zarządzanie sklepami
+   - Zarządzanie cenami specjalnymi
+   - Zarządzanie cennikami
+   - Zarządzanie tagami produktów
    - Przeglądanie wszystkich zamówień w systemie
-   - Zarządzanie zamówieniami
-   - Statystyki i raporty
+   - Zmiana statusu zamówień na "w realizacji" (in_progress)
+
+2. **Zarządzanie cenami:**
+   - Cena bazowa produktu
+   - Ceny specjalne dla konkretnych sklepów (your_price)
+   - Ceny promocyjne (promo_price)
+   - Okresy ważności cen
+
+### Dla Kierowców (driver)
+
+1. **Panel kierowcy:**
+   - Lista załadowanych dostaw
+   - Szczegóły zamówień do dostawy
+   - Informacje o sklepie i trasie
+   - Możliwość oznaczenia dostawy jako "w drodze" i "dostarczona"
+   - Dodawanie notatek do dostaw
 
 ## Technologie
 
@@ -54,19 +88,19 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
 - **Vite** jako bundler
 - **Tailwind CSS** do stylowania
 - **Lucide React** dla ikon
-- **Web Speech API** do rozpoznawania mowy
 
 ### Backend & Baza Danych
 - **Supabase** jako backend-as-a-service
   - PostgreSQL jako baza danych
-  - Supabase Auth do autentykacji
+  - Supabase Auth do autentykacji (email/password)
   - Row Level Security (RLS) do zabezpieczeń
   - Realtime subscriptions (opcjonalnie)
 
 ### PWA
 - Manifest.json dla instalacji jako aplikacja
 - Service Worker (opcjonalnie)
-- Responsywny design
+- Responsywny design z mobile-first approach
+- Dolna nawigacja optymalizowana pod urządzenia mobilne
 
 ## Struktura Bazy Danych
 
@@ -74,44 +108,79 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
 
 1. **stores** - Sklepy
    - id, name, code, address, phone, active
+   - created_at, updated_at
    - Przechowuje informacje o sklepach
 
 2. **users** - Użytkownicy
    - id (referencja do auth.users), email, full_name, role, store_id, active
-   - Role: store_manager, salesperson, operator, admin
+   - order_mode (quantity/list) - tryb zamawiania
+   - show_all_order_filters (boolean) - widok filtrów zamówień
+   - created_at, updated_at
+   - Role: store_manager, salesperson, operator, admin, driver
 
 3. **products** - Produkty
-   - id, name, code (barcode), category, unit, base_price, image_url, description, active, index
-   - Katalog produktów mięsno-wędliniarskich
+   - id, name, code (barcode), original_category, display_category
+   - unit, base_price, image_url, description, index
+   - price_list_id - przypisanie do cennika
+   - min_quantity, quantity_step - limity zamawiania
+   - tags[] - tablica tagów do grupowania
+   - active, created_at, updated_at
+   - Katalog produktów mięsno-wędliniarskich (147 produktów)
 
-4. **special_prices** - Ceny Specjalne
-   - id, store_id, product_id, special_price, valid_from, valid_to
-   - Ceny promocyjne dla konkretnych sklepów
+4. **price_lists** - Cenniki
+   - id, name, description, is_active
+   - valid_from, valid_to
+   - created_at, updated_at
+   - Zarządzanie cennikami produktów
 
-5. **orders** - Zamówienia
-   - id, order_number, store_id, created_by, status, requires_confirmation
-   - total_amount, voice_transcript, notes, sent_at, confirmed_at, delivery_date
-   - Statusy: draft, sent, pending_confirmation, confirmed, partially_confirmed, rejected, archived
+5. **special_prices** - Ceny Specjalne
+   - id, store_id, product_id
+   - your_price - indywidualna cena dla sklepu
+   - promo_price - cena promocyjna/specjalna
+   - valid_from, valid_to
+   - created_at
 
-6. **order_items** - Pozycje Zamówienia
-   - id, order_id, product_id, quantity_ordered, unit, price_per_unit, total_price
+6. **orders** - Zamówienia
+   - id, order_number, store_id, created_by
+   - status: draft, sent, in_progress, pending_confirmation, confirmed, partially_confirmed, rejected
+   - requires_confirmation, total_amount
+   - voice_transcript, notes
+   - sent_at, in_progress_at, confirmed_at, delivery_date
+   - created_at, updated_at
+
+7. **order_items** - Pozycje Zamówienia
+   - id, order_id, product_id
+   - quantity, unit, unit_price, total_price
    - confirmed_quantity, status
+   - created_at
 
-7. **order_history** - Historia Zamówień
-   - id, order_id, action, performed_by, details
+8. **order_history** - Historia Zamówień
+   - id, order_id, action, performed_by, details (jsonb)
+   - created_at
    - Audit log wszystkich akcji na zamówieniach
 
-8. **salesperson_stores** - Przypisania Handlowców
+9. **salesperson_stores** - Przypisania Handlowców
    - salesperson_id, store_id
+   - created_at
    - Określa które sklepy obsługuje dany handlowiec
+
+10. **deliveries** - Dostawy
+    - id, order_id, driver_id
+    - status: loaded, in_transit, delivered
+    - loaded_at, delivered_at, notes
+    - created_at, updated_at
+    - System zarządzania dostawami dla kierowców
 
 ### Zabezpieczenia (RLS)
 
 Każda tabela ma włączone Row Level Security z politykami:
 - Kierownicy widzą tylko dane swojego sklepu
+- Kierownicy mogą usuwać tylko swoje szkice zamówień (status: draft)
 - Handlowcy widzą dane sklepów, które obsługują
-- Operatorzy i admini mają pełny dostęp
+- Operatorzy i admini mają pełny dostęp do wszystkich danych
+- Kierowcy widzą tylko swoje dostawy
 - Wszystkie polityki sprawdzają auth.uid() i role użytkownika
+- Polityki UPDATE umożliwiają zmianę statusu zamówień
 
 ## Komponenty Aplikacji
 
@@ -123,16 +192,24 @@ Każda tabela ma włączone Row Level Security z politykami:
 
 ### Ekrany
 
-1. **LoginScreen.tsx** - Ekran logowania
+1. **LoginScreen.tsx** - Ekran logowania z autentykacją Supabase
 2. **HomeScreen.tsx** - Ekran powitalny z logo i informacjami
-3. **VoiceOrderScreen.tsx** - Składanie zamówienia głosem
-4. **ManualOrderScreen.tsx** - Ręczne wprowadzanie zamówienia
-5. **CopyOrderScreen.tsx** - Kopiowanie wcześniejszego zamówienia
-6. **OrdersList.tsx** - Lista zamówień z filtrowaniem
-7. **OrderDetails.tsx** - Szczegóły zamówienia z możliwością edycji
-8. **PriceList.tsx** - Cennik produktów z wyszukiwaniem
-9. **ProfileScreen.tsx** - Profil użytkownika
-10. **AdminPanel.tsx** - Panel administracyjny
+3. **PriceListOrderScreen.tsx** - Składanie zamówienia z cennika (główny tryb)
+4. **PriceListOrderListMode.tsx** - Tryb listowy zamawiania
+5. **ManualOrderScreen.tsx** - Ręczne wprowadzanie zamówienia
+6. **CopyOrderScreen.tsx** - Kopiowanie wcześniejszego zamówienia
+7. **EditDraftOrderScreen.tsx** - Edycja szkicu zamówienia
+8. **OrdersList.tsx** - Lista zamówień z filtrowaniem i możliwością usuwania szkiców
+9. **OrderDetails.tsx** - Szczegóły zamówienia (bez danych sklepu dla kierownika)
+10. **PriceList.tsx** - Cennik produktów z wyszukiwaniem
+11. **ProfileScreen.tsx** - Profil użytkownika z ustawieniami
+12. **AdminPanel.tsx** - Panel administracyjny
+13. **ProductManager.tsx** - Zarządzanie produktami
+14. **StoresManager.tsx** - Zarządzanie sklepami
+15. **PriceListManager.tsx** - Zarządzanie cennikami
+16. **TagsManager.tsx** - Zarządzanie tagami
+17. **DriverScreen.tsx** - Panel kierowcy z dostawami
+18. **ProductCard.tsx** - Karta produktu
 
 ## Przepływ Pracy
 
@@ -141,53 +218,49 @@ Każda tabela ma włączone Row Level Security z politykami:
 1. Logowanie do aplikacji
 2. Kliknięcie "Nowe" w dolnej nawigacji
 3. Wybór metody składania zamówienia:
-   - **Głosowe**: Naciśnięcie mikrofonu, dyktowanie, potwierdzenie, wysłanie
+   - **Z cennika**: Przeglądanie cennika, dodawanie produktów, wysłanie
    - **Ręczne**: Wyszukanie produktów, dodanie do koszyka, określenie ilości, wysłanie
    - **Kopiowanie**: Wybór wcześniejszego zamówienia, modyfikacja, wysłanie
-4. Zamówienie otrzymuje status "sent"
-5. Można sprawdzić status w zakładce "Zamówienia"
+4. Zamówienie zapisywane jako szkic (draft) można edytować
+5. Po kliknięciu "Zamów w hurtowni" status zmienia się na "sent"
+6. Można sprawdzić status w zakładce "Zamówienia"
+7. Szkice można usunąć przyciskiem kosza
 
-### Przetwarzanie Zamówienia (Handlowiec)
+### Przetwarzanie Zamówienia (Operator/Admin)
+
+1. Logowanie do panelu administracyjnego
+2. Przeglądanie nowych zamówień (status: sent)
+3. Kliknięcie "Rozpocznij realizację"
+4. Status zmienia się na "in_progress"
+5. Przygotowanie zamówienia
+6. Przypisanie kierowcy i załadunek
+
+### Dostawa Zamówienia (Kierowca)
 
 1. Logowanie do aplikacji
-2. Przeglądanie nowych zamówień
-3. Kliknięcie na zamówienie -> szczegóły
-4. Przegląd pozycji zamówienia
-5. Opcje:
-   - Potwierdzenie całego zamówienia
-   - Modyfikacja ilości w poszczególnych pozycjach
-   - Częściowe potwierdzenie
-   - Odrzucenie zamówienia
-6. Dodanie uwag (opcjonalnie)
-7. Zapisanie zmian
-8. Zamówienie zmienia status na "confirmed" lub "partially_confirmed"
-
-### Rozpoznawanie Mowy (Voice Order)
-
-Aplikacja wykorzystuje Web Speech API do rozpoznawania poleceń:
-- Nasłuchuje polskich nazw produktów i ilości
-- Parsuje frazy typu: "szynka 5 kilogramów", "kiełbasa 2 kilo"
-- Wyświetla wykryte produkty do potwierdzenia
-- Pozwala na edycję przed wysłaniem
+2. Panel kierowcy wyświetla załadowane dostawy
+3. Kliknięcie na dostawę -> szczegóły
+4. Rozpoczęcie dostawy - status "w drodze" (in_transit)
+5. Po dostarczeniu - oznaczenie jako "dostarczona" (delivered)
+6. Możliwość dodania notatek
 
 ## Dane Testowe
 
 ### Użytkownicy:
-- **Kierownik**: kierownik@sklep.pl / test123
-- **Handlowiec**: handlowiec@hurtownia.pl / test123
-- **Operator**: operator@hurtownia.pl / test123
+- **Kierownik**: manager@rodeo.pl / rodeo2024
+- **Handlowiec**: sales@rodeo.pl / rodeo2024
+- **Operator**: operator@rodeo.pl / rodeo2024
+- **Kierowca**: driver@rodeo.pl / rodeo2024
 
 ### Sklepy:
-- Sklep Mięsny "U Wojtka" (SHOP001)
-- Delikatesy "Smak" (SHOP002)
+- 18 realnych sklepów mięsnych w różnych miastach Polski
 
 ### Produkty:
-Ponad 50 produktów w kategoriach:
-- Mięso (schab, karkówka, żeberka, łopatka)
-- Wędliny (szynka, kiełbasa, parówki, salami)
+147 produktów w kategoriach wyświetlania:
+- Mięso (schab, karkówka, żeberka, łopatka, itp.)
+- Wędliny (szynka, kiełbasa, parówki, salami, boczki, itp.)
 - Drób (kurczak, indyk, kaczka)
-- Ryby (łosoś, dorsz, pstrąg)
-- Dodatki (przyprawy, sosy)
+- Dodatkowo system tagów do precyzyjnego grupowania
 
 ## Zmienne Środowiskowe
 
@@ -215,24 +288,59 @@ npm run preview
 npm run typecheck
 ```
 
+## Kluczowe Funkcjonalności
+
+### System Cen
+- **Cena bazowa (base_price)** - podstawowa cena produktu
+- **Twoja cena (your_price)** - indywidualna cena negocjowana dla sklepu
+- **Cena promocyjna (promo_price)** - najniższa cena specjalna/promocyjna
+- Automatyczne wyświetlanie najkorzystniejszej ceny
+- Śledzenie okresów ważności cen
+
+### Limity Zamawiania
+- **min_quantity** - minimalna ilość do zamówienia
+- **quantity_step** - krok zwiększania ilości (np. karton 10 szt.)
+- Walidacja ilości po stronie interfejsu
+
+### Tryby Zamawiania
+- **Tryb ilościowy (quantity)** - podawanie dokładnych ilości
+- **Tryb listowy (list)** - szybkie zaznaczanie produktów bez ilości
+
+### Statusy Zamówień
+1. **draft** - szkic, można edytować i usunąć
+2. **sent** - wysłane do hurtowni
+3. **in_progress** - w realizacji przez operatora
+4. **pending_confirmation** - oczekuje na potwierdzenie
+5. **confirmed** - potwierdzone
+6. **partially_confirmed** - częściowo potwierdzone
+7. **rejected** - odrzucone
+
+### Statusy Dostaw
+1. **loaded** - załadowana, czeka na wyjazd
+2. **in_transit** - w drodze do klienta
+3. **delivered** - dostarczona
+
 ## Przyszłe Funkcjonalności
 
 1. **Powiadomienia push** - o nowych zamówieniach i zmianach statusu
-2. **Eksport do PDF/Excel** - generowanie raportów
+2. **Eksport do PDF/Excel** - generowanie raportów zamówień
 3. **Statystyki** - wykresy sprzedaży, najpopularniejsze produkty
-4. **Harmonogram dostaw** - planowanie tras i terminów
+4. **Zaawansowane planowanie tras** - optymalizacja dostaw
 5. **Chat** - komunikacja między kierownikami a handlowcami
 6. **Skanowanie kodów kreskowych** - przy składaniu zamówień
-7. **Historia cen** - śledzenie zmian cen produktów
+7. **Historia cen** - śledzenie zmian cen produktów w czasie
 8. **Ulubione zestawy** - zapisywanie często zamawianych kombinacji
+9. **Składanie zamówień głosem** - Web Speech API
 
 ## Deployment
 
 Aplikacja jest gotowa do deploymentu na platformach:
 - Vercel
 - Netlify
+- Railway
+- Render
 - Bolt.new
-- Własny serwer (nginx + node)
+- Własny serwer (nginx)
 
 Wymagania:
 - Node.js 18+
@@ -245,18 +353,29 @@ Aplikacja wspiera:
 - Przeglądarki: Chrome, Edge, Safari, Firefox (najnowsze wersje)
 - Urządzenia: Desktop, Tablet, Mobile
 - Systemy: Windows, macOS, Linux, iOS, Android
-- Rozpoznawanie mowy: Chrome, Edge (tylko na HTTPS)
+- Orientacja: Portrait i Landscape (responsywny design)
 
 ## Bezpieczeństwo
 
-- Wszystkie zapytania przez Supabase RLS
-- Hasła hashowane przez Supabase Auth
+- Wszystkie zapytania chronione przez Supabase RLS
+- Hasła hashowane przez Supabase Auth (bcrypt)
 - HTTPS wymagane w produkcji
 - Tokeny JWT do autoryzacji
 - Walidacja danych po stronie backendu
-- Ochrona przed SQL injection (Supabase)
-- Rate limiting (Supabase)
+- Ochrona przed SQL injection (Supabase parametrized queries)
+- Rate limiting (Supabase built-in)
+- Row Level Security sprawdza auth.uid() dla każdego zapytania
+
+## Migracje Bazy Danych
+
+Wszystkie migracje znajdują się w katalogu `/supabase/migrations/`:
+- Tworzenie tabel z RLS
+- Dodawanie przykładowych danych
+- Aktualizacje schematów
+- Poprawki polityk RLS
+- System tagów i kategorii
+- System dostaw
 
 ## Licencja
 
-Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do automatyzacji procesu zamawiania towarów.
+Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do automatyzacji procesu zamawiania towarów i zarządzania dostawami.
