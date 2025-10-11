@@ -301,7 +301,9 @@ Każda tabela ma włączone Row Level Security z politykami:
      3. Automatyczne rozpoznawanie produktów i ilości przez system
      4. Wyświetlenie transkrypcji i rozpoznanych produktów na ekranie
      5. Możliwość edycji, dodania/usunięcia pozycji
-     6. Weryfikacja i zatwierdzenie zamówienia
+     6. Kliknięcie "Zapisz jako szkic"
+     7. Automatyczne przejście do edycji szkicu
+     8. Możliwość dalszej edycji przed wysłaniem
    - **Z cennika**: Przeglądanie cennika, dodawanie produktów, wysłanie
    - **Ręczne**: Wyszukanie produktów, dodanie do koszyka, określenie ilości, wysłanie
    - **Kopiowanie**: Wybór wcześniejszego zamówienia, modyfikacja, wysłanie
@@ -312,7 +314,7 @@ Każda tabela ma włączone Row Level Security z politykami:
      4. Automatyczne tworzenie zamówienia ze statusem "notatnik"
      5. Możliwość uzupełnienia ilości później
 4. Zamówienie zapisywane jako szkic (draft) można edytować
-5. Po kliknięciu "Zamów w hurtowni" pojawia się komunikat sukcesu i powrót do ekranu głównego
+5. Po kliknięciu "Zamów w hurtowni" pojawia się komunikat sukcesu i filtr automatycznie przełącza się na "Wysłane"
 6. Status zmienia się na "sent"
 7. Można sprawdzić status w zakładce "Zamówienia"
 8. Szkice i notatniki można edytować, kopiować i usuwać
@@ -419,8 +421,10 @@ npm run typecheck
 ### Zamawianie Głosowe
 - **Rozpoznawanie mowy** - wykorzystanie Web Speech API do dyktowania zamówień
 - **Automatyczne parsowanie** - inteligentne rozpoznawanie nazw produktów i ilości z transkrypcji
-- **Weryfikacja na ekranie** - wyświetlenie transkrypcji i rozpoznanych produktów przed zatwierdzeniem
-- **Edycja przed wysłaniem** - możliwość poprawy, dodania lub usunięcia pozycji
+- **Weryfikacja na ekranie** - wyświetlenie transkrypcji i rozpoznanych produktów przed zapisaniem
+- **Zapisywanie jako szkic** - po dyktowaniu zamówienie zapisywane jako draft, nie wysyłane od razu
+- **Przejście do edycji** - automatyczne przekierowanie do ekranu edycji szkicu
+- **Edycja przed wysłaniem** - możliwość poprawy, dodania lub usunięcia pozycji w trybie edycji
 - **Szybkość składania zamówień** - znacznie szybsze niż ręczne wprowadzanie
 - **Przykładowe komendy głosowe**:
   - "Schab 10 kilogramów"
@@ -648,3 +652,15 @@ Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do autom
    - Usunięto filtry tagów
    - Wyszukiwanie tylko po nazwie i indeksie
    - Czysty, minimalistyczny interfejs
+
+5. **Zmieniony przepływ zamawiania głosowego:**
+   - Po dyktowaniu zamówienie zapisywane jako szkic (draft), nie wysyłane
+   - Automatyczne przekierowanie do ekranu edycji szkicu (EditDraftOrderScreen)
+   - Użytkownik może dalej edytować zamówienie przed wysłaniem
+   - Przycisk "Zapisz jako szkic" zamiast "Przejdź do potwierdzenia"
+   - Usunięty stage 'summary' (zbędny w nowym przepływie)
+
+6. **Poprawka filtrowania po wysłaniu zamówienia:**
+   - Po wysłaniu zamówienia filtr automatycznie przełącza się na "Wysłane"
+   - Poprawiony typ stanu ordersListFilter w App.tsx
+   - Dodany useEffect w OrdersList reagujący na zmiany initialFilter
