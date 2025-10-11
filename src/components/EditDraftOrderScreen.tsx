@@ -4,17 +4,20 @@ import { supabase, Product, OrderItem } from '../lib/supabase';
 
 interface EditDraftOrderScreenProps {
   orderId: string;
+  userId: string;
   onSave: () => void;
   onCancel: () => void;
 }
 
-export default function EditDraftOrderScreen({ orderId, onSave, onCancel }: EditDraftOrderScreenProps) {
+export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel }: EditDraftOrderScreenProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [orderItems, setOrderItems] = useState<(OrderItem & { products?: Product })[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [canEdit, setCanEdit] = useState(true);
+  const [creatorId, setCreatorId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -25,12 +28,30 @@ export default function EditDraftOrderScreen({ orderId, onSave, onCancel }: Edit
     try {
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
-        .select('order_number')
+        .select(`
+          order_number,
+          created_by,
+          creator:created_by (
+            allow_collaborative_editing
+          )
+        `)
         .eq('id', orderId)
         .single();
 
       if (orderError) throw orderError;
       setOrderNumber(orderData.order_number);
+      setCreatorId(orderData.created_by);
+
+      // Check if user can edit
+      const isCreator = orderData.created_by === userId;
+      const creatorAllowsCollab = orderData.creator?.allow_collaborative_editing ?? true;
+      setCanEdit(isCreator || creatorAllowsCollab);
+
+      if (!isCreator && !creatorAllowsCollab) {
+        alert('Nie masz uprawnień do edycji tego zamówienia. Twórca wyłączył współdzielenie edycji.');
+        onCancel();
+        return;
+      }
 
       const { data: productsData, error: productsError } = await supabase
         .from('products')
@@ -180,6 +201,18 @@ export default function EditDraftOrderScreen({ orderId, onSave, onCancel }: Edit
         .eq('id', orderId);
 
       if (orderUpdateError) throw orderUpdateError;
+
+      // Log modification in order history (only if user is not the creator)
+      if (creatorId && creatorId !== userId) {
+        await supabase
+          .from('order_history')
+          .insert({
+            order_id: orderId,
+            action: 'modified_draft',
+            performed_by: userId,
+            details: { modified_at: new Date().toISOString() }
+          });
+      }
 
       alert('Zamówienie zapisane!');
       onSave();

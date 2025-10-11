@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 
 interface ProfileScreenProps {
@@ -17,6 +17,7 @@ const roleLabels: Record<string, string> = {
 export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [orderMode, setOrderMode] = useState<'quantity' | 'list'>((user as any).order_mode || 'quantity');
   const [showAllFilters, setShowAllFilters] = useState<boolean>(user.show_all_order_filters || false);
+  const [allowCollaboration, setAllowCollaboration] = useState<boolean>((user as any).allow_collaborative_editing ?? true);
   const [saving, setSaving] = useState(false);
 
   const handleOrderModeChange = async (mode: 'quantity' | 'list') => {
@@ -52,6 +53,26 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
       alert('Ustawienia zapisane!');
     } catch (error) {
       console.error('Error updating filter settings:', error);
+      alert('Błąd podczas zapisywania ustawień');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCollaborationToggle = async () => {
+    setSaving(true);
+    try {
+      const newValue = !allowCollaboration;
+      const { error } = await supabase
+        .from('users')
+        .update({ allow_collaborative_editing: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setAllowCollaboration(newValue);
+      alert('Ustawienia zapisane!');
+    } catch (error) {
+      console.error('Error updating collaboration settings:', error);
       alert('Błąd podczas zapisywania ustawień');
     } finally {
       setSaving(false);
@@ -144,6 +165,42 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             </button>
           </div>
         </div>
+
+        {(user.role === 'store_manager' || user.role === 'salesperson') && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Współdzielenie edycji</h3>
+            </div>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 mb-3">Czy inni użytkownicy z Twojego sklepu mogą edytować Twoje szkice zamówień?</p>
+              <button
+                onClick={handleCollaborationToggle}
+                disabled={saving}
+                className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                  allowCollaboration
+                    ? 'border-amber-500 bg-amber-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-semibold text-gray-800 mb-1">✅ Tak, pozwól innym edytować</div>
+                <div className="text-sm text-gray-600">Inni kierownicy i handlowcy z Twojego sklepu mogą edytować Twoje szkice</div>
+              </button>
+              <button
+                onClick={handleCollaborationToggle}
+                disabled={saving}
+                className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                  !allowCollaboration
+                    ? 'border-amber-500 bg-amber-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-semibold text-gray-800 mb-1">❌ Nie, tylko ja mogę edytować</div>
+                <div className="text-sm text-gray-600">Tylko Ty możesz edytować swoje szkice zamówień</div>
+              </button>
+            </div>
+          </div>
+        )}
 
         {user.role === 'store_manager' && (
           <div className="bg-white rounded-xl shadow-lg p-6">

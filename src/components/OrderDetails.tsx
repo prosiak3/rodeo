@@ -420,6 +420,31 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                     </div>
                   </div>
                 )}
+
+                {history.filter(h => h.action === 'modified_draft').length > 0 && (
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <h5 className="font-semibold text-xs text-gray-700 mb-2">Modyfikacje szkicu:</h5>
+                    <div className="space-y-2">
+                      {history.filter(h => h.action === 'modified_draft').map((mod, index) => (
+                        <div key={index} className="flex items-start gap-2 text-xs">
+                          <span className="text-lg">✏️</span>
+                          <div>
+                            <div className="text-gray-600">
+                              <span className="font-medium text-blue-600">{mod.users?.full_name}</span>
+                              <span className="mx-1">•</span>
+                              <span className="text-gray-500">{formatDate(mod.created_at)}</span>
+                            </div>
+                            <div className="text-gray-500 text-xs">
+                              {mod.users?.role === 'store_manager' ? 'Kierownik sklepu' :
+                               mod.users?.role === 'salesperson' ? 'Handlowiec' :
+                               mod.users?.role}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

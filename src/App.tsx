@@ -149,6 +149,7 @@ function AppContent() {
     return (
       <EditDraftOrderScreen
         orderId={editingOrderId}
+        userId={user.id}
         onSave={() => {
           setEditingOrderId(null);
           setSelectedOrderId(editingOrderId);
