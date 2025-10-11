@@ -391,6 +391,7 @@ function AppContent() {
                 storeId={user.store_id}
                 userRole={user.role}
                 onSelectOrder={setSelectedOrderId}
+                showLimitedFilters={true}
               />
             </div>
           </div>

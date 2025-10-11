@@ -6,6 +6,7 @@ interface OrdersListProps {
   storeId?: string;
   userRole: string;
   onSelectOrder: (orderId: string) => void;
+  showLimitedFilters?: boolean;
 }
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: any; bgColor: string; hoverColor: string }> = {
@@ -19,10 +20,10 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; icon: an
   archived: { label: 'Archiwum', color: 'text-gray-700', icon: Package, bgColor: 'bg-gray-100', hoverColor: 'hover:text-gray-700 hover:bg-gray-200' },
 };
 
-export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersListProps) {
+export default function OrdersList({ storeId, userRole, onSelectOrder, showLimitedFilters = false }: OrdersListProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'draft' : 'all');
 
   useEffect(() => {
     loadOrders();
@@ -89,36 +90,59 @@ export default function OrdersList({ storeId, userRole, onSelectOrder }: OrdersL
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition ${
-            filter === 'all'
-              ? 'bg-amber-600 text-white'
-              : 'bg-white text-gray-700 border border-gray-300'
-          }`}
-          title="Wszystkie"
-        >
-          Wszystkie
-        </button>
-        {Object.entries(statusConfig).map(([status, config]) => {
-          const Icon = config.icon;
-          return (
-            <button
-              key={status}
-              onClick={() => setFilter(status as OrderStatus)}
-              className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
-                filter === status
-                  ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
-                  : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
-              }`}
-              title={config.label}
-            >
-              <Icon className="w-5 h-5" />
-            </button>
-          );
-        })}
-      </div>
+      {showLimitedFilters ? (
+        <div className="flex gap-3">
+          {(['draft', 'sent'] as const).map((status) => {
+            const config = statusConfig[status];
+            const Icon = config.icon;
+            return (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                  filter === status
+                    ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
+                    : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span>{config.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition ${
+              filter === 'all'
+                ? 'bg-amber-600 text-white'
+                : 'bg-white text-gray-700 border border-gray-300'
+            }`}
+            title="Wszystkie"
+          >
+            Wszystkie
+          </button>
+          {Object.entries(statusConfig).map(([status, config]) => {
+            const Icon = config.icon;
+            return (
+              <button
+                key={status}
+                onClick={() => setFilter(status as OrderStatus)}
+                className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
+                  filter === status
+                    ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
+                    : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
+                }`}
+                title={config.label}
+              >
+                <Icon className="w-5 h-5" />
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {orders.length === 0 ? (
         <div className="bg-white rounded-xl shadow p-12 text-center">
