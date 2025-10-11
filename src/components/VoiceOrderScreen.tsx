@@ -22,16 +22,16 @@ interface OrderItem {
 interface VoiceOrderScreenProps {
   storeId: string;
   userId: string;
-  onOrderSent: () => void;
+  onDraftCreated: (orderId: string) => void;
 }
 
-export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: VoiceOrderScreenProps) {
+export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: VoiceOrderScreenProps) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const allProductsRef = useRef<Product[]>([]);
-  const [stage, setStage] = useState<'recording' | 'confirmation' | 'summary'>('recording');
+  const [stage, setStage] = useState<'recording' | 'confirmation'>('recording');
   const [requiresConfirmation, setRequiresConfirmation] = useState(false);
   const [notes, setNotes] = useState('');
   const [sending, setSending] = useState(false);
@@ -315,17 +315,6 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     setTranscript('');
   };
 
-  const confirmOrder = () => {
-    const unmatchedItems = orderItems.filter(item => !item.matched);
-    if (unmatchedItems.length > 0) {
-      const confirmed = window.confirm(
-        `Uwaga! ${unmatchedItems.length} pozycji nie zostało dopasowanych do cennika. Przejdź do podsumowania i usuń te pozycje lub wróć i wybierz sugestie.`
-      );
-      if (!confirmed) return;
-    }
-    setStage('summary');
-  };
-
   const addMoreItems = () => {
     setStage('recording');
   };
@@ -417,12 +406,11 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
           order_number: orderNumber,
           store_id: storeId,
           created_by: userId,
-          status: 'sent',
+          status: 'draft',
           requires_confirmation: requiresConfirmation,
           total_amount: totalAmount,
           voice_transcript: JSON.stringify(orderItems),
           notes: notes,
-          sent_at: new Date().toISOString(),
         })
         .select()
         .single();
@@ -443,7 +431,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
       await supabase.from('order_history').insert({
         order_id: order.id,
-        action: 'created',
+        action: 'draft_created',
         performed_by: userId,
         details: {
           items_count: matchedItems.length,
@@ -452,112 +440,17 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
         },
       });
 
-      alert(`Zamówienie wysłane! Dopasowano ${matchedItems.length} z ${orderItems.length} produktów.`);
-      onOrderSent();
+      setTimeout(() => {
+        alert(`Szkic utworzony! Dopasowano ${matchedItems.length} z ${orderItems.length} produktów.`);
+      }, 100);
+      onDraftCreated(order.id);
     } catch (error) {
-      console.error('Error sending order:', error);
-      alert('Błąd podczas wysyłania zamówienia');
+      console.error('Error creating draft order:', error);
+      alert('Błąd podczas tworzenia zamówienia');
     } finally {
       setSending(false);
     }
   };
-
-  if (stage === 'summary') {
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="p-6 space-y-6">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="font-semibold text-lg mb-4">Pozycje zamówienia</h3>
-            <div className="space-y-3">
-              {orderItems.map((item, index) => (
-                <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className="font-medium">{item.productName}</p>
-                      <p className="text-sm text-gray-600">
-                        {item.quantity} {item.unit}
-                      </p>
-                      {item.productIndex && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <svg className="w-24 h-10" viewBox="0 0 120 40">
-                            {item.productIndex.split('').map((digit, i) => (
-                              <rect
-                                key={i}
-                                x={i * 9}
-                                y="5"
-                                width={i % 2 === 0 ? "3" : "4.5"}
-                                height="25"
-                                fill="#000"
-                              />
-                            ))}
-                          </svg>
-                          <span className="font-mono text-xs text-gray-600">{item.productIndex}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => editItem(index)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => removeItem(index)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <label className="block mb-2 font-medium">Uwagi do zamówienia</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-              rows={3}
-              placeholder="Dodaj uwagi..."
-            />
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={requiresConfirmation}
-                onChange={(e) => setRequiresConfirmation(e.target.checked)}
-                className="w-5 h-5 text-amber-600 rounded"
-              />
-              <span className="font-medium">Wymaga potwierdzenia przez hurtownię</span>
-            </label>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setStage('confirmation')}
-              className="flex-1 py-4 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition"
-            >
-              Wstecz
-            </button>
-            <button
-              onClick={sendOrder}
-              disabled={sending}
-              className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
-            >
-              <Send className="w-5 h-5" />
-              {sending ? 'Wysyłanie...' : 'Wyślij zamówienie'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (stage === 'confirmation') {
     return (
@@ -661,11 +554,12 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
               Dodaj więcej
             </button>
             <button
-              onClick={confirmOrder}
-              className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg"
+              onClick={sendOrder}
+              disabled={sending}
+              className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
             >
               <Check className="w-5 h-5" />
-              Dalej
+              {sending ? 'Zapisuję...' : 'Zapisz jako szkic'}
             </button>
           </div>
         </div>
@@ -815,7 +709,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
                 className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
               >
                 <Check className="w-5 h-5" />
-                Przejdź do potwierdzenia
+                Zapisz jako szkic
               </button>
             </div>
           </>

@@ -499,9 +499,9 @@ function AppContent() {
               <VoiceOrderScreen
                 storeId={user.store_id}
                 userId={user.id}
-                onOrderSent={() => {
+                onDraftCreated={(orderId) => {
                   setOrderMode(null);
-                  setActiveTab('orders');
+                  setEditingOrderId(orderId);
                 }}
               />
             )}
