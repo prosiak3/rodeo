@@ -39,6 +39,7 @@ export default function PriceList() {
   const [showDescription, setShowDescription] = useState<boolean>(true);
   const [showIndex, setShowIndex] = useState<boolean>(true);
   const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>('multiple');
+  const [currentSessionNotebookId, setCurrentSessionNotebookId] = useState<string | null>(null);
 
   useEffect(() => {
     loadProducts();
@@ -172,7 +173,23 @@ export default function PriceList() {
 
       let orderId: string | undefined;
 
-      if (notebookMode === 'single') {
+      if (notebookMode === 'multiple') {
+        if (currentSessionNotebookId) {
+          orderId = currentSessionNotebookId;
+
+          const { data: existingItem } = await supabase
+            .from('order_items')
+            .select('id')
+            .eq('order_id', orderId)
+            .eq('product_id', product.id)
+            .maybeSingle();
+
+          if (existingItem) {
+            console.log('Product already in current session notebook, skipping');
+            return;
+          }
+        }
+      } else {
         const { data: existingOrder } = await supabase
           .from('orders')
           .select('id')
@@ -214,6 +231,10 @@ export default function PriceList() {
 
         if (orderError) throw orderError;
         orderId = newOrder.id;
+
+        if (notebookMode === 'multiple') {
+          setCurrentSessionNotebookId(orderId);
+        }
       }
 
       const { error: itemError } = await supabase
