@@ -15,6 +15,7 @@ import AdminPanel from './components/AdminPanel';
 import PriceList from './components/PriceList';
 import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
+import Header from './components/Header';
 import { supabase } from './lib/supabase';
 
 function AppContent() {
@@ -25,6 +26,7 @@ function AppContent() {
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
   const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const createTestUsers = async () => {
     const testUsers = [
@@ -198,94 +200,151 @@ function AppContent() {
 
   if (user.role === 'driver') {
     return (
-      <>
-        <div className="pb-16">
-          {activeTab === 'home' && (
-            <DriverScreen userId={user.id} />
-          )}
-
-          {activeTab === 'profile' && (
-            <ProfileScreen user={user} onSignOut={signOut} />
-          )}
+      <div className="fixed inset-0 flex flex-col bg-gray-50">
+        <Header
+          title="RODEO"
+          subtitle="Kierowca"
+          onProfileClick={() => setShowProfileModal(true)}
+        />
+        <div className="flex-1 overflow-y-auto pt-20 pb-16">
+          <DriverScreen userId={user.id} />
         </div>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
-      </>
+        {showProfileModal && (
+          <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <ProfileScreen user={user} onSignOut={signOut} />
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="w-full p-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition rounded-b-2xl"
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
   if (user.role === 'admin' || user.role === 'operator') {
     return (
-      <>
-        <div className="pb-16">
-          {activeTab === 'home' && (
-            <AdminPanel
-              userId={user.id}
-              userRole={user.role}
-              onSelectOrder={setSelectedOrderId}
-            />
-          )}
-
-          {activeTab === 'profile' && (
-            <ProfileScreen user={user} onSignOut={signOut} />
-          )}
+      <div className="fixed inset-0 flex flex-col bg-gray-50">
+        <Header
+          title="Panel Administracyjny"
+          subtitle={user.role === 'admin' ? 'Administrator' : 'Operator'}
+          onProfileClick={() => setShowProfileModal(true)}
+        />
+        <div className="flex-1 overflow-y-auto pt-20 pb-16">
+          <AdminPanel
+            userId={user.id}
+            userRole={user.role}
+            onSelectOrder={setSelectedOrderId}
+          />
         </div>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
-      </>
+        {showProfileModal && (
+          <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <ProfileScreen user={user} onSignOut={signOut} />
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="w-full p-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition rounded-b-2xl"
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
   if (user.role === 'salesperson') {
+    const getHeaderForTab = () => {
+      switch (activeTab) {
+        case 'home':
+          return { title: 'RODEO', subtitle: 'Weź byka za rogi' };
+        case 'orders':
+          return { title: 'Zamówienia', subtitle: 'Wszystkie zamówienia sklepów' };
+        case 'prices':
+          return { title: 'Cennik', subtitle: 'Aktualny cennik produktów' };
+        default:
+          return { title: 'RODEO', subtitle: '' };
+      }
+    };
+
+    const header = getHeaderForTab();
+
     return (
-      <>
-        <div className="pb-16">
+      <div className="fixed inset-0 flex flex-col bg-gray-50">
+        <Header
+          title={header.title}
+          subtitle={header.subtitle}
+          onProfileClick={() => setShowProfileModal(true)}
+        />
+        <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
-
           {activeTab === 'orders' && (
-            <div className="min-h-screen bg-gray-50 pb-20">
-              <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
-                <div className="flex items-center gap-3">
-                  <span className="text-4xl">🐃</span>
-                  <h2 className="text-2xl font-bold">Zamówienia</h2>
-                </div>
-                <p className="text-amber-100 text-sm mt-1">Wszystkie zamówienia sklepów</p>
-              </div>
-              <div className="p-6">
-                <OrdersList
-                  userRole={user.role}
-                  onSelectOrder={setSelectedOrderId}
-                />
-              </div>
+            <div className="p-6">
+              <OrdersList
+                userRole={user.role}
+                onSelectOrder={setSelectedOrderId}
+              />
             </div>
           )}
-
           {activeTab === 'prices' && (
-            <div className="min-h-screen bg-gray-50 pb-20">
-              <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-4xl">🐃</span>
-                  <h2 className="text-2xl font-bold">Cennik</h2>
-                </div>
-                <p className="text-white font-semibold">Weź byka za rogi</p>
-                <p className="text-amber-100 mt-1 text-sm">Aktualny cennik produktów</p>
-              </div>
-              <div className="p-3">
-                <PriceList />
-              </div>
+            <div className="p-3">
+              <PriceList />
             </div>
-          )}
-
-          {activeTab === 'profile' && (
-            <ProfileScreen user={user} onSignOut={signOut} />
           )}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
-      </>
+        {showProfileModal && (
+          <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <ProfileScreen user={user} onSignOut={signOut} />
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="w-full p-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition rounded-b-2xl"
+              >
+                Zamknij
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
+  const getHeaderForTab = () => {
+    switch (activeTab) {
+      case 'home':
+        return { title: 'RODEO', subtitle: 'Weź byka za rogi' };
+      case 'new-order':
+        return { title: 'Nowe zamówienie', subtitle: orderMode ? '' : 'Wybierz sposób utworzenia zamówienia' };
+      case 'orders':
+        return { title: 'Moje zamówienia', subtitle: '' };
+      case 'prices':
+        return { title: 'Cennik', subtitle: 'Aktualny cennik produktów' };
+      case 'admin':
+        return { title: 'Panel Administracyjny', subtitle: '' };
+      default:
+        return { title: 'RODEO', subtitle: '' };
+    }
+  };
+
+  const header = getHeaderForTab();
+
   return (
-    <>
-      <div className="pb-16">
+    <div className="fixed inset-0 flex flex-col bg-gray-50">
+      <Header
+        title={header.title}
+        subtitle={header.subtitle}
+        onProfileClick={() => setShowProfileModal(true)}
+        showProfile={activeTab !== 'profile'}
+      />
+      <div className="flex-1 overflow-y-auto pt-20 pb-16">
         {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
 
         {activeTab === 'admin' && user.role === 'admin' && (
@@ -299,73 +358,66 @@ function AppContent() {
         {activeTab === 'new-order' && user.store_id && (
           <>
             {orderMode === null && (
-              <div className="min-h-screen bg-gray-50 pb-20">
-                <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
-                  <h2 className="text-2xl font-bold">Nowe zamówienie</h2>
-                  <p className="text-amber-100 text-sm mt-1">Wybierz sposób utworzenia zamówienia</p>
-                </div>
-
-                <div className="p-6 space-y-4">
-                  <button
-                    onClick={() => setOrderMode('voice')}
-                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">🎤</span>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-800">Zamówienie głosowe</h3>
-                        <p className="text-sm text-gray-600">Dyktuj zamówienie przez mikrofon</p>
-                      </div>
+              <div className="p-6 space-y-4">
+                <button
+                  onClick={() => setOrderMode('voice')}
+                  className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">🎤</span>
                     </div>
-                  </button>
-
-                  <button
-                    onClick={() => setOrderMode('manual')}
-                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">✏️</span>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-800">Wprowadź ręcznie</h3>
-                        <p className="text-sm text-gray-600">Dodaj produkty z listy</p>
-                      </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800">Zamówienie głosowe</h3>
+                      <p className="text-sm text-gray-600">Dyktuj zamówienie przez mikrofon</p>
                     </div>
-                  </button>
+                  </div>
+                </button>
 
-                  <button
-                    onClick={() => setOrderMode('pricelist')}
-                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">📋</span>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-800">Z cennika</h3>
-                        <p className="text-sm text-gray-600">Wybierz produkty z listy cenowej</p>
-                      </div>
+                <button
+                  onClick={() => setOrderMode('manual')}
+                  className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">✏️</span>
                     </div>
-                  </button>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800">Wprowadź ręcznie</h3>
+                      <p className="text-sm text-gray-600">Dodaj produkty z listy</p>
+                    </div>
+                  </div>
+                </button>
 
-                  <button
-                    onClick={() => setOrderMode('copy')}
-                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">🔄</span>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-800">Kopiuj zamówienie</h3>
-                        <p className="text-sm text-gray-600">Wykorzystaj wcześniejsze zamówienie</p>
-                      </div>
+                <button
+                  onClick={() => setOrderMode('pricelist')}
+                  className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">📋</span>
                     </div>
-                  </button>
-                </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800">Z cennika</h3>
+                      <p className="text-sm text-gray-600">Wybierz produkty z listy cenowej</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setOrderMode('copy')}
+                  className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">🔄</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800">Kopiuj zamówienie</h3>
+                      <p className="text-sm text-gray-600">Wykorzystaj wcześniejsze zamówienie</p>
+                    </div>
+                  </div>
+                </button>
               </div>
             )}
 
@@ -436,47 +488,39 @@ function AppContent() {
         )}
 
         {activeTab === 'orders' && (
-          <div className="min-h-screen bg-gray-50 pb-20">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
-              <div className="flex items-center gap-3">
-                <span className="text-4xl">🐃</span>
-                <h2 className="text-2xl font-bold">Moje zamówienia</h2>
-              </div>
-            </div>
-            <div className="p-6">
-              <OrdersList
-                storeId={user.store_id}
-                userRole={user.role}
-                onSelectOrder={setSelectedOrderId}
-                showLimitedFilters={!user.show_all_order_filters}
-              />
-            </div>
+          <div className="p-6">
+            <OrdersList
+              storeId={user.store_id}
+              userRole={user.role}
+              onSelectOrder={setSelectedOrderId}
+              showLimitedFilters={!user.show_all_order_filters}
+            />
           </div>
         )}
 
         {activeTab === 'prices' && (
-          <div className="min-h-screen bg-gray-50 pb-20">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-4xl">🐃</span>
-                <h2 className="text-2xl font-bold">Cennik</h2>
-              </div>
-              <p className="text-white font-semibold">Weź byka za rogi</p>
-              <p className="text-amber-100 mt-1 text-sm">Aktualny cennik produktów</p>
-            </div>
-            <div className="p-3">
-              <PriceList />
-            </div>
+          <div className="p-3">
+            <PriceList />
           </div>
-        )}
-
-        {activeTab === 'profile' && (
-          <ProfileScreen user={user} onSignOut={signOut} />
         )}
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-    </>
+
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <ProfileScreen user={user} onSignOut={signOut} />
+            <button
+              onClick={() => setShowProfileModal(false)}
+              className="w-full p-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition rounded-b-2xl"
+            >
+              Zamknij
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

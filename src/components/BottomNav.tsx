@@ -1,4 +1,4 @@
-import { Home, Plus, Package, User, Tag, Settings } from 'lucide-react';
+import { Home, Plus, Package, Tag, Settings } from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: 'home' | 'new-order' | 'orders' | 'prices' | 'profile';
@@ -9,7 +9,7 @@ interface BottomNavProps {
 export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNavProps) {
   if (userRole === 'admin' || userRole === 'operator') {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
         <div className="flex justify-around items-center h-16">
           <button
             onClick={() => onTabChange('home')}
@@ -20,16 +20,6 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
             <Settings className="w-6 h-6" />
             <span className="text-xs mt-1">Panel</span>
           </button>
-
-          <button
-            onClick={() => onTabChange('profile')}
-            className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-              activeTab === 'profile' ? 'text-amber-600' : 'text-gray-600'
-            }`}
-          >
-            <User className="w-6 h-6" />
-            <span className="text-xs mt-1">Profil</span>
-          </button>
         </div>
       </div>
     );
@@ -37,7 +27,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
 
   if (userRole === 'salesperson') {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
         <div className="flex justify-around items-center h-16">
           <button
             onClick={() => onTabChange('home')}
@@ -68,23 +58,13 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
             <Tag className="w-5 h-5" />
             <span className="text-xs mt-1">Cennik</span>
           </button>
-
-          <button
-            onClick={() => onTabChange('profile')}
-            className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-              activeTab === 'profile' ? 'text-amber-600' : 'text-gray-600'
-            }`}
-          >
-            <User className="w-6 h-6" />
-            <span className="text-xs mt-1">Profil</span>
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
       <div className="flex justify-around items-center h-16">
         <button
           onClick={() => onTabChange('home')}
@@ -124,16 +104,6 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
         >
           <Tag className="w-5 h-5" />
           <span className="text-xs mt-1">Cennik</span>
-        </button>
-
-        <button
-          onClick={() => onTabChange('profile')}
-          className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-            activeTab === 'profile' ? 'text-amber-600' : 'text-gray-600'
-          }`}
-        >
-          <User className="w-6 h-6" />
-          <span className="text-xs mt-1">Profil</span>
         </button>
       </div>
     </div>
