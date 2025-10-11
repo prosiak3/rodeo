@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3, ArrowUpDown } from 'lucide-react';
 import { supabase, Order, OrderStatus } from '../lib/supabase';
+import { useConfirm } from '../hooks/useConfirm';
 
 interface OrdersListProps {
   storeId?: string;
@@ -22,6 +23,7 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; icon: an
 };
 
 export default function OrdersList({ storeId, userRole, onSelectOrder, showLimitedFilters = false }: OrdersListProps) {
+  const { confirm, ConfirmComponent } = useConfirm();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'notatnik' : 'draft');
@@ -100,7 +102,14 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
 
   const deleteOrder = async (orderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('Czy na pewno chcesz usunąć to zamówienie?')) return;
+    const confirmed = await confirm({
+      title: 'Usunąć zamówienie?',
+      message: 'Ta operacja jest nieodwracalna. Wszystkie dane zamówienia zostaną trwale usunięte.',
+      confirmText: 'Usuń',
+      cancelText: 'Anuluj',
+      variant: 'danger'
+    });
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -194,7 +203,9 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   }
 
   return (
-    <div className="space-y-4">
+    <>
+      <ConfirmComponent />
+      <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className={showLimitedFilters ? "flex gap-3 flex-1" : "flex gap-2 overflow-x-auto pb-2 flex-1"}>
           {showLimitedFilters ? (
@@ -337,5 +348,6 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
         </div>
       )}
     </div>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
+import { useConfirm } from '../hooks/useConfirm';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -13,6 +14,7 @@ interface OrderDetailsProps {
 }
 
 export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit, onOrderSent, onUseAsTemplate }: OrderDetailsProps) {
+  const { confirm, ConfirmComponent } = useConfirm();
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [history, setHistory] = useState<OrderHistory[]>([]);
@@ -126,7 +128,14 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const sendOrder = async () => {
     if (!order) return;
-    if (!confirm('Czy na pewno chcesz wysłać to zamówienie?')) return;
+    const confirmed = await confirm({
+      title: 'Wysłać zamówienie?',
+      message: 'Zamówienie zostanie wysłane do hurtowni. Nie będzie można go później edytować.',
+      confirmText: 'Wyślij',
+      cancelText: 'Anuluj',
+      variant: 'info'
+    });
+    if (!confirmed) return;
 
     try {
       const { error: updateError } = await supabase
@@ -179,7 +188,14 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const startProgress = async () => {
     if (!order) return;
-    if (!confirm('Czy na pewno chcesz rozpocząć realizację tego zamówienia?')) return;
+    const confirmed = await confirm({
+      title: 'Rozpocząć realizację?',
+      message: 'Zamówienie zostanie oznaczone jako "W trakcie realizacji". Będziesz mógł śledzić postępy.',
+      confirmText: 'Rozpocznij',
+      cancelText: 'Anuluj',
+      variant: 'info'
+    });
+    if (!confirmed) return;
 
     try {
       const { error: updateError } = await supabase
@@ -209,7 +225,14 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const rejectOrder = async () => {
     if (!order) return;
-    if (!confirm('Czy na pewno chcesz odrzucić to zamówienie?')) return;
+    const confirmed = await confirm({
+      title: 'Odrzucić zamówienie?',
+      message: 'Zamówienie zostanie oznaczone jako odrzucone. Użytkownik zostanie powiadomiony.',
+      confirmText: 'Odrzuć',
+      cancelText: 'Anuluj',
+      variant: 'danger'
+    });
+    if (!confirmed) return;
 
     try {
       const { error: updateError } = await supabase
@@ -236,7 +259,14 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const deleteOrder = async () => {
     if (!order || (order.status !== 'draft' && order.status !== 'notatnik')) return;
-    if (!confirm('Czy na pewno chcesz usunąć to zamówienie?')) return;
+    const confirmed = await confirm({
+      title: 'Usunąć zamówienie?',
+      message: 'Ta operacja jest nieodwracalna. Wszystkie dane zamówienia zostaną trwale usunięte.',
+      confirmText: 'Usuń',
+      cancelText: 'Anuluj',
+      variant: 'danger'
+    });
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -260,7 +290,14 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const convertToDraft = async () => {
     if (!order || order.status !== 'notatnik') return;
-    if (!confirm('Czy na pewno chcesz przekształcić to zamówienie w szkic? Zostaniesz przeniesiony do edycji.')) return;
+    const confirmed = await confirm({
+      title: 'Przekształcić w szkic?',
+      message: 'Zamówienie zostanie przekształcone w szkic i będzie można je edytować. Zostaniesz przeniesiony do edycji.',
+      confirmText: 'Przekształć',
+      cancelText: 'Anuluj',
+      variant: 'warning'
+    });
+    if (!confirmed) return;
 
     try {
       const { error: updateError } = await supabase
@@ -337,7 +374,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                      (order.status === 'in_progress' || order.status === 'pending_confirmation');
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <>
+      <ConfirmComponent />
+      <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
         <div className="flex items-center gap-3 mb-3">
           <button
@@ -662,5 +701,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         )}
       </div>
     </div>
+    </>
   );
 }
