@@ -28,6 +28,7 @@ export default function PriceList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [priceLayout, setPriceLayout] = useState<PriceLayout>('horizontal');
   const [swipedProduct, setSwipedProduct] = useState<string | null>(null);
@@ -101,11 +102,14 @@ export default function PriceList() {
     }
   };
 
+  const categories = ['all', 'Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
                          (product.index && product.index.toLowerCase().includes(search.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     const notInNotebook = !notebookItems.includes(product.id);
-    return matchesSearch && notInNotebook;
+    return matchesSearch && matchesCategory && notInNotebook;
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -284,6 +288,22 @@ export default function PriceList() {
             placeholder="Szukaj produktu..."
             className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-amber-500 focus:border-transparent"
           />
+        </div>
+
+        <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
+                selectedCategory === cat
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {cat === 'all' ? 'Wszystkie' : cat}
+            </button>
+          ))}
         </div>
 
         <div className="flex gap-2 items-center justify-between">
