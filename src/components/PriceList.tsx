@@ -54,6 +54,28 @@ export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
   }, []);
 
   useEffect(() => {
+    if (notebookOrderId) {
+      setCurrentSessionNotebookId(notebookOrderId);
+      loadNotebookItems(notebookOrderId);
+    }
+  }, [notebookOrderId]);
+
+  const loadNotebookItems = async (orderId: string) => {
+    try {
+      const { data: orderItems } = await supabase
+        .from('order_items')
+        .select('product_id')
+        .eq('order_id', orderId);
+
+      if (orderItems) {
+        setNotebookItems(orderItems.map(item => item.product_id));
+      }
+    } catch (error) {
+      console.error('Error loading notebook items:', error);
+    }
+  };
+
+  useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (isDragging && touchStart !== null && swipedProduct !== null) {
         console.log('🌍 Global mouse MOVE - position:', e.clientX);
@@ -146,6 +168,15 @@ export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
         if (existingOrder) {
           setCurrentSessionNotebookId(existingOrder.id);
           console.log('Loaded existing notebook order:', existingOrder.id);
+
+          const { data: orderItems } = await supabase
+            .from('order_items')
+            .select('product_id')
+            .eq('order_id', existingOrder.id);
+
+          if (orderItems) {
+            setNotebookItems(orderItems.map(item => item.product_id));
+          }
         }
       }
     } catch (error) {
@@ -292,6 +323,11 @@ export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
   const addToNotebook = async (product: Product) => {
     if (!storeId || !userId) {
       console.log('Cannot add to notebook: storeId or userId missing', { storeId, userId });
+      return;
+    }
+
+    if (notebookItems.includes(product.id)) {
+      console.log('Product already in notebook, skipping');
       return;
     }
 
@@ -523,13 +559,14 @@ export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
               const isAdding = notebookItems.includes(product.id);
+              const isInNotebook = notebookItems.includes(product.id);
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
-              const isDisabled = isPriceZero;
+              const isDisabled = isPriceZero || isInNotebook;
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-40 bg-gray-100 cursor-not-allowed' : 'select-none cursor-grab active:cursor-grabbing'}`}
+                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'select-none cursor-grab active:cursor-grabbing'}`}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
                   onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
@@ -557,6 +594,9 @@ export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
                           </span>
                           {showIndex && product.index && (
                             <span className="text-[10px] text-gray-400 font-mono">[{product.index}]</span>
+                          )}
+                          {isInNotebook && (
+                            <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">W NOTATNIKU</span>
                           )}
                         </div>
                         {showDescription && product.description && (
