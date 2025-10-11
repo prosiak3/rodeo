@@ -195,18 +195,29 @@ export default function PriceList() {
   };
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
+    console.log('🖱️ Mouse DOWN - productId:', productId, 'position:', e.clientX);
+    e.preventDefault();
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
     setSwipedProduct(productId);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (touchStart === null || swipedProduct === null) return;
-    if (e.buttons !== 1) return;
+    if (touchStart === null || swipedProduct === null) {
+      return;
+    }
+    if (e.buttons !== 1) {
+      console.log('🔴 Mouse MOVE ignored - button not pressed');
+      return;
+    }
+    console.log('🖱️ Mouse MOVE - position:', e.clientX);
+    e.preventDefault();
     setTouchCurrent(e.clientX);
   };
 
   const handleMouseUp = async (product: Product) => {
+    console.log('🖱️ Mouse UP - product:', product.name, { touchStart, touchCurrent });
+
     if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
       setTouchCurrent(null);
@@ -217,6 +228,8 @@ export default function PriceList() {
     const swipeDistance = touchCurrent - touchStart;
     const screenWidth = window.innerWidth;
     const swipeThreshold = screenWidth * 0.5;
+
+    console.log('🖱️ Mouse swipe distance:', swipeDistance, 'Threshold:', swipeThreshold);
 
     if (swipeDistance > swipeThreshold) {
       await addToNotebook(product);
