@@ -283,6 +283,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   };
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
+    console.log('🖱️ MOUSE DOWN:', e.clientX);
     setIsDragging(true);
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
@@ -294,10 +295,12 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       return;
     }
     e.preventDefault();
+    console.log('🖱️ MOUSE MOVE:', e.clientX, 'distance:', e.clientX - touchStart);
     setTouchCurrent(e.clientX);
   };
 
   const handleMouseUp = async (product: Product) => {
+    console.log('🖱️ MOUSE UP:', { touchStart, touchCurrent });
     setIsDragging(false);
 
     if (touchStart === null || touchCurrent === null) {
@@ -311,7 +314,10 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     const screenWidth = window.innerWidth;
     const swipeThreshold = screenWidth * 0.5;
 
+    console.log('🖱️ MOUSE RESULT:', { swipeDistance, screenWidth, swipeThreshold, willAdd: swipeDistance > swipeThreshold });
+
     if (swipeDistance > swipeThreshold) {
+      console.log('🖱️ ADDING TO NOTEBOOK via mouse:', product.name);
       await addToNotebook(product);
     }
 
