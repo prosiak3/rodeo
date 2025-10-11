@@ -133,19 +133,29 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     };
 
     recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error === 'no-speech' || event.error === 'aborted') {
-        console.log('Ignoring error:', event.error);
+      if (event.error === 'no-speech') {
         return;
       }
+      if (event.error === 'aborted') {
+        setIsListening(false);
+        (window as any).shouldContinueListening = false;
+        return;
+      }
+      console.error('Speech recognition error:', event.error);
       setIsListening(false);
       (window as any).shouldContinueListening = false;
     };
 
     recognition.onend = () => {
       const shouldRestart = (window as any).shouldContinueListening;
-      if (shouldRestart) {
+
+      if (shouldRestart && isListening) {
         setTimeout(() => {
+          if (!(window as any).shouldContinueListening) {
+            setIsListening(false);
+            return;
+          }
+
           try {
             const newRecognition = new SpeechRecognition();
             newRecognition.lang = 'pl-PL';
@@ -177,8 +187,13 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   const stopListening = async () => {
     setShouldContinueListening(false);
     (window as any).shouldContinueListening = false;
+    setIsListening(false);
     if ((window as any).currentRecognition) {
-      (window as any).currentRecognition.stop();
+      try {
+        (window as any).currentRecognition.stop();
+      } catch (error) {
+
+      }
     }
     if (inactivityTimer) {
       clearTimeout(inactivityTimer);
