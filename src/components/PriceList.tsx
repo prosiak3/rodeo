@@ -645,8 +645,21 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                     setSwipedProduct(null);
                   }}
                 >
+                    {!isDisabled && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('➕ Add button clicked for:', product.name);
+                          addToNotebook(product);
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 active:bg-green-700 transition shadow-lg"
+                        title="Dodaj do notatnika"
+                      >
+                        <Plus className="w-6 h-6" />
+                      </button>
+                    )}
                     <div
-                      className={`px-3 py-2 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
+                      className={`px-3 py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
                       style={{
                         transform: isDisabled ? 'none' : `translateX(${swipeOffset}px)`,
                         transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
@@ -748,19 +761,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                             </>
                           )}
                         </div>
-                      )}
-                      {!isDisabled && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log('➕ Add button clicked for:', product.name);
-                            addToNotebook(product);
-                          }}
-                          className="ml-2 flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition"
-                          title="Dodaj do notatnika"
-                        >
-                          <Plus className="w-5 h-5" />
-                        </button>
                       )}
                     </div>
                     </div>
