@@ -173,8 +173,6 @@ export default function PriceList() {
     const screenWidth = window.innerWidth;
     const swipeThreshold = screenWidth * 0.5;
 
-    console.log('Swipe distance:', swipeDistance, 'threshold:', swipeThreshold, 'screen width:', screenWidth);
-
     if (swipeDistance > swipeThreshold) {
       await addToNotebook(product);
     }
@@ -406,13 +404,13 @@ export default function PriceList() {
       ) : (
         <div className="space-y-3">
           {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
-            <div key={category} className="bg-white rounded-lg shadow overflow-hidden">
+            <div key={category}>
               {selectedCategory === 'all' && (
-                <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2 sticky top-[140px] z-5">
-                  <h3 className="text-white font-bold text-sm">{category}</h3>
+                <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2.5 mb-2 rounded-lg shadow-md">
+                  <h3 className="text-white font-bold text-base">{category}</h3>
                 </div>
               )}
-              <div className="divide-y divide-gray-100">
+              <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
               const isAdding = notebookItems.includes(product.id);
@@ -423,6 +421,7 @@ export default function PriceList() {
                 <div
                   key={product.id}
                   className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-40 bg-gray-100 cursor-not-allowed' : 'touch-none select-none cursor-grab active:cursor-grabbing'}`}
+                  style={{ touchAction: isDisabled ? 'auto' : 'none' }}
                   onPointerDown={isDisabled ? undefined : (e) => handlePointerStart(e, product.id)}
                   onPointerMove={isDisabled ? undefined : handlePointerMove}
                   onPointerUp={isDisabled ? undefined : (e) => handlePointerEnd(e, product)}
@@ -436,7 +435,8 @@ export default function PriceList() {
                       className={`px-3 py-2 ${isDisabled ? '' : 'hover:bg-gray-50'} transition ${isAdding ? 'opacity-0' : 'opacity-100'}`}
                       style={{
                         transform: isDisabled ? 'none' : `translateX(${swipeOffset}px)`,
-                        transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
+                        transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none',
+                        pointerEvents: isDisabled ? 'auto' : 'none'
                       }}
                     >
                     <div className="flex items-center gap-2">
