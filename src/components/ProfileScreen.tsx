@@ -18,7 +18,6 @@ const roleLabels: Record<string, string> = {
 
 export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const { theme, setTheme } = useTheme();
-  const [orderMode, setOrderMode] = useState<'quantity' | 'list'>((user as any).order_mode || 'quantity');
   const [showAllFilters, setShowAllFilters] = useState<boolean>(user.show_all_order_filters || false);
   const [allowCollaboration, setAllowCollaboration] = useState<boolean>((user as any).allow_collaborative_editing ?? true);
   const [showDescription, setShowDescription] = useState<boolean>((user as any).show_product_description ?? true);
@@ -27,25 +26,6 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [showSortIcons, setShowSortIcons] = useState<boolean>((user as any).show_sort_icons ?? true);
   const [showPriceLayoutToggle, setShowPriceLayoutToggle] = useState<boolean>((user as any).show_price_layout_toggle ?? true);
   const [saving, setSaving] = useState(false);
-
-  const handleOrderModeChange = async (mode: 'quantity' | 'list') => {
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({ order_mode: mode })
-        .eq('id', user.id);
-
-      if (error) throw error;
-      setOrderMode(mode);
-      alert('Ustawienia zapisane!');
-    } catch (error) {
-      console.error('Error updating order mode:', error);
-      alert('Błąd podczas zapisywania ustań');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleShowAllFiltersToggle = async () => {
     setSaving(true);
@@ -225,40 +205,6 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 </div>
               </button>
             ))}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Settings className="w-5 h-5 text-amber-600" />
-            <h3 className="font-semibold text-lg">Ustawienia zamawiania</h3>
-          </div>
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600 mb-3">Wybierz sposób składania zamówień z cennika:</p>
-            <button
-              onClick={() => handleOrderModeChange('quantity')}
-              disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
-                orderMode === 'quantity'
-                  ? 'border-amber-500 bg-amber-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="font-semibold text-gray-800 mb-1">Z cennika ilości</div>
-              <div className="text-sm text-gray-600">Dodajesz produkt z ilością od razu i wysyłasz</div>
-            </button>
-            <button
-              onClick={() => handleOrderModeChange('list')}
-              disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
-                orderMode === 'list'
-                  ? 'border-amber-500 bg-amber-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="font-semibold text-gray-800 mb-1">Z cennika lista</div>
-              <div className="text-sm text-gray-600">Budujesz listę produktów, potem podajesz ilości i zapisujesz jako szkic</div>
-            </button>
           </div>
         </div>
 
