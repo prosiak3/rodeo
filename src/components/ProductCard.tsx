@@ -17,9 +17,10 @@ interface ProductCardProps {
   onSelect?: () => void;
   children?: React.ReactNode;
   priceLayout?: 'horizontal' | 'vertical';
+  positionNumber?: number;
 }
 
-export default function ProductCard({ product, onSelect, children, priceLayout = 'horizontal' }: ProductCardProps) {
+export default function ProductCard({ product, onSelect, children, priceLayout = 'horizontal', positionNumber }: ProductCardProps) {
   const hasPromo = product.promo_price && product.promo_price > 0;
   const finalPrice = product.promo_price || product.your_price || product.base_price;
 
@@ -33,8 +34,17 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
-            <span className="text-xs text-gray-500">{product.code}</span>
+            <div className="flex items-center gap-2">
+              {positionNumber && (
+                <span className="flex-shrink-0 w-8 h-8 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-xs font-bold">
+                  {positionNumber}
+                </span>
+              )}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
+                <span className="text-xs text-gray-500">{product.code}</span>
+              </div>
+            </div>
           </div>
         {priceLayout === 'horizontal' ? (
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -120,11 +130,6 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
         {product.description && (
           <p className="text-xs text-gray-600">{product.description}</p>
         )}
-
-        <div className="flex gap-3 text-xs text-gray-500">
-          <span>Min: {product.min_quantity} {product.unit}</span>
-          <span>Krok: {product.quantity_step} {product.unit}</span>
-        </div>
 
         {product.tags && product.tags.length > 0 && (
           <div className="flex gap-1 flex-wrap">

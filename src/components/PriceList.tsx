@@ -330,8 +330,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   };
 
   const addToNotebook = async (product: Product) => {
+    console.log('🔵 addToNotebook called for:', product.name, { storeId, userId });
     if (!storeId || !userId) {
-      console.log('Cannot add to notebook: storeId or userId missing', { storeId, userId });
+      console.log('❌ Cannot add to notebook: storeId or userId missing', { storeId, userId });
       return;
     }
 
@@ -597,6 +598,19 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
               const isDisabled = isPriceZero || isInNotebook;
+
+              // Debug first product
+              if (categoryProducts.indexOf(product) === 0 && category === filteredProducts[0]?.category) {
+                console.log('🔍 First product state:', {
+                  name: product.name,
+                  isPriceZero,
+                  isInNotebook,
+                  isDisabled,
+                  base_price: product.base_price,
+                  your_price: product.your_price,
+                  promo_price: product.promo_price
+                });
+              }
               return (
                 <div
                   key={product.id}
@@ -623,6 +637,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0 mr-2">
                         <div className="flex items-baseline gap-2">
+                          <span className="flex-shrink-0 w-7 h-7 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-xs font-bold">
+                            {categoryProducts.indexOf(product) + 1}
+                          </span>
                           <span className="font-medium text-sm text-gray-800 truncate">
                             {product.name}
                           </span>
@@ -634,12 +651,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           )}
                         </div>
                         {showDescription && product.description && (
-                          <p className="text-xs text-gray-600 truncate">{product.description}</p>
+                          <p className="text-xs text-gray-600 truncate ml-9">{product.description}</p>
                         )}
-                        <div className="flex gap-3 mt-1 text-xs text-gray-500">
-                          <span>Min: {product.min_quantity} {product.unit}</span>
-                          <span>Krok: {product.quantity_step} {product.unit}</span>
-                        </div>
                       </div>
                       {priceLayout === 'horizontal' ? (
                         <div className="flex items-center gap-2 flex-shrink-0">
