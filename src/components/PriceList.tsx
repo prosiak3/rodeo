@@ -594,14 +594,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           e.preventDefault();
                           addToNotebook(product);
                         }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation();
-                        }}
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 active:bg-green-700 transition shadow-lg"
-                        style={{ touchAction: 'auto' }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 active:bg-green-700 transition shadow-lg pointer-events-auto"
+                        style={{ touchAction: 'none' }}
                         title="Dodaj do notatnika"
                       >
                         <Plus className="w-6 h-6" />
