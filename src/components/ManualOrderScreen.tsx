@@ -8,6 +8,7 @@ interface Product {
   unit: string;
   price_per_unit: number;
   description: string;
+  barcode?: string;
 }
 
 interface OrderItem {
@@ -44,7 +45,8 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
       const query = searchQuery.toLowerCase();
       const filtered = products.filter(p =>
         p.name.toLowerCase().includes(query) ||
-        (p.description || '').toLowerCase().includes(query)
+        (p.description || '').toLowerCase().includes(query) ||
+        (p.barcode || '').toLowerCase().includes(query)
       );
       setFilteredProducts(filtered);
     } else {
@@ -54,14 +56,39 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
 
   const loadProducts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('*')
+        .select('id, name, unit, base_price, description, barcode')
+        .eq('active', true)
         .order('name');
 
-      if (error) throw error;
-      setProducts(data || []);
-      setFilteredProducts(data || []);
+      if (productsError) throw productsError;
+
+      const { data: specialPricesData, error: specialPricesError } = await supabase
+        .from('special_prices')
+        .select('product_id, your_price, promo_price')
+        .eq('store_id', storeId);
+
+      if (specialPricesError) throw specialPricesError;
+
+      const specialPricesMap = new Map(
+        (specialPricesData || []).map(sp => [
+          sp.product_id,
+          sp.promo_price || sp.your_price || null
+        ])
+      );
+
+      const productsWithPrices = (productsData || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        unit: p.unit,
+        description: p.description || '',
+        barcode: p.barcode || '',
+        price_per_unit: specialPricesMap.get(p.id) || p.base_price || 0
+      }));
+
+      setProducts(productsWithPrices);
+      setFilteredProducts(productsWithPrices);
     } catch (error) {
       console.error('Error loading products:', error);
     }
