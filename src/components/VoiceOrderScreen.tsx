@@ -35,6 +35,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   const [notes, setNotes] = useState('');
   const [sending, setSending] = useState(false);
   const [shouldContinueListening, setShouldContinueListening] = useState(false);
+  const [notification, setNotification] = useState<string>('');
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -92,6 +93,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     recognition.interimResults = true;
 
     setShouldContinueListening(true);
+    (window as any).shouldContinueListening = true;
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -125,17 +127,28 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     };
 
     recognition.onend = () => {
-      if (shouldContinueListening && isListening) {
+      const shouldRestart = (window as any).shouldContinueListening;
+      if (shouldRestart) {
         setTimeout(() => {
-          if ((window as any).currentRecognition) {
-            try {
-              (window as any).currentRecognition.start();
-            } catch (error) {
-              console.error('Error restarting recognition:', error);
-              setIsListening(false);
-            }
+          try {
+            const newRecognition = new SpeechRecognition();
+            newRecognition.lang = 'pl-PL';
+            newRecognition.continuous = false;
+            newRecognition.interimResults = true;
+
+            newRecognition.onstart = recognition.onstart;
+            newRecognition.onresult = recognition.onresult;
+            newRecognition.onerror = recognition.onerror;
+            newRecognition.onend = recognition.onend;
+
+            newRecognition.start();
+            (window as any).currentRecognition = newRecognition;
+          } catch (error) {
+            console.error('Error restarting recognition:', error);
+            setIsListening(false);
+            (window as any).shouldContinueListening = false;
           }
-        }, 100);
+        }, 300);
       } else {
         setIsListening(false);
       }
@@ -147,6 +160,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
   const stopListening = async () => {
     setShouldContinueListening(false);
+    (window as any).shouldContinueListening = false;
     if ((window as any).currentRecognition) {
       (window as any).currentRecognition.stop();
     }
@@ -217,11 +231,12 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
           .map(item => item.productName)
           .join(', ');
 
-        if (items.filter(item => !item.matched && (!item.suggestions || item.suggestions.length === 0)).length > 0) {
-          setTimeout(() => {
-            alert(`Uwaga! Nie znaleziono ${unmatchedCount} produktów w cenniku: ${unmatchedNames}`);
-          }, 100);
-        }
+        setNotification(`⚠️ Nie znaleziono w cenniku: ${unmatchedNames}`);
+        setTimeout(() => setNotification(''), 5000);
+      } else {
+        const addedNames = items.map(item => item.productName).join(', ');
+        setNotification(`✓ Dodano: ${addedNames}`);
+        setTimeout(() => setNotification(''), 3000);
       }
     }
     setTranscript('');
@@ -647,6 +662,16 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm font-medium text-blue-800 mb-2">Transkrypcja na żywo:</p>
               <p className="text-gray-700">{transcript}</p>
+            </div>
+          )}
+
+          {notification && (
+            <div className={`mt-6 p-4 rounded-lg border-2 ${
+              notification.includes('⚠️')
+                ? 'bg-yellow-50 border-yellow-400 text-yellow-800'
+                : 'bg-green-50 border-green-400 text-green-800'
+            }`}>
+              <p className="text-sm font-medium">{notification}</p>
             </div>
           )}
         </div>
