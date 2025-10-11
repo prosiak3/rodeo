@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface Product {
   id: string;
@@ -25,6 +26,7 @@ type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
 type PriceLayout = 'horizontal' | 'vertical';
 
 export default function PriceList() {
+  const { colors } = useTheme();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -315,7 +317,7 @@ export default function PriceList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: colors.primary }}></div>
       </div>
     );
   }
@@ -330,7 +332,8 @@ export default function PriceList() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Szukaj produktu..."
-            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-amber-500 focus:border-transparent"
+            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:border-transparent"
+            style={{ '--tw-ring-color': colors.ring } as React.CSSProperties}
           />
         </div>
 
@@ -339,11 +342,8 @@ export default function PriceList() {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition ${
-                selectedCategory === cat
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition bg-gray-100 text-gray-700 hover:bg-gray-200"
+              style={selectedCategory === cat ? { backgroundColor: colors.primary, color: 'white' } : {}}
             >
               {cat === 'all' ? 'Wszystkie' : cat}
             </button>
@@ -354,33 +354,24 @@ export default function PriceList() {
           <div className="flex gap-1">
             <button
               onClick={() => setSortBy('name-asc')}
-              className={`p-1.5 rounded transition ${
-                sortBy === 'name-asc'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+              style={sortBy === 'name-asc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
               title="Nazwa A-Z"
             >
               <ArrowUpAZ className="w-4 h-4" />
             </button>
             <button
               onClick={() => setSortBy('name-desc')}
-              className={`p-1.5 rounded transition ${
-                sortBy === 'name-desc'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+              style={sortBy === 'name-desc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
               title="Nazwa Z-A"
             >
               <ArrowDownZA className="w-4 h-4" />
             </button>
             <button
               onClick={() => setSortBy('price-asc')}
-              className={`p-1.5 rounded transition flex items-center gap-1 ${
-                sortBy === 'price-asc'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className="p-1.5 rounded transition flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200"
+              style={sortBy === 'price-asc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
               title="Cena rosnąco"
             >
               <span className="text-xs font-semibold">PLN</span>
@@ -388,11 +379,8 @@ export default function PriceList() {
             </button>
             <button
               onClick={() => setSortBy('price-desc')}
-              className={`p-1.5 rounded transition flex items-center gap-1 ${
-                sortBy === 'price-desc'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className="p-1.5 rounded transition flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200"
+              style={sortBy === 'price-desc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
               title="Cena malejąco"
             >
               <span className="text-xs font-semibold">PLN</span>
@@ -403,22 +391,16 @@ export default function PriceList() {
           <div className="flex gap-1">
             <button
               onClick={() => setPriceLayout('horizontal')}
-              className={`p-1.5 rounded transition ${
-                priceLayout === 'horizontal'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+              style={priceLayout === 'horizontal' ? { backgroundColor: colors.primary, color: 'white' } : {}}
               title="Układ poziomy"
             >
               <AlignJustify className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPriceLayout('vertical')}
-              className={`p-1.5 rounded transition ${
-                priceLayout === 'vertical'
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+              style={priceLayout === 'vertical' ? { backgroundColor: colors.primary, color: 'white' } : {}}
               title="Układ pionowy"
             >
               <LayoutGrid className="w-4 h-4" />
@@ -437,7 +419,7 @@ export default function PriceList() {
           {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
             <div key={category}>
               {selectedCategory === 'all' && (
-                <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2.5 mb-2 rounded-lg shadow-md">
+                <div className="px-4 py-2.5 mb-2 rounded-lg shadow-md" style={{ background: colors.gradient }}>
                   <h3 className="text-white font-bold text-base">{category}</h3>
                 </div>
               )}
@@ -493,7 +475,7 @@ export default function PriceList() {
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {!product.your_price && !product.promo_price && (
                             <div className="flex items-center gap-1">
-                              <span className="text-sm font-bold text-amber-600">
+                              <span className="text-sm font-bold" style={{ color: colors.text }}>
                                 {product.base_price.toFixed(2)}
                               </span>
                               <span className="text-xs text-gray-500">PLN/{product.unit}</span>
@@ -531,7 +513,7 @@ export default function PriceList() {
                         <div className="flex flex-col items-end gap-1 flex-shrink-0">
                           {!product.your_price && !product.promo_price && (
                             <div className="flex items-baseline gap-1">
-                              <span className="text-base font-bold text-amber-600">
+                              <span className="text-base font-bold" style={{ color: colors.text }}>
                                 {product.base_price.toFixed(2)}
                               </span>
                               <span className="text-xs text-gray-500">PLN/{product.unit}</span>
@@ -577,7 +559,7 @@ export default function PriceList() {
         </div>
       )}
 
-      <div className="bg-amber-50 rounded-lg p-3 text-xs text-amber-800 border border-amber-200">
+      <div className="rounded-lg p-3 text-xs border" style={{ backgroundColor: colors.bgLight, color: colors.text, borderColor: colors.border }}>
         <p className="font-semibold mb-1">📋 Informacja o cenniku</p>
         <p>Ceny podane w cenniku są cenami bazowymi. Rzeczywiste ceny mogą różnić się w zależności od sklepu i specjalnych promocji.</p>
       </div>

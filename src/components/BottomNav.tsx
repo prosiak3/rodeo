@@ -1,4 +1,5 @@
 import { Home, Plus, Package, Tag, Settings } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface BottomNavProps {
   activeTab: 'home' | 'new-order' | 'orders' | 'prices' | 'profile';
@@ -7,15 +8,16 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNavProps) {
+  const { colors } = useTheme();
+
   if (userRole === 'admin' || userRole === 'operator') {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
         <div className="flex justify-around items-center h-16">
           <button
             onClick={() => onTabChange('home')}
-            className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-              activeTab === 'home' ? 'text-amber-600' : 'text-gray-600'
-            }`}
+            className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600"
+            style={activeTab === 'home' ? { color: colors.primary } : {}}
           >
             <Settings className="w-6 h-6" />
             <span className="text-xs mt-1">Panel</span>
@@ -31,9 +33,8 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
         <div className="flex justify-around items-center h-16">
           <button
             onClick={() => onTabChange('home')}
-            className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-              activeTab === 'home' ? 'text-amber-600' : 'text-gray-600'
-            }`}
+            className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600"
+            style={activeTab === 'home' ? { color: colors.primary } : {}}
           >
             <Home className="w-6 h-6" />
             <span className="text-xs mt-1">Główna</span>
@@ -41,9 +42,8 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
 
           <button
             onClick={() => onTabChange('orders')}
-            className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-              activeTab === 'orders' ? 'text-amber-600' : 'text-gray-600'
-            }`}
+            className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600"
+            style={activeTab === 'orders' ? { color: colors.primary } : {}}
           >
             <Package className="w-6 h-6" />
             <span className="text-xs mt-1">Zamówienia</span>
@@ -51,9 +51,8 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
 
           <button
             onClick={() => onTabChange('prices')}
-            className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-              activeTab === 'prices' ? 'text-amber-600' : 'text-gray-600'
-            }`}
+            className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600"
+            style={activeTab === 'prices' ? { color: colors.primary } : {}}
           >
             <Tag className="w-5 h-5" />
             <span className="text-xs mt-1">Cennik</span>
@@ -68,9 +67,8 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
       <div className="flex justify-around items-center h-16">
         <button
           onClick={() => onTabChange('home')}
-          className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-            activeTab === 'home' ? 'text-amber-600' : 'text-gray-600'
-          }`}
+          className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600"
+          style={activeTab === 'home' ? { color: colors.primary } : {}}
         >
           <Home className="w-6 h-6" />
           <span className="text-xs mt-1">Główna</span>
@@ -78,9 +76,8 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
 
         <button
           onClick={() => onTabChange('new-order')}
-          className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-            activeTab === 'new-order' ? 'text-amber-600' : 'text-gray-600'
-          }`}
+          className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600"
+          style={activeTab === 'new-order' ? { color: colors.primary } : {}}
         >
           <Plus className="w-6 h-6" />
           <span className="text-xs mt-1">Nowe</span>
@@ -88,9 +85,8 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
 
         <button
           onClick={() => onTabChange('orders')}
-          className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-            activeTab === 'orders' ? 'text-amber-600' : 'text-gray-600'
-          }`}
+          className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600"
+          style={activeTab === 'orders' ? { color: colors.primary } : {}}
         >
           <Package className="w-6 h-6" />
           <span className="text-xs mt-1">Zamówienia</span>
@@ -98,9 +94,8 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
 
         <button
           onClick={() => onTabChange('prices')}
-          className={`flex flex-col items-center justify-center flex-1 h-full transition ${
-            activeTab === 'prices' ? 'text-amber-600' : 'text-gray-600'
-          }`}
+          className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600"
+          style={activeTab === 'prices' ? { color: colors.primary } : {}}
         >
           <Tag className="w-5 h-5" />
           <span className="text-xs mt-1">Cennik</span>
