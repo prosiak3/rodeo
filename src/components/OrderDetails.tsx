@@ -127,7 +127,12 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
       });
 
       alert(fully ? 'Zamówienie potwierdzone!' : 'Zamówienie częściowo potwierdzone');
-      loadOrderDetails();
+
+      if (onOrderSent) {
+        onOrderSent();
+      } else {
+        loadOrderDetails();
+      }
     } catch (error) {
       console.error('Error confirming order:', error);
       alert('Błąd podczas potwierdzania zamówienia');
@@ -224,7 +229,12 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
       });
 
       alert('Zamówienie w realizacji!');
-      loadOrderDetails();
+
+      if (onOrderSent) {
+        onOrderSent();
+      } else {
+        loadOrderDetails();
+      }
     } catch (error) {
       console.error('Error starting order progress:', error);
       alert('Błąd podczas rozpoczynania realizacji');
@@ -258,7 +268,12 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
       });
 
       alert('Zamówienie odrzucone');
-      loadOrderDetails();
+
+      if (onOrderSent) {
+        onOrderSent();
+      } else {
+        loadOrderDetails();
+      }
     } catch (error) {
       console.error('Error rejecting order:', error);
       alert('Błąd podczas odrzucania zamówienia');
