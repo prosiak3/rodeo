@@ -463,7 +463,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   return (
     <div className="space-y-3">
       {notebookOrderId && onBackToOrder && (
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-20">
           <button
             onClick={onBackToOrder}
             className="w-full flex items-center justify-center gap-2 text-white font-medium hover:opacity-90 transition"
@@ -473,7 +473,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           </button>
         </div>
       )}
-      <div className="bg-white rounded-lg shadow p-3 sticky top-0 z-10">
+      <div className="bg-white rounded-lg shadow p-3 sticky top-[72px] z-10">
         <div className="flex items-center gap-2 mb-2">
           <Search className="w-4 h-4 text-gray-400" />
           <input
@@ -580,6 +580,10 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
               const isDisabled = isPriceZero || isInNotebook;
+
+              if (isInNotebook) {
+                console.log('Product in notebook:', product.name, product.id);
+              }
               return (
                 <div
                   key={product.id}
