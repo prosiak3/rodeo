@@ -608,7 +608,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                   }}
                 >
                     <div
-                      className={`px-3 py-2 ${isDisabled ? '' : 'hover:bg-gray-50'} transition ${isAdding ? 'opacity-0' : 'opacity-100'}`}
+                      className={`px-3 py-2 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
                       style={{
                         transform: isDisabled ? 'none' : `translateX(${swipeOffset}px)`,
                         transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
