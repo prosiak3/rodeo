@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 
 interface OrderDetailsProps {
@@ -7,9 +7,10 @@ interface OrderDetailsProps {
   userRole: string;
   userId: string;
   onBack: () => void;
+  onEdit?: () => void;
 }
 
-export default function OrderDetails({ orderId, userRole, userId, onBack }: OrderDetailsProps) {
+export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit }: OrderDetailsProps) {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [history, setHistory] = useState<OrderHistory[]>([]);
@@ -231,6 +232,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
     );
   }
 
+  const canEdit = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canSend = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canStartProgress = (userRole === 'operator' || userRole === 'admin') && order.status === 'sent';
   const canConfirm = (userRole === 'operator' || userRole === 'admin') &&
@@ -439,8 +441,15 @@ export default function OrderDetails({ orderId, userRole, userId, onBack }: Orde
           </div>
         </div>
 
-        {canSend && (
-          <div className="bg-white rounded-lg shadow p-3">
+        {canEdit && onEdit && (
+          <div className="bg-white rounded-lg shadow p-3 space-y-2">
+            <button
+              onClick={onEdit}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <Edit className="w-5 h-5" />
+              Edytuj zamówienie
+            </button>
             <button
               onClick={sendOrder}
               className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"

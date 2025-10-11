@@ -9,6 +9,7 @@ import PriceListOrderScreen from './components/PriceListOrderScreen';
 import PriceListOrderListMode from './components/PriceListOrderListMode';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
+import EditDraftOrderScreen from './components/EditDraftOrderScreen';
 import ProfileScreen from './components/ProfileScreen';
 import AdminPanel from './components/AdminPanel';
 import PriceList from './components/PriceList';
@@ -20,6 +21,7 @@ function AppContent() {
   const { session, user, loading, signIn, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile'>('home');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
 
   const createTestUsers = async () => {
@@ -141,6 +143,22 @@ function AppContent() {
     return <LoginScreen onLogin={signIn} onCreateTestUsers={createTestUsers} />;
   }
 
+  if (editingOrderId) {
+    return (
+      <EditDraftOrderScreen
+        orderId={editingOrderId}
+        onSave={() => {
+          setEditingOrderId(null);
+          setSelectedOrderId(editingOrderId);
+        }}
+        onCancel={() => {
+          setEditingOrderId(null);
+          setSelectedOrderId(editingOrderId);
+        }}
+      />
+    );
+  }
+
   if (selectedOrderId) {
     return (
       <OrderDetails
@@ -148,6 +166,10 @@ function AppContent() {
         userRole={user.role}
         userId={user.id}
         onBack={() => setSelectedOrderId(null)}
+        onEdit={() => {
+          setEditingOrderId(selectedOrderId);
+          setSelectedOrderId(null);
+        }}
       />
     );
   }
