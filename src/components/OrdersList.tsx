@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3 } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3, ArrowUpDown } from 'lucide-react';
 import { supabase, Order, OrderStatus } from '../lib/supabase';
 
 interface OrdersListProps {
@@ -24,10 +24,11 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'draft' : 'all');
+  const [sortAscending, setSortAscending] = useState(false);
 
   useEffect(() => {
     loadOrders();
-  }, [storeId, filter]);
+  }, [storeId, filter, sortAscending]);
 
   const loadOrders = async () => {
     setLoading(true);
@@ -42,7 +43,7 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
             role
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: sortAscending });
 
       if (storeId && userRole === 'store_manager') {
         query = query.eq('store_id', storeId);
@@ -102,59 +103,71 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
 
   return (
     <div className="space-y-4">
-      {showLimitedFilters ? (
-        <div className="flex gap-3">
-          {(['draft', 'sent'] as const).map((status) => {
-            const config = statusConfig[status];
-            const Icon = config.icon;
-            return (
+      <div className="flex items-center justify-between gap-3">
+        <div className={showLimitedFilters ? "flex gap-3 flex-1" : "flex gap-2 overflow-x-auto pb-2 flex-1"}>
+          {showLimitedFilters ? (
+            <>
+              {(['draft', 'sent'] as const).map((status) => {
+                const config = statusConfig[status];
+                const Icon = config.icon;
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setFilter(status)}
+                    className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                      filter === status
+                        ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
+                        : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{config.label}</span>
+                  </button>
+                );
+              })}
+            </>
+          ) : (
+            <>
               <button
-                key={status}
-                onClick={() => setFilter(status)}
-                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
-                  filter === status
-                    ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
-                    : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
+                onClick={() => setFilter('all')}
+                className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition ${
+                  filter === 'all'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300'
                 }`}
+                title="Wszystkie"
               >
-                <Icon className="w-5 h-5" />
-                <span>{config.label}</span>
+                Wszystkie
               </button>
-            );
-          })}
+              {Object.entries(statusConfig).map(([status, config]) => {
+                const Icon = config.icon;
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setFilter(status as OrderStatus)}
+                    className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
+                      filter === status
+                        ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
+                        : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
+                    }`}
+                    title={config.label}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </button>
+                );
+              })}
+            </>
+          )}
         </div>
-      ) : (
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-2 rounded-lg font-medium whitespace-nowrap transition ${
-              filter === 'all'
-                ? 'bg-amber-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300'
-            }`}
-            title="Wszystkie"
-          >
-            Wszystkie
-          </button>
-          {Object.entries(statusConfig).map(([status, config]) => {
-            const Icon = config.icon;
-            return (
-              <button
-                key={status}
-                onClick={() => setFilter(status as OrderStatus)}
-                className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
-                  filter === status
-                    ? `${config.bgColor} ${config.color} ring-2 ring-offset-1 ${config.bgColor.replace('bg-', 'ring-')}`
-                    : `bg-white text-gray-600 border border-gray-300 ${config.hoverColor}`
-                }`}
-                title={config.label}
-              >
-                <Icon className="w-5 h-5" />
-              </button>
-            );
-          })}
-        </div>
-      )}
+        <button
+          onClick={() => setSortAscending(!sortAscending)}
+          className="px-4 py-3 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition flex items-center gap-2 whitespace-nowrap"
+          title={sortAscending ? "Od najstarszych" : "Od najnowszych"}
+        >
+          <ArrowUpDown className="w-5 h-5" />
+          <span className="hidden sm:inline">{sortAscending ? "Najstarsze" : "Najnowsze"}</span>
+        </button>
+      </div>
 
       {orders.length === 0 ? (
         <div className="bg-white rounded-xl shadow p-12 text-center">
