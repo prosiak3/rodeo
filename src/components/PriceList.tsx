@@ -622,15 +622,14 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0 mr-2">
                         <div className="flex items-baseline gap-2">
-                          <span className="flex-shrink-0 w-7 h-7 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-xs font-bold">
-                            {categoryProducts.indexOf(product) + 1}
-                          </span>
+                          {showIndex && product.index && (
+                            <span className="flex-shrink-0 w-7 h-7 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-xs font-bold">
+                              {product.index}
+                            </span>
+                          )}
                           <span className="font-medium text-sm text-gray-800 truncate">
                             {product.name}
                           </span>
-                          {showIndex && product.index && (
-                            <span className="text-[10px] text-gray-400 font-mono">[{product.index}]</span>
-                          )}
                           {isInNotebook && (
                             <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">W NOTATNIKU</span>
                           )}
