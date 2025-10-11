@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 
 interface ProfileScreenProps {
@@ -19,6 +19,8 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [orderMode, setOrderMode] = useState<'quantity' | 'list'>((user as any).order_mode || 'quantity');
   const [showAllFilters, setShowAllFilters] = useState<boolean>(user.show_all_order_filters || false);
   const [allowCollaboration, setAllowCollaboration] = useState<boolean>((user as any).allow_collaborative_editing ?? true);
+  const [showDescription, setShowDescription] = useState<boolean>((user as any).show_product_description ?? true);
+  const [showIndex, setShowIndex] = useState<boolean>((user as any).show_product_index ?? true);
   const [saving, setSaving] = useState(false);
 
   const handleOrderModeChange = async (mode: 'quantity' | 'list') => {
@@ -74,6 +76,34 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
       alert('Ustawienia zapisane!');
     } catch (error) {
       console.error('Error updating collaboration settings:', error);
+      alert('Błąd podczas zapisywania ustawień');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDisplayToggle = async (field: 'show_product_description' | 'show_product_index') => {
+    setSaving(true);
+    try {
+      const currentValue = field === 'show_product_description' ? showDescription : showIndex;
+      const newValue = !currentValue;
+      const { error } = await supabase
+        .from('users')
+        .update({ [field]: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      if (field === 'show_product_description') {
+        setShowDescription(newValue);
+      } else {
+        setShowIndex(newValue);
+      }
+
+      alert('Ustawienia zapisane! Odśwież cennik, aby zobaczyć zmiany.');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating display settings:', error);
       alert('Błąd podczas zapisywania ustawień');
     } finally {
       setSaving(false);
@@ -202,6 +232,57 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             </div>
           </div>
         )}
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Eye className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Wyświetlanie w cenniku</h3>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-800">Rozszerzony opis produktu</div>
+                  <div className="text-sm text-gray-600">Pokazuj dodatkowy opis pod nazwą produktu</div>
+                </div>
+                <button
+                  onClick={() => handleDisplayToggle('show_product_description')}
+                  disabled={saving}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    showDescription ? 'bg-amber-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      showDescription ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-800">Numer indeksu produktu</div>
+                  <div className="text-sm text-gray-600">Pokazuj 13-cyfrowy kod indeksu</div>
+                </div>
+                <button
+                  onClick={() => handleDisplayToggle('show_product_index')}
+                  disabled={saving}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    showIndex ? 'bg-amber-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      showIndex ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {user.role === 'store_manager' && (
           <div className="bg-white rounded-xl shadow-lg p-6">

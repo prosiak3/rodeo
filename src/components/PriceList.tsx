@@ -36,6 +36,8 @@ export default function PriceList() {
   const [notebookItems, setNotebookItems] = useState<string[]>([]);
   const [storeId, setStoreId] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
+  const [showDescription, setShowDescription] = useState<boolean>(true);
+  const [showIndex, setShowIndex] = useState<boolean>(true);
 
   useEffect(() => {
     loadProducts();
@@ -50,13 +52,15 @@ export default function PriceList() {
 
       const { data: userData } = await supabase
         .from('users')
-        .select('store_id')
+        .select('store_id, show_product_description, show_product_index')
         .eq('id', authData.user.id)
         .single();
 
       if (userData?.store_id) {
         setStoreId(userData.store_id);
       }
+      setShowDescription(userData?.show_product_description ?? true);
+      setShowIndex(userData?.show_product_index ?? true);
 
       const { data, error } = await supabase
         .from('products')
@@ -321,11 +325,11 @@ export default function PriceList() {
                           <span className="font-medium text-sm text-gray-800 truncate">
                             {product.name}
                           </span>
-                          {product.index && !product.index.match(/^[0-9]+$/) && (
+                          {showIndex && product.index && (
                             <span className="text-[10px] text-gray-400 font-mono">[{product.index}]</span>
                           )}
                         </div>
-                        {product.description && (
+                        {showDescription && product.description && (
                           <p className="text-xs text-gray-600 truncate">{product.description}</p>
                         )}
                         <div className="flex gap-3 mt-1 text-xs text-gray-500">

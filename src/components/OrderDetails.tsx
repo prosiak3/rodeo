@@ -277,6 +277,17 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         details: { from_status: 'notatnik' },
       });
 
+      // Verify the update succeeded
+      const { data: verifyData } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('id', orderId)
+        .single();
+
+      if (verifyData?.status !== 'draft') {
+        throw new Error('Status zamówienia nie został zaktualizowany');
+      }
+
       if (onEdit) {
         onEdit();
       }
