@@ -52,8 +52,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             name,
             code,
             image_url,
-            description,
-            category
+            description
           )
         `)
         .eq('order_id', orderId);
