@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase';
 interface Product {
   id: string;
   name: string;
-  barcode: string;
   unit: string;
   price_per_unit: number;
   description: string;
@@ -45,7 +44,6 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
       const query = searchQuery.toLowerCase();
       const filtered = products.filter(p =>
         p.name.toLowerCase().includes(query) ||
-        p.barcode.toLowerCase().includes(query) ||
         p.description.toLowerCase().includes(query)
       );
       setFilteredProducts(filtered);
