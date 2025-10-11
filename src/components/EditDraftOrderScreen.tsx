@@ -340,12 +340,19 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <button onClick={onCancel} className="flex items-center gap-2 mb-2 hover:opacity-80 transition">
-          <ArrowLeft className="w-5 h-5" />
-          <span>Anuluj</span>
-        </button>
-        <h2 className="text-xl font-bold">Edycja szkicu</h2>
-        <p className="text-amber-100 text-sm">{orderNumber}</p>
+        <div className="flex items-center gap-3 mb-2">
+          <button
+            onClick={onCancel}
+            className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 rounded-lg px-4 py-3 transition-all active:scale-95"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Powrót</span>
+          </button>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold">Edycja szkicu</h2>
+            <p className="text-amber-100 text-sm">{orderNumber}</p>
+          </div>
+        </div>
       </div>
 
       <div className="p-4 space-y-4">
@@ -463,12 +470,6 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
         </div>
 
         <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition"
-          >
-            Anuluj
-          </button>
           <button
             onClick={saveOrder}
             disabled={saving || orderItems.length === 0}

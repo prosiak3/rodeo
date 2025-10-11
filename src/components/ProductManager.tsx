@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Save, X, Package, Tag } from 'lucide-react';
+import { Edit2, Save, X, Package, Tag, AlertTriangle, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import TagsManager from './TagsManager';
 
@@ -23,6 +23,8 @@ export default function ProductManager() {
   const [filter, setFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showTagsManager, setShowTagsManager] = useState(false);
+  const [showDuplicates, setShowDuplicates] = useState(false);
+  const [duplicates, setDuplicates] = useState<{name: string; products: Product[]}[]>([]);
 
   useEffect(() => {
     loadProducts();
@@ -42,6 +44,44 @@ export default function ProductManager() {
       console.error('Error loading products:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const findDuplicates = () => {
+    const nameGroups = products.reduce((acc, product) => {
+      if (!acc[product.name]) {
+        acc[product.name] = [];
+      }
+      acc[product.name].push(product);
+      return acc;
+    }, {} as Record<string, Product[]>);
+
+    const dupes = Object.entries(nameGroups)
+      .filter(([_, prods]) => prods.length > 1)
+      .map(([name, prods]) => ({ name, products: prods }))
+      .sort((a, b) => b.products.length - a.products.length);
+
+    setDuplicates(dupes);
+    setShowDuplicates(true);
+  };
+
+  const deleteProduct = async (productId: string) => {
+    if (!confirm('Czy na pewno chcesz usunąć ten produkt? Może to wpłynąć na istniejące zamówienia.')) return;
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      alert('Produkt został usunięty');
+      loadProducts();
+      findDuplicates();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Błąd podczas usuwania produktu. Produkt może być używany w zamówieniach.');
     }
   };
 
@@ -106,17 +146,81 @@ export default function ProductManager() {
           <Package className="w-8 h-8 text-amber-600" />
           <h2 className="text-2xl font-bold text-gray-800">Zarządzanie produktami</h2>
         </div>
-        <button
-          onClick={() => setShowTagsManager(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
-        >
-          <Tag className="w-5 h-5" />
-          Zarządzaj tagami
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={findDuplicates}
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition flex items-center gap-2"
+          >
+            <AlertTriangle className="w-5 h-5" />
+            Znajdź duplikaty
+          </button>
+          <button
+            onClick={() => setShowTagsManager(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            <Tag className="w-5 h-5" />
+            Zarządzaj tagami
+          </button>
+        </div>
       </div>
 
       {showTagsManager && (
         <TagsManager onClose={() => setShowTagsManager(false)} />
+      )}
+
+      {showDuplicates && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-6 h-6 text-orange-600" />
+                <h3 className="text-xl font-bold text-gray-800">Znalezione duplikaty ({duplicates.length})</h3>
+              </div>
+              <button
+                onClick={() => setShowDuplicates(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              {duplicates.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <p className="text-gray-600 text-lg">Nie znaleziono duplikatów!</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {duplicates.map((dup, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-bold text-lg mb-3 text-gray-800">{dup.name} ({dup.products.length} kopii)</h4>
+                      <div className="space-y-2">
+                        {dup.products.map((product) => (
+                          <div key={product.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{product.code}</span>
+                                <span className="text-gray-600">{product.category}</span>
+                                <span className="font-medium">{product.base_price.toFixed(2)} PLN/{product.unit}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => deleteProduct(product.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                              title="Usuń ten wariant"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="bg-white rounded-xl shadow p-6">
