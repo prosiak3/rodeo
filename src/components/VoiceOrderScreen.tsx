@@ -254,13 +254,17 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
       const unmatchedCount = items.filter(item => !item.matched).length;
       if (unmatchedCount > 0) {
-        const unmatchedNames = items
-          .filter(item => !item.matched)
-          .map(item => item.productName)
-          .join(', ');
+        const unmatchedItems = items.filter(item => !item.matched);
+        const unmatchedNames = unmatchedItems.map(item => item.productName).join(', ');
 
-        setNotification(`⚠️ Nie znaleziono w cenniku: ${unmatchedNames}`);
-        setTimeout(() => setNotification(''), 5000);
+        const hasSuggestions = unmatchedItems.some(item => item.suggestions && item.suggestions.length > 0);
+
+        if (hasSuggestions) {
+          setNotification(`⚠️ Nie znaleziono w cenniku: ${unmatchedNames}. Zobacz sugestie poniżej lub podyktuj ponownie.`);
+        } else {
+          setNotification(`⚠️ Nie znaleziono w cenniku: ${unmatchedNames}. Proszę podyktować ponownie lub sprawdzić nazwę produktu.`);
+        }
+        setTimeout(() => setNotification(''), 7000);
       } else {
         const addedNames = items.map(item => item.productName).join(', ');
         setNotification(`✓ Dodano: ${addedNames}`);
@@ -601,7 +605,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
                           ) : (
                             <div className="text-sm text-red-600">
                               <p className="font-medium mb-1">⚠️ Produkt nie istnieje w cenniku</p>
-                              <p className="text-xs text-gray-600">Usuń tę pozycję lub zmień nazwę produktu</p>
+                              <p className="text-xs text-gray-600">Proszę podyktować ponownie używając prawidłowej nazwy lub usuń tę pozycję</p>
                             </div>
                           )}
                         </div>
