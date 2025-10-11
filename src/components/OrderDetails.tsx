@@ -279,12 +279,17 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-3">
-        <button onClick={onBack} className="flex items-center gap-1 mb-2 hover:opacity-80 transition text-sm">
-          <ArrowLeft className="w-4 h-4" />
-          <span>Powrót</span>
-        </button>
-        <h2 className="text-xl font-bold">{order.order_number}</h2>
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <button
+            onClick={onBack}
+            className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 rounded-lg px-4 py-3 transition-all active:scale-95 min-w-[100px]"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Powrót</span>
+          </button>
+          <h2 className="text-xl font-bold flex-1">{order.order_number}</h2>
+        </div>
       </div>
 
       <div className="p-3 space-y-3">
