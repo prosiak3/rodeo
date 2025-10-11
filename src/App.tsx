@@ -29,6 +29,13 @@ function AppContent() {
   const createTestUsers = async () => {
     const testUsers = [
       {
+        email: 'admin@rodeo.pl',
+        password: 'test123',
+        full_name: 'Administrator Systemu',
+        role: 'admin',
+        store_code: null,
+      },
+      {
         email: 'kierownik@sklep.pl',
         password: 'test123',
         full_name: 'Jan Kowalski',
@@ -50,7 +57,7 @@ function AppContent() {
         store_code: null,
       },
       {
-        email: 'kierowca@hurtownia.pl',
+        email: 'kierowca@rodeo.pl',
         password: 'test123',
         full_name: 'Marek Nowicki',
         role: 'driver',

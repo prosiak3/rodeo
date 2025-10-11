@@ -2,15 +2,15 @@
 
 ## Opis Aplikacji
 
-RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Umożliwia kierownikom sklepów składanie zamówień różnymi metodami, handlowcom i operatorom hurtowni ich przetwarzanie, a kierowcom realizację dostaw.
+RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Umożliwia ekspedientom sklepów składanie zamówień różnymi metodami, handlowcom i pracownikom hurtowni ich przetwarzanie, kierowcom realizację dostaw, a administratorom kompleksowe zarządzanie systemem.
 
 ## Funkcjonalności
 
-### Dla Kierowników Sklepów (store_manager)
+### Dla Ekspedientów (store_manager)
 
 1. **Dwa tryby zamawiania:**
-   - **Tryb ilościowy (quantity)** - standardowe wprowadzanie ilości produktów
-   - **Tryb listowy (list)** - szybkie zaznaczanie produktów bez podawania ilości
+   - **Tryb ilościowy (quantity)** - standardowe wprowadzanie ilości produktów i natychmiastowe wysyłanie
+   - **Tryb listowy (list)** - szybkie zaznaczanie produktów bez podawania ilości, budowanie listy, zapisywanie jako szkic
 
 2. **Trzy sposoby składania zamówień:**
    - **Z cennika** - wybieranie produktów bezpośrednio z aktywnego cennika
@@ -24,6 +24,8 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - Szczegóły zamówienia z datami utworzenia i modyfikacji
    - Możliwość usunięcia szkicu zamówienia
    - Status zamówienia śledzony przez cały proces
+   - Współdzielenie edycji szkiców z kolegami z tego samego sklepu (opcjonalne)
+   - Historia modyfikacji z informacją kto i kiedy zmienił zamówienie
 
 4. **Cennik:**
    - Przeglądanie aktualnych cen produktów
@@ -38,8 +40,9 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
 
 5. **Profil:**
    - Informacje o użytkowniku i sklepie
-   - Zmiana trybu zamawiania
+   - Zmiana trybu zamawiania (ilościowy/listowy)
    - Przełączanie widoku filtrów zamówień (uproszczone/wszystkie)
+   - Włączanie/wyłączanie współdzielenia edycji szkiców
    - Wylogowanie
 
 ### Dla Handlowców (salesperson)
@@ -50,27 +53,61 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - Modyfikacja ilości w pozycjach zamówienia
    - Dodawanie uwag
    - Tworzenie zamówień dla sklepów które obsługują
+   - Widok wszystkich zamówień bez ograniczeń filtrów
 
 2. **Filtrowanie:**
    - Po statusie zamówienia
    - Po sklepie
 
-### Dla Operatorów i Adminów (operator/admin)
+### Dla Pracowników Hurtowni (operator)
 
-1. **Panel administracyjny:**
-   - Zarządzanie produktami (dodawanie, edycja, archiwizacja)
-   - Zarządzanie sklepami
-   - Zarządzanie cenami specjalnymi
-   - Zarządzanie cennikami
-   - Zarządzanie tagami produktów
+1. **Zarządzanie zamówieniami:**
    - Przeglądanie wszystkich zamówień w systemie
    - Zmiana statusu zamówień na "w realizacji" (in_progress)
+   - Potwierdzanie/odrzucanie zamówień
+   - Modyfikacja pozycji zamówienia
 
-2. **Zarządzanie cenami:**
+2. **Dostęp do danych:**
+   - Widok wszystkich sklepów
+   - Historia zamówień
+   - Szczegóły zamówień
+
+### Dla Administratorów (admin)
+
+1. **Panel administracyjny z zakładkami:**
+   - **Zamówienia** - zarządzanie wszystkimi zamówieniami
+   - **Sklepy** - dodawanie i edycja sklepów
+   - **Produkty** - pełne zarządzanie katalogiem produktów
+   - **Cenniki** - zarządzanie cennikami i cenami specjalnymi
+   - **Użytkownicy** - tworzenie i zarządzanie użytkownikami systemu
+   - **Ustawienia** - konfiguracja parametrów systemowych
+
+2. **Zarządzanie użytkownikami:**
+   - Tworzenie nowych kont użytkowników
+   - Przypisywanie ról: Administrator, Ekspedient, Handlowiec, Hurtownia, Kierowca
+   - Przypisywanie użytkowników do sklepów
+   - Aktywacja/dezaktywacja kont
+   - Usuwanie użytkowników
+   - Widok wszystkich użytkowników z filtrowaniem
+
+3. **Ustawienia systemowe:**
+   - Domyślny tryb zamawiania dla nowych użytkowników
+   - Domyślny widok filtrów zamówień
+   - Domyślne ustawienia współdzielenia edycji
+   - Możliwość zastosowania ustawień do wszystkich użytkowników jednocześnie
+
+4. **Zarządzanie cenami:**
    - Cena bazowa produktu
    - Ceny specjalne dla konkretnych sklepów (your_price)
    - Ceny promocyjne (promo_price)
    - Okresy ważności cen
+
+5. **Zarządzanie produktami:**
+   - Dodawanie nowych produktów
+   - Edycja istniejących produktów
+   - Ustawianie kodów kreskowych
+   - Zarządzanie kategoriami i tagami
+   - Archiwizacja produktów
 
 ### Dla Kierowców (driver)
 
@@ -115,8 +152,9 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - id (referencja do auth.users), email, full_name, role, store_id, active
    - order_mode (quantity/list) - tryb zamawiania
    - show_all_order_filters (boolean) - widok filtrów zamówień
+   - allow_collaborative_editing (boolean) - współdzielenie edycji szkiców
    - created_at, updated_at
-   - Role: store_manager, salesperson, operator, admin, driver
+   - Role: admin, store_manager, salesperson, operator, driver
 
 3. **products** - Produkty
    - id, name, code (barcode), original_category, display_category
@@ -159,28 +197,41 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - created_at
    - Audit log wszystkich akcji na zamówieniach
 
-9. **salesperson_stores** - Przypisania Handlowców
-   - salesperson_id, store_id
+9. **order_modifications** - Modyfikacje Zamówień
+   - id, order_id, modified_by
+   - changes (jsonb) - szczegóły zmian
    - created_at
-   - Określa które sklepy obsługuje dany handlowiec
+   - Śledzenie kto i kiedy modyfikował szkic zamówienia
 
-10. **deliveries** - Dostawy
+10. **salesperson_stores** - Przypisania Handlowców
+    - salesperson_id, store_id
+    - created_at
+    - Określa które sklepy obsługuje dany handlowiec
+
+11. **deliveries** - Dostawy
     - id, order_id, driver_id
     - status: loaded, in_transit, delivered
     - loaded_at, delivered_at, notes
     - created_at, updated_at
     - System zarządzania dostawami dla kierowców
 
+12. **system_settings** - Ustawienia Systemowe
+    - id, default_order_mode, default_show_all_filters, default_allow_collaboration
+    - created_at, updated_at
+    - Globalne ustawienia systemu zarządzane przez administratora
+
 ### Zabezpieczenia (RLS)
 
 Każda tabela ma włączone Row Level Security z politykami:
-- Kierownicy widzą tylko dane swojego sklepu
-- Kierownicy mogą usuwać tylko swoje szkice zamówień (status: draft)
+- Ekspedienci widzą tylko dane swojego sklepu
+- Ekspedienci mogą usuwać tylko swoje szkice zamówień (status: draft)
+- Ekspedienci mogą edytować szkice współpracowników z tego samego sklepu (jeśli allow_collaborative_editing = true)
 - Handlowcy widzą dane sklepów, które obsługują
-- Operatorzy i admini mają pełny dostęp do wszystkich danych
+- Pracownicy hurtowni i admini mają pełny dostęp do wszystkich danych
 - Kierowcy widzą tylko swoje dostawy
 - Wszystkie polityki sprawdzają auth.uid() i role użytkownika
 - Polityki UPDATE umożliwiają zmianę statusu zamówień
+- Administrator może zarządzać ustawieniami systemowymi
 
 ## Komponenty Aplikacji
 
@@ -193,40 +244,43 @@ Każda tabela ma włączone Row Level Security z politykami:
 ### Ekrany
 
 1. **LoginScreen.tsx** - Ekran logowania z autentykacją Supabase
-2. **HomeScreen.tsx** - Ekran powitalny z logo i informacjami
+2. **HomeScreen.tsx** - Ekran powitalny z szybkimi akcjami
 3. **PriceListOrderScreen.tsx** - Składanie zamówienia z cennika (główny tryb)
 4. **PriceListOrderListMode.tsx** - Tryb listowy zamawiania
 5. **ManualOrderScreen.tsx** - Ręczne wprowadzanie zamówienia
 6. **CopyOrderScreen.tsx** - Kopiowanie wcześniejszego zamówienia
-7. **EditDraftOrderScreen.tsx** - Edycja szkicu zamówienia
+7. **EditDraftOrderScreen.tsx** - Edycja szkicu zamówienia z historią modyfikacji
 8. **OrdersList.tsx** - Lista zamówień z filtrowaniem i możliwością usuwania szkiców
-9. **OrderDetails.tsx** - Szczegóły zamówienia (bez danych sklepu dla kierownika)
+9. **OrderDetails.tsx** - Szczegóły zamówienia z komunikatem sukcesu po wysłaniu
 10. **PriceList.tsx** - Cennik produktów z wyszukiwaniem
 11. **ProfileScreen.tsx** - Profil użytkownika z ustawieniami
-12. **AdminPanel.tsx** - Panel administracyjny
+12. **AdminPanel.tsx** - Panel administracyjny z zakładkami
 13. **ProductManager.tsx** - Zarządzanie produktami
 14. **StoresManager.tsx** - Zarządzanie sklepami
 15. **PriceListManager.tsx** - Zarządzanie cennikami
 16. **TagsManager.tsx** - Zarządzanie tagami
-17. **DriverScreen.tsx** - Panel kierowcy z dostawami
-18. **ProductCard.tsx** - Karta produktu
+17. **UsersManager.tsx** - Zarządzanie użytkownikami systemu
+18. **SystemSettings.tsx** - Ustawienia systemowe
+19. **DriverScreen.tsx** - Panel kierowcy z dostawami
+20. **ProductCard.tsx** - Karta produktu
 
 ## Przepływ Pracy
 
-### Składanie Zamówienia (Kierownik)
+### Składanie Zamówienia (Ekspedient)
 
 1. Logowanie do aplikacji
-2. Kliknięcie "Nowe" w dolnej nawigacji
+2. Kliknięcie "Nowe zamówienie" na ekranie głównym lub w dolnej nawigacji
 3. Wybór metody składania zamówienia:
    - **Z cennika**: Przeglądanie cennika, dodawanie produktów, wysłanie
    - **Ręczne**: Wyszukanie produktów, dodanie do koszyka, określenie ilości, wysłanie
    - **Kopiowanie**: Wybór wcześniejszego zamówienia, modyfikacja, wysłanie
 4. Zamówienie zapisywane jako szkic (draft) można edytować
-5. Po kliknięciu "Zamów w hurtowni" status zmienia się na "sent"
-6. Można sprawdzić status w zakładce "Zamówienia"
-7. Szkice można usunąć przyciskiem kosza
+5. Po kliknięciu "Zamów w hurtowni" pojawia się komunikat sukcesu i powrót do ekranu głównego
+6. Status zmienia się na "sent"
+7. Można sprawdzić status w zakładce "Zamówienia"
+8. Szkice można edytować, kopiować i usuwać
 
-### Przetwarzanie Zamówienia (Operator/Admin)
+### Przetwarzanie Zamówienia (Hurtownia/Admin)
 
 1. Logowanie do panelu administracyjnego
 2. Przeglądanie nowych zamówień (status: sent)
@@ -244,13 +298,26 @@ Każda tabela ma włączone Row Level Security z politykami:
 5. Po dostarczeniu - oznaczenie jako "dostarczona" (delivered)
 6. Możliwość dodania notatek
 
+### Zarządzanie Systemem (Administrator)
+
+1. Logowanie jako administrator
+2. Dostęp do "Panel administracyjny" na ekranie głównym
+3. Zakładki dostępne w panelu:
+   - Zamówienia - wszystkie zamówienia w systemie
+   - Sklepy - dodawanie/edycja sklepów
+   - Produkty - zarządzanie katalogiem
+   - Cenniki - zarządzanie cenami
+   - Użytkownicy - tworzenie i zarządzanie kontami
+   - Ustawienia - konfiguracja systemu
+
 ## Dane Testowe
 
 ### Użytkownicy:
-- **Kierownik**: manager@rodeo.pl / rodeo2024
-- **Handlowiec**: sales@rodeo.pl / rodeo2024
-- **Operator**: operator@rodeo.pl / rodeo2024
-- **Kierowca**: driver@rodeo.pl / rodeo2024
+- **Administrator**: admin@rodeo.pl / test123
+- **Ekspedient**: kierownik@sklep.pl / test123
+- **Handlowiec**: handlowiec@hurtownia.pl / test123
+- **Hurtownia**: operator@hurtownia.pl / test123
+- **Kierowca**: kierowca@rodeo.pl / test123
 
 ### Sklepy:
 - 18 realnych sklepów mięsnych w różnych miastach Polski
@@ -303,34 +370,86 @@ npm run typecheck
 - Walidacja ilości po stronie interfejsu
 
 ### Tryby Zamawiania
-- **Tryb ilościowy (quantity)** - podawanie dokładnych ilości
-- **Tryb listowy (list)** - szybkie zaznaczanie produktów bez ilości
+- **Tryb ilościowy (quantity)** - podawanie dokładnych ilości i natychmiastowe wysyłanie
+- **Tryb listowy (list)** - szybkie zaznaczanie produktów, budowanie listy, zapisywanie jako szkic
+
+### Współdzielenie Edycji
+- Ekspedienci z tego samego sklepu mogą edytować szkice nawzajem (opcjonalne)
+- Historia modyfikacji pokazuje kto i kiedy zmienił zamówienie
+- Można wyłączyć w ustawieniach profilu
 
 ### Statusy Zamówień
-1. **draft** - szkic, można edytować i usunąć
-2. **sent** - wysłane do hurtowni
-3. **in_progress** - w realizacji przez operatora
-4. **pending_confirmation** - oczekuje na potwierdzenie
-5. **confirmed** - potwierdzone
-6. **partially_confirmed** - częściowo potwierdzone
-7. **rejected** - odrzucone
+1. **draft** - szkic, można edytować i usunąć (ikona: ołówek, kolor: bursztynowy)
+2. **sent** - wysłane do hurtowni (ikona: samolot, kolor: niebieski)
+3. **in_progress** - w realizacji przez hurtownię (ikona: play, kolor: fioletowy)
+4. **pending_confirmation** - oczekuje na potwierdzenie (ikona: wykrzyknik, kolor: żółty)
+5. **confirmed** - potwierdzone (ikona: check, kolor: zielony)
+6. **partially_confirmed** - częściowo potwierdzone (ikona: wykrzyknik, kolor: pomarańczowy)
+7. **rejected** - odrzucone (ikona: X, kolor: czerwony)
+8. **archived** - archiwum (ikona: paczka, kolor: szary)
 
 ### Statusy Dostaw
 1. **loaded** - załadowana, czeka na wyjazd
 2. **in_transit** - w drodze do klienta
 3. **delivered** - dostarczona
 
+### Komunikaty Sukcesu
+- Po wysłaniu zamówienia pojawia się elegancki modal z animacją
+- Zielona ikona checkmark z efektem scale-in
+- Automatyczne przekierowanie do ekranu głównego po 2 sekundach
+
+## Propozycje Motywów Kolorystycznych
+
+### 1. Motyw Bursztynowy (Aktualny - domyślny)
+- Główny: Bursztynowy (#F59E0B) do Pomarańczowy (#EA580C)
+- Akcent: Pomarańczowy ciemny
+- Tło: Szare odcienie
+- Użycie: Energetyczny, ciepły, branża spożywcza
+
+### 2. Motyw Czerwony Mięsny
+- Główny: Czerwony (#DC2626) do Bordowy (#991B1B)
+- Akcent: Ciemny czerwony
+- Tło: Jasny różowy i szary
+- Użycie: Bezpośrednie odniesienie do mięsa, odważny
+
+### 3. Motyw Zielony Świeżość
+- Główny: Zielony (#10B981) do Ciemny zielony (#059669)
+- Akcent: Jasny zielony
+- Tło: Miętowe i szare
+- Użycie: Świeżość, ekologia, naturalne produkty
+
+### 4. Motyw Niebieski Profesjonalny
+- Główny: Niebieski (#3B82F6) do Granatowy (#1E40AF)
+- Akcent: Jasny niebieski
+- Tło: Błękitne i szare
+- Użycie: Profesjonalny, zaufanie, korporacyjny
+
+### 5. Motyw Fioletowy Premium
+- Główny: Fioletowy (#8B5CF6) do Ciemny fiolet (#6D28D9)
+- Akcent: Lawendowy
+- Tło: Jasny fioletowy i szary
+- Użycie: Premium, luksusowy, ekskluzywny
+
+## Implementacja Motywów
+
+Motywy można zaimplementować poprzez:
+1. Zmienne CSS w index.css z wyborem motywu
+2. Tailwind CSS z custom colors w tailwind.config.js
+3. Context API do przełączania motywów w czasie rzeczywistym
+4. Zapisywanie preferencji motywu w profilu użytkownika
+
 ## Przyszłe Funkcjonalności
 
-1. **Powiadomienia push** - o nowych zamówieniach i zmianach statusu
-2. **Eksport do PDF/Excel** - generowanie raportów zamówień
-3. **Statystyki** - wykresy sprzedaży, najpopularniejsze produkty
-4. **Zaawansowane planowanie tras** - optymalizacja dostaw
-5. **Chat** - komunikacja między kierownikami a handlowcami
-6. **Skanowanie kodów kreskowych** - przy składaniu zamówień
-7. **Historia cen** - śledzenie zmian cen produktów w czasie
-8. **Ulubione zestawy** - zapisywanie często zamawianych kombinacji
-9. **Składanie zamówień głosem** - Web Speech API
+1. **Przełączanie motywów** - wybór kolorystyki w ustawieniach
+2. **Powiadomienia push** - o nowych zamówieniach i zmianach statusu
+3. **Eksport do PDF/Excel** - generowanie raportów zamówień
+4. **Statystyki** - wykresy sprzedaży, najpopularniejsze produkty
+5. **Zaawansowane planowanie tras** - optymalizacja dostaw
+6. **Chat** - komunikacja między ekspedientami a handlowcami
+7. **Skanowanie kodów kreskowych** - przy składaniu zamówień
+8. **Historia cen** - śledzenie zmian cen produktów w czasie
+9. **Ulubione zestawy** - zapisywanie często zamawianych kombinacji
+10. **Składanie zamówień głosem** - Web Speech API
 
 ## Deployment
 
@@ -365,6 +484,7 @@ Aplikacja wspiera:
 - Ochrona przed SQL injection (Supabase parametrized queries)
 - Rate limiting (Supabase built-in)
 - Row Level Security sprawdza auth.uid() dla każdego zapytania
+- Administrator ma specjalne uprawnienia do zarządzania systemem
 
 ## Migracje Bazy Danych
 
@@ -375,6 +495,8 @@ Wszystkie migracje znajdują się w katalogu `/supabase/migrations/`:
 - Poprawki polityk RLS
 - System tagów i kategorii
 - System dostaw
+- System modyfikacji zamówień
+- Ustawienia systemowe
 
 ## Licencja
 
