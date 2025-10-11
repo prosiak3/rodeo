@@ -235,7 +235,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   };
 
   const deleteOrder = async () => {
-    if (!order || order.status !== 'draft') return;
+    if (!order || (order.status !== 'draft' && order.status !== 'notatnik')) return;
     if (!confirm('Czy na pewno chcesz usunąć to zamówienie?')) return;
 
     try {
@@ -289,7 +289,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   }
 
   const canEdit = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
-  const canDelete = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
+  const canDelete = (userRole === 'store_manager' || userRole === 'salesperson') && (order.status === 'draft' || order.status === 'notatnik');
   const canUseAsTemplate = (userRole === 'store_manager' || userRole === 'salesperson');
   const canSend = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canStartProgress = (userRole === 'operator' || userRole === 'admin') && order.status === 'sent';
