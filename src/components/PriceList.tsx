@@ -149,6 +149,7 @@ export default function PriceList() {
   }
 
   const handleTouchStart = (e: React.TouchEvent, productId: string) => {
+    e.preventDefault();
     const touch = e.touches[0];
     setTouchStart(touch.clientX);
     setTouchCurrent(touch.clientX);
@@ -157,11 +158,14 @@ export default function PriceList() {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStart === null || swipedProduct === null) return;
+    e.preventDefault();
     const touch = e.touches[0];
     setTouchCurrent(touch.clientX);
   };
 
   const handleTouchEnd = async (product: Product) => {
+    console.log('Touch end triggered', { touchStart, touchCurrent });
+
     if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
       setTouchCurrent(null);
@@ -172,6 +176,8 @@ export default function PriceList() {
     const swipeDistance = touchCurrent - touchStart;
     const screenWidth = window.innerWidth;
     const swipeThreshold = screenWidth * 0.5;
+
+    console.log('Swipe distance:', swipeDistance, 'Threshold:', swipeThreshold);
 
     if (swipeDistance > swipeThreshold) {
       await addToNotebook(product);
@@ -216,7 +222,12 @@ export default function PriceList() {
   };
 
   const addToNotebook = async (product: Product) => {
-    if (!storeId || !userId) return;
+    if (!storeId || !userId) {
+      console.log('Cannot add to notebook: storeId or userId missing', { storeId, userId });
+      return;
+    }
+
+    console.log('Adding to notebook:', product.name);
 
     try {
       setNotebookItems([...notebookItems, product.id]);

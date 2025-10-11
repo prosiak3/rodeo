@@ -110,6 +110,15 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     };
 
     recognition.onresult = (event: any) => {
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+      }
+
+      const newTimer = setTimeout(() => {
+        stopListening();
+      }, 30000);
+      setInactivityTimer(newTimer);
+
       let interimTranscript = '';
       let finalTranscript = '';
 
@@ -126,7 +135,6 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       setTranscript(currentText);
 
       if (finalTranscript) {
-        console.log('Final transcript:', finalTranscript);
         parseTranscript(finalTranscript, allProductsRef.current);
         setTranscript('');
       }
@@ -149,7 +157,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     recognition.onend = () => {
       const shouldRestart = (window as any).shouldContinueListening;
 
-      if (shouldRestart && isListening) {
+      if (shouldRestart) {
         setTimeout(() => {
           if (!(window as any).shouldContinueListening) {
             setIsListening(false);
@@ -174,7 +182,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
             setIsListening(false);
             (window as any).shouldContinueListening = false;
           }
-        }, 300);
+        }, 100);
       } else {
         setIsListening(false);
       }
