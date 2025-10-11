@@ -135,13 +135,11 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       const currentText = finalTranscript || interimTranscript;
       setTranscript(currentText);
 
-      if (finalTranscript && (finalTranscript.toLowerCase().includes('kg') || finalTranscript.toLowerCase().includes('szt'))) {
-        console.log('Final transcript with kg/szt:', finalTranscript);
-        setTimeout(() => {
-          parseTranscript(finalTranscript, allProductsRef.current);
-          setTranscript('');
-          resetInactivityTimer();
-        }, 200);
+      if (finalTranscript) {
+        console.log('Final transcript:', finalTranscript);
+        parseTranscript(finalTranscript, allProductsRef.current);
+        setTranscript('');
+        resetInactivityTimer();
       }
     };
 
