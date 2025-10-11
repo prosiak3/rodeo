@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
+import { useTheme, Theme } from '../contexts/ThemeContext';
 
 interface ProfileScreenProps {
   user: User;
@@ -16,6 +17,7 @@ const roleLabels: Record<string, string> = {
 };
 
 export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
+  const { theme, setTheme } = useTheme();
   const [orderMode, setOrderMode] = useState<'quantity' | 'list'>((user as any).order_mode || 'quantity');
   const [showAllFilters, setShowAllFilters] = useState<boolean>(user.show_all_order_filters || false);
   const [allowCollaboration, setAllowCollaboration] = useState<boolean>((user as any).allow_collaborative_editing ?? true);
@@ -130,18 +132,16 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">🐃</span>
-          <div>
-            <h2 className="text-xl font-bold">Profil użytkownika</h2>
-            <p className="text-amber-100 text-sm">Weź byka za rogi</p>
-          </div>
-        </div>
-      </div>
+  const themeNames: Record<Theme, string> = {
+    amber: 'Bursztynowy',
+    blue: 'Niebieski',
+    green: 'Zielony',
+    red: 'Czerwony',
+    purple: 'Fioletowy',
+  };
 
+  return (
+    <div className="bg-gray-50">
       <div className="p-6 space-y-6">
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex items-center gap-4 mb-6">
@@ -180,6 +180,40 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 <p className="font-medium text-gray-800">{roleLabels[user.role] || user.role}</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Palette className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Motyw kolorystyczny</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-3">Wybierz swój ulubiony motyw:</p>
+          <div className="grid grid-cols-2 gap-3">
+            {(['amber', 'blue', 'green', 'red', 'purple'] as Theme[]).map((themeOption) => (
+              <button
+                key={themeOption}
+                onClick={() => setTheme(themeOption)}
+                className={`p-4 rounded-lg border-2 transition text-left ${
+                  theme === themeOption
+                    ? 'border-gray-800 bg-gray-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-8 h-8 rounded-full ${
+                      themeOption === 'amber' ? 'bg-amber-500' :
+                      themeOption === 'blue' ? 'bg-blue-500' :
+                      themeOption === 'green' ? 'bg-green-500' :
+                      themeOption === 'red' ? 'bg-red-500' :
+                      'bg-purple-500'
+                    }`}
+                  />
+                  <span className="font-medium text-gray-800">{themeNames[themeOption]}</span>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 

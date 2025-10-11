@@ -6,16 +6,7 @@ interface HomeScreenProps {
 export default function HomeScreen({ onNavigate, userRole }: HomeScreenProps) {
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-4xl">🐃</span>
-          <h2 className="text-xl font-bold">RODEO</h2>
-        </div>
-        <p className="text-white font-semibold">Weź byka za rogi</p>
-        <p className="text-amber-100 mt-1 text-sm">System zamówień mięsno-wędliniarskich</p>
-      </div>
-
+    <div className="bg-gray-50">
       <div className="p-6 space-y-6">
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="font-semibold text-lg mb-4">Szybkie akcje</h3>

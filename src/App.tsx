@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import LoginScreen from './components/LoginScreen';
 import HomeScreen from './components/HomeScreen';
 import VoiceOrderScreen from './components/VoiceOrderScreen';
@@ -374,7 +375,10 @@ function AppContent() {
                 </button>
 
                 <button
-                  onClick={() => setOrderMode('pricelist')}
+                  onClick={() => {
+                    setOrderMode(null);
+                    setActiveTab('prices');
+                  }}
                   className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
                 >
                   <div className="flex items-center gap-4">
@@ -383,7 +387,7 @@ function AppContent() {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-gray-800">Z cennika</h3>
-                      <p className="text-sm text-gray-600">Wybierz produkty z listy cenowej</p>
+                      <p className="text-sm text-gray-600">Przejdź do cennika</p>
                     </div>
                   </div>
                 </button>
@@ -505,7 +509,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </AuthProvider>
   );
 }
