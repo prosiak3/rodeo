@@ -24,6 +24,8 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [showDescription, setShowDescription] = useState<boolean>((user as any).show_product_description ?? true);
   const [showIndex, setShowIndex] = useState<boolean>((user as any).show_product_index ?? true);
   const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>((user as any).notebook_mode || 'multiple');
+  const [showSortIcons, setShowSortIcons] = useState<boolean>((user as any).show_sort_icons ?? true);
+  const [showPriceLayoutToggle, setShowPriceLayoutToggle] = useState<boolean>((user as any).show_price_layout_toggle ?? true);
   const [saving, setSaving] = useState(false);
 
   const handleOrderModeChange = async (mode: 'quantity' | 'list') => {
@@ -85,10 +87,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
-  const handleDisplayToggle = async (field: 'show_product_description' | 'show_product_index') => {
+  const handleDisplayToggle = async (field: 'show_product_description' | 'show_product_index' | 'show_sort_icons' | 'show_price_layout_toggle') => {
     setSaving(true);
     try {
-      const currentValue = field === 'show_product_description' ? showDescription : showIndex;
+      let currentValue: boolean;
+      if (field === 'show_product_description') currentValue = showDescription;
+      else if (field === 'show_product_index') currentValue = showIndex;
+      else if (field === 'show_sort_icons') currentValue = showSortIcons;
+      else currentValue = showPriceLayoutToggle;
+
       const newValue = !currentValue;
       const { error } = await supabase
         .from('users')
@@ -99,8 +106,12 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
       if (field === 'show_product_description') {
         setShowDescription(newValue);
-      } else {
+      } else if (field === 'show_product_index') {
         setShowIndex(newValue);
+      } else if (field === 'show_sort_icons') {
+        setShowSortIcons(newValue);
+      } else {
+        setShowPriceLayoutToggle(newValue);
       }
 
       alert('Ustawienia zapisane! Odśwież cennik, aby zobaczyć zmiany.');
@@ -407,6 +418,57 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             </div>
           </div>
         )}
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Settings className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Ustawienia cennika</h3>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-800">Ikony sortowania</div>
+                  <div className="text-sm text-gray-600">Pokazuj opcje sortowania w cenniku</div>
+                </div>
+                <button
+                  onClick={() => handleDisplayToggle('show_sort_icons')}
+                  disabled={saving}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    showSortIcons ? 'bg-amber-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      showSortIcons ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-800">Przełącznik widoku ceny</div>
+                  <div className="text-sm text-gray-600">Pokazuj opcję zmiany układu cen</div>
+                </div>
+                <button
+                  onClick={() => handleDisplayToggle('show_price_layout_toggle')}
+                  disabled={saving}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    showPriceLayoutToggle ? 'bg-amber-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      showPriceLayoutToggle ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="font-semibold text-lg mb-4">Informacje o aplikacji</h3>

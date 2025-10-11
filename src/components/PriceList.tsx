@@ -48,6 +48,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   const [showDescription, setShowDescription] = useState<boolean>(true);
   const [showIndex, setShowIndex] = useState<boolean>(true);
   const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>('multiple');
+  const [showSortIcons, setShowSortIcons] = useState<boolean>(true);
+  const [showPriceLayoutToggle, setShowPriceLayoutToggle] = useState<boolean>(true);
   const [currentSessionNotebookId, setCurrentSessionNotebookId] = useState<string | null>(notebookOrderId || null);
 
   useEffect(() => {
@@ -127,7 +129,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       const { data: userData } = await supabase
         .from('users')
-        .select('store_id, show_product_description, show_product_index, notebook_mode')
+        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle')
         .eq('id', authData.user.id)
         .single();
 
@@ -137,6 +139,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       setShowDescription(userData?.show_product_description ?? true);
       setShowIndex(userData?.show_product_index ?? true);
       setNotebookMode((userData as any)?.notebook_mode || 'multiple');
+      setShowSortIcons((userData as any)?.show_sort_icons ?? true);
+      setShowPriceLayoutToggle((userData as any)?.show_price_layout_toggle ?? true);
 
       const { data, error } = await supabase
         .from('products')
@@ -497,61 +501,65 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         </div>
 
         <div className="flex gap-2 items-center justify-between">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setSortBy('name-asc')}
-              className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
-              style={sortBy === 'name-asc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
-              title="Nazwa A-Z"
-            >
-              <ArrowUpAZ className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setSortBy('name-desc')}
-              className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
-              style={sortBy === 'name-desc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
-              title="Nazwa Z-A"
-            >
-              <ArrowDownZA className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setSortBy('price-asc')}
-              className="p-1.5 rounded transition flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200"
-              style={sortBy === 'price-asc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
-              title="Cena rosnąco"
-            >
-              <span className="text-xs font-semibold">PLN</span>
-              <ArrowUp className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => setSortBy('price-desc')}
-              className="p-1.5 rounded transition flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200"
-              style={sortBy === 'price-desc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
-              title="Cena malejąco"
-            >
-              <span className="text-xs font-semibold">PLN</span>
-              <ArrowDown className="w-3 h-3" />
-            </button>
-          </div>
+          {showSortIcons && (
+            <div className="flex gap-1">
+              <button
+                onClick={() => setSortBy('name-asc')}
+                className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+                style={sortBy === 'name-asc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
+                title="Nazwa A-Z"
+              >
+                <ArrowUpAZ className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setSortBy('name-desc')}
+                className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+                style={sortBy === 'name-desc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
+                title="Nazwa Z-A"
+              >
+                <ArrowDownZA className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setSortBy('price-asc')}
+                className="p-1.5 rounded transition flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200"
+                style={sortBy === 'price-asc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
+                title="Cena rosnąco"
+              >
+                <span className="text-xs font-semibold">PLN</span>
+                <ArrowUp className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => setSortBy('price-desc')}
+                className="p-1.5 rounded transition flex items-center gap-1 bg-gray-100 text-gray-600 hover:bg-gray-200"
+                style={sortBy === 'price-desc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
+                title="Cena malejąco"
+              >
+                <span className="text-xs font-semibold">PLN</span>
+                <ArrowDown className="w-3 h-3" />
+              </button>
+            </div>
+          )}
 
-          <div className="flex gap-1">
-            <button
-              onClick={() => setPriceLayout('horizontal')}
-              className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
-              style={priceLayout === 'horizontal' ? { backgroundColor: colors.primary, color: 'white' } : {}}
-              title="Układ poziomy"
-            >
-              <AlignJustify className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPriceLayout('vertical')}
-              className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
-              style={priceLayout === 'vertical' ? { backgroundColor: colors.primary, color: 'white' } : {}}
-              title="Układ pionowy"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-          </div>
+          {showPriceLayoutToggle && (
+            <div className="flex gap-1">
+              <button
+                onClick={() => setPriceLayout('horizontal')}
+                className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+                style={priceLayout === 'horizontal' ? { backgroundColor: colors.primary, color: 'white' } : {}}
+                title="Układ poziomy"
+              >
+                <AlignJustify className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPriceLayout('vertical')}
+                className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
+                style={priceLayout === 'vertical' ? { backgroundColor: colors.primary, color: 'white' } : {}}
+                title="Układ pionowy"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
