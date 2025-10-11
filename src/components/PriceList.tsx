@@ -28,8 +28,6 @@ export default function PriceList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedTag, setSelectedTag] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [priceLayout, setPriceLayout] = useState<PriceLayout>('horizontal');
 
@@ -85,16 +83,10 @@ export default function PriceList() {
     }
   };
 
-  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
-  const allTags = Array.from(new Set(products.flatMap(p => p.tags || [])));
-  const tags = ['all', ...allTags];
-
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
-                         product.code.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    const matchesTag = selectedTag === 'all' || (product.tags && product.tags.includes(selectedTag));
-    return matchesSearch && matchesCategory && matchesTag;
+                         (product.index && product.index.toLowerCase().includes(search.toLowerCase()));
+    return matchesSearch;
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -142,39 +134,6 @@ export default function PriceList() {
           />
         </div>
 
-        <div className="flex gap-1 overflow-x-auto pb-1 mb-2">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap transition ${
-                selectedCategory === category
-                  ? 'bg-amber-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category === 'all' ? 'Wszystkie' : category}
-            </button>
-          ))}
-        </div>
-
-        {tags.length > 1 && (
-          <div className="flex gap-1 overflow-x-auto pb-1 mb-2">
-            {tags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setSelectedTag(tag)}
-                className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap transition ${
-                  selectedTag === tag
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                }`}
-              >
-                #{tag === 'all' ? 'wszystkie' : tag}
-              </button>
-            ))}
-          </div>
-        )}
 
         <div className="flex gap-2 items-center justify-between">
           <div className="flex gap-2 items-center text-xs flex-1">
@@ -243,9 +202,6 @@ export default function PriceList() {
                         <div className="flex items-baseline gap-2">
                           <span className="font-medium text-sm text-gray-800 truncate">
                             {product.name}
-                          </span>
-                          <span className="text-xs text-gray-500 flex-shrink-0">
-                            {product.code}
                           </span>
                         </div>
                         {product.description && (
