@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -30,6 +30,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   const [transcript, setTranscript] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const allProductsRef = useRef<Product[]>([]);
   const [stage, setStage] = useState<'recording' | 'confirmation' | 'summary'>('recording');
   const [requiresConfirmation, setRequiresConfirmation] = useState(false);
   const [notes, setNotes] = useState('');
@@ -54,6 +55,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       if (data) {
         console.log('Loaded products:', data.length);
         setAllProducts(data);
+        allProductsRef.current = data;
       }
     } catch (error) {
       console.error('Error loading products:', error);
@@ -135,9 +137,8 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
       if (finalTranscript && (finalTranscript.toLowerCase().includes('kg') || finalTranscript.toLowerCase().includes('szt'))) {
         console.log('Final transcript with kg/szt:', finalTranscript);
-        const capturedProducts = allProducts;
         setTimeout(() => {
-          parseTranscript(finalTranscript, capturedProducts);
+          parseTranscript(finalTranscript, allProductsRef.current);
           setTranscript('');
           resetInactivityTimer();
         }, 200);
