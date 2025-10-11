@@ -275,35 +275,53 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
       return;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'pl-PL';
-    recognition.continuous = true;
-    recognition.interimResults = false;
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'pl-PL';
+      recognition.continuous = true;
+      recognition.interimResults = false;
 
-    setIsListening(true);
-    setTranscript('');
+      setIsListening(true);
+      setTranscript('');
 
-    recognition.onresult = (event: any) => {
-      const result = event.results[event.results.length - 1];
-      if (result.isFinal) {
-        const finalTranscript = result[0].transcript;
-        setTranscript(finalTranscript);
-        parseVoiceInput(finalTranscript);
-      }
-    };
+      recognition.onresult = (event: any) => {
+        const result = event.results[event.results.length - 1];
+        if (result.isFinal) {
+          const finalTranscript = result[0].transcript;
+          setTranscript(finalTranscript);
+          parseVoiceInput(finalTranscript);
+        }
+      };
 
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+
+        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          alert('Brak dostępu do mikrofonu. Sprawdź uprawnienia przeglądarki.');
+        } else if (event.error === 'no-speech') {
+          alert('Nie wykryto mowy. Spróbuj ponownie.');
+        } else if (event.error === 'audio-capture') {
+          alert('Nie znaleziono mikrofonu. Sprawdź, czy mikrofon jest podłączony.');
+        } else if (event.error === 'network') {
+          alert('Błąd sieci. Sprawdź połączenie z internetem.');
+        } else {
+          alert(`Błąd rozpoznawania mowy: ${event.error}`);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+      (window as any).currentRecognition = recognition;
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
       setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognition.start();
-    (window as any).currentRecognition = recognition;
+      alert('Nie udało się uruchomić rozpoznawania mowy. Spróbuj ponownie.');
+    }
   };
 
   const stopVoiceRecognition = () => {
@@ -314,6 +332,8 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   };
 
   const parseVoiceInput = (text: string) => {
+    console.log('Voice input received:', text);
+
     const pattern1 = /(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)\s+([a-ząćęłńóśźż\s]+)/gi;
     const pattern2 = /([a-ząćęłńóśźż\s]+?)\s+(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)/gi;
 
@@ -328,6 +348,16 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
       matches.push({ productName: match[1], quantity: match[2], unit: match[3] });
     }
 
+    console.log('Parsed matches:', matches);
+
+    if (matches.length === 0) {
+      alert(`Nie rozpoznano produktu w: "${text}". Spróbuj powiedzieć np. "10 kg schabu" lub "boczek 5 kg"`);
+      setTranscript('');
+      return;
+    }
+
+    let addedCount = 0;
+
     for (const matchData of matches) {
       const quantity = parseFloat(matchData.quantity.replace(',', '.'));
       const productName = matchData.productName?.trim();
@@ -338,6 +368,8 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
           const pName = p.name.toLowerCase();
           return pName.includes(normalizedName) || normalizedName.includes(pName);
         });
+
+        console.log('Looking for product:', normalizedName, 'Found:', product?.name);
 
         if (product) {
           const existingItem = orderItems.find(item => item.product_id === product.id);
@@ -357,8 +389,15 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
             };
             setOrderItems(prev => [...prev, newItem]);
           }
+          addedCount++;
+        } else {
+          alert(`Nie znaleziono produktu: "${productName}"`);
         }
       }
+    }
+
+    if (addedCount > 0) {
+      alert(`Dodano ${addedCount} ${addedCount === 1 ? 'produkt' : 'produkty/produktów'}!`);
     }
 
     setTranscript('');
