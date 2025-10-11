@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
 
@@ -665,21 +665,23 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         )}
 
         {canEdit && onEdit && (
-          <div className="bg-white rounded-lg shadow p-3 space-y-2">
-            <button
-              onClick={onEdit}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow"
-            >
-              <Edit className="w-5 h-5" />
-              Edytuj zamówienie
-            </button>
-            <button
-              onClick={sendOrder}
-              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
-            >
-              <Package className="w-5 h-5" />
-              Zamów w hurtowni
-            </button>
+          <div className="bg-white rounded-lg shadow p-3">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={onEdit}
+                className="py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow"
+              >
+                <Edit className="w-5 h-5" />
+                Edytuj zamówienie
+              </button>
+              <button
+                onClick={sendOrder}
+                className="py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
+              >
+                <Truck className="w-5 h-5" />
+                Zamów w hurtowni
+              </button>
+            </div>
           </div>
         )}
 
