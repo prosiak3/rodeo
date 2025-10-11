@@ -247,19 +247,19 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
   return (
     <div className="bg-gray-50">
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-3 flex items-center justify-between shadow-sm">
-        <button
-          onClick={onCancel}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium text-gray-700"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Wróć do cennika</span>
-        </button>
         {orderItems.length > 0 && (
           <div className="bg-amber-100 rounded-lg px-3 py-2 text-right">
             <p className="text-xs text-amber-700">Produkty</p>
             <p className="font-bold text-lg text-amber-600">{orderItems.length}</p>
           </div>
         )}
+        <button
+          onClick={onCancel}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium text-gray-700"
+        >
+          <span>Dodaj asortyment</span>
+          <ArrowLeft className="w-5 h-5" />
+        </button>
       </div>
 
       <div className="p-3 space-y-3">
@@ -327,8 +327,8 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
                 </>
               ) : (
                 <>
-                  <Save className="w-5 h-5" />
-                  Zapisz jako szkic
+                  Dalej
+                  <ArrowLeft className="w-5 h-5 rotate-180" />
                 </>
               )}
             </button>
