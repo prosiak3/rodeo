@@ -462,6 +462,21 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   return (
     <div className="space-y-3">
+      <div className="bg-red-500 p-4 rounded-lg">
+        <button
+          onClick={() => {
+            console.log('🟥🟥🟥 TEST BUTTON CLICKED!');
+            alert('Test button działa!');
+            const firstProduct = products[0];
+            if (firstProduct) {
+              addToNotebook(firstProduct);
+            }
+          }}
+          className="w-full bg-white text-red-500 font-bold py-2 px-4 rounded"
+        >
+          TEST: Dodaj pierwszy produkt
+        </button>
+      </div>
       {notebookOrderId && onBackToOrder && (
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-30 mb-3">
           <button
