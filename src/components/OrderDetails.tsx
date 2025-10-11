@@ -598,7 +598,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
             >
               <Package className="w-5 h-5" />
-              Dodaj
+              Dodaj asortyment
             </button>
           </div>
         )}
