@@ -30,6 +30,12 @@ export default function PriceList() {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [priceLayout, setPriceLayout] = useState<PriceLayout>('horizontal');
+  const [swipedProduct, setSwipedProduct] = useState<string | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchCurrent, setTouchCurrent] = useState<number | null>(null);
+  const [notebookItems, setNotebookItems] = useState<string[]>([]);
+  const [storeId, setStoreId] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
     loadProducts();
@@ -40,12 +46,17 @@ export default function PriceList() {
     try {
       const { data: authData } = await supabase.auth.getUser();
       if (!authData.user) throw new Error('Not authenticated');
+      setUserId(authData.user.id);
 
       const { data: userData } = await supabase
         .from('users')
         .select('store_id')
         .eq('id', authData.user.id)
         .single();
+
+      if (userData?.store_id) {
+        setStoreId(userData.store_id);
+      }
 
       const { data, error } = await supabase
         .from('products')
@@ -103,6 +114,100 @@ export default function PriceList() {
         return 0;
     }
   });
+
+  const handleTouchStart = (e: React.TouchEvent, productId: string) => {
+    setTouchStart(e.touches[0].clientX);
+    setSwipedProduct(productId);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    setTouchCurrent(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = async (product: Product) => {
+    if (touchStart === null || touchCurrent === null) {
+      setTouchStart(null);
+      setTouchCurrent(null);
+      setSwipedProduct(null);
+      return;
+    }
+
+    const swipeDistance = touchCurrent - touchStart;
+
+    if (swipeDistance > 100) {
+      await addToNotebook(product);
+    }
+
+    setTouchStart(null);
+    setTouchCurrent(null);
+    setSwipedProduct(null);
+  };
+
+  const addToNotebook = async (product: Product) => {
+    if (!storeId || !userId) return;
+
+    try {
+      setNotebookItems([...notebookItems, product.id]);
+
+      const { data: existingOrder } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('store_id', storeId)
+        .eq('created_by', userId)
+        .eq('status', 'notatnik')
+        .maybeSingle();
+
+      let orderId = existingOrder?.id;
+
+      if (!orderId) {
+        const orderNumber = `NOT-${Date.now()}`;
+        const { data: newOrder, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            order_number: orderNumber,
+            store_id: storeId,
+            created_by: userId,
+            status: 'notatnik',
+            total_amount: 0,
+          })
+          .select()
+          .single();
+
+        if (orderError) throw orderError;
+        orderId = newOrder.id;
+      }
+
+      const { error: itemError } = await supabase
+        .from('order_items')
+        .insert({
+          order_id: orderId,
+          product_id: product.id,
+          quantity: 0,
+          unit: product.unit,
+          unit_price: product.base_price,
+          total_price: 0,
+          status: 'pending',
+        });
+
+      if (itemError) throw itemError;
+
+      setTimeout(() => {
+        setNotebookItems(items => items.filter(id => id !== product.id));
+      }, 500);
+    } catch (error) {
+      console.error('Error adding to notebook:', error);
+      setNotebookItems(items => items.filter(id => id !== product.id));
+    }
+  };
+
+  const getSwipeTransform = (productId: string) => {
+    if (swipedProduct !== productId || touchStart === null || touchCurrent === null) {
+      return 0;
+    }
+    const distance = touchCurrent - touchStart;
+    return distance > 0 ? distance : 0;
+  };
 
   const groupedProducts = sortedProducts.reduce((acc, product) => {
     if (!acc[product.category]) {
@@ -192,11 +297,23 @@ export default function PriceList() {
               <div className="divide-y divide-gray-100">
                 {categoryProducts.map((product) => {
                   const hasPromo = product.promo_price && product.promo_price > 0;
+                  const isAdding = notebookItems.includes(product.id);
+                  const swipeOffset = getSwipeTransform(product.id);
                   return (
                   <div
                     key={product.id}
-                    className={`px-3 py-2 hover:bg-gray-50 transition ${hasPromo ? 'bg-yellow-50' : ''}`}
+                    className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''}`}
+                    onTouchStart={(e) => handleTouchStart(e, product.id)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={() => handleTouchEnd(product)}
                   >
+                    <div
+                      className={`px-3 py-2 hover:bg-gray-50 transition ${isAdding ? 'opacity-0' : 'opacity-100'}`}
+                      style={{
+                        transform: `translateX(${swipeOffset}px)`,
+                        transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
+                      }}
+                    >
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0 mr-2">
                         <div className="flex items-baseline gap-2">
@@ -266,28 +383,7 @@ export default function PriceList() {
                         </div>
                       )}
                     </div>
-                    {product.index && (
-                      <div className="mt-2 flex flex-col gap-1">
-                        <svg className="w-full h-16" viewBox="0 0 300 70" preserveAspectRatio="xMinYMin meet">
-                          {product.index.split('').map((digit, i) => {
-                            const barWidth = i % 2 === 0 ? 6 : 10;
-                            const x = i * 22;
-                            return (
-                              <g key={i}>
-                                <rect
-                                  x={x}
-                                  y="5"
-                                  width={barWidth}
-                                  height="50"
-                                  fill="#000"
-                                />
-                              </g>
-                            );
-                          })}
-                        </svg>
-                        <span className="font-mono text-sm text-gray-800 text-center tracking-wider">{product.index}</span>
-                      </div>
-                    )}
+                    </div>
                   </div>
                   );
                 })}
