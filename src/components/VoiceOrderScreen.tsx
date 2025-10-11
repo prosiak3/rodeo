@@ -192,16 +192,29 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     console.log('Parsing transcript:', text);
     console.log('Available products:', products.length);
     const items: OrderItem[] = [];
-    const pattern = /(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)\s+([a-ząćęłńóśźż\s]+)/gi;
 
+    const pattern1 = /(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)\s+([a-ząćęłńóśźż\s]+)/gi;
+    const pattern2 = /([a-ząćęłńóśźż\s]+?)\s+(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)/gi;
+
+    const matches = [];
     let match;
-    while ((match = pattern.exec(text)) !== null) {
-      console.log('Regex match:', match);
-      const quantity = parseFloat(match[1].replace(',', '.'));
-      let unit = 'kg';
-      const productName = match[3]?.trim();
 
-      if (match[2] && (match[2].toLowerCase().includes('szt') || match[2].toLowerCase().includes('sztuk'))) {
+    while ((match = pattern1.exec(text)) !== null) {
+      matches.push({ quantity: match[1], unit: match[2], productName: match[3] });
+    }
+
+    while ((match = pattern2.exec(text)) !== null) {
+      matches.push({ productName: match[1], quantity: match[2], unit: match[3] });
+    }
+
+    console.log('All matches found:', matches);
+
+    for (const matchData of matches) {
+      const quantity = parseFloat(matchData.quantity.replace(',', '.'));
+      let unit = 'kg';
+      const productName = matchData.productName?.trim();
+
+      if (matchData.unit && (matchData.unit.toLowerCase().includes('szt') || matchData.unit.toLowerCase().includes('sztuk'))) {
         unit = 'szt';
       }
 
