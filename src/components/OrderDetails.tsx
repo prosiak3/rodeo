@@ -364,12 +364,38 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     );
   }
 
+  const deleteOrderItem = async (itemId: string) => {
+    const confirmed = await confirm({
+      title: 'Usunąć pozycję?',
+      message: 'Ta pozycja zostanie trwale usunięta z zamówienia.',
+      confirmText: 'Usuń',
+      cancelText: 'Anuluj',
+      variant: 'danger'
+    });
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('order_items')
+        .delete()
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      await loadOrderDetails();
+    } catch (error) {
+      console.error('Error deleting order item:', error);
+      alert('Błąd podczas usuwania pozycji');
+    }
+  };
+
   const canEdit = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canDelete = (userRole === 'store_manager' || userRole === 'salesperson') && (order.status === 'draft' || order.status === 'notatnik');
   const canUseAsTemplate = (userRole === 'store_manager' || userRole === 'salesperson') && order.status !== 'notatnik';
   const canSend = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canConvertToDraft = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
   const canAddMore = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
+  const canDeleteItems = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
   const canStartProgress = (userRole === 'operator' || userRole === 'admin') && order.status === 'sent';
   const canConfirm = (userRole === 'operator' || userRole === 'admin') &&
                      (order.status === 'in_progress' || order.status === 'pending_confirmation');
@@ -580,6 +606,15 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                     <span className="text-gray-400">×</span>
                     <span>{item.unit_price.toFixed(2)}</span>
                     <span className="font-bold text-amber-600 min-w-[60px] text-right">{item.total_price.toFixed(2)} PLN</span>
+                    {canDeleteItems && (
+                      <button
+                        onClick={() => deleteOrderItem(item.id)}
+                        className="ml-2 p-1 text-red-500 hover:bg-red-50 rounded transition"
+                        title="Usuń pozycję"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
