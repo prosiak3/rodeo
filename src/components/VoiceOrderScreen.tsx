@@ -36,6 +36,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   const [sending, setSending] = useState(false);
   const [shouldContinueListening, setShouldContinueListening] = useState(false);
   const [notification, setNotification] = useState<string>('');
+  const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -84,6 +85,18 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       .map(item => item.product);
   };
 
+  const resetInactivityTimer = () => {
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+    }
+    const timer = setTimeout(() => {
+      stopListening();
+      setNotification('⏱️ Nasłuchiwanie zatrzymane po 15 sekundach bezczynności');
+      setTimeout(() => setNotification(''), 4000);
+    }, 15000);
+    setInactivityTimer(timer);
+  };
+
   const startListening = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -94,6 +107,8 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
     setShouldContinueListening(true);
     (window as any).shouldContinueListening = true;
+
+    resetInactivityTimer();
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -118,6 +133,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       if (finalTranscript && (finalTranscript.toLowerCase().includes('kg') || finalTranscript.toLowerCase().includes('szt'))) {
         parseTranscript(finalTranscript);
         setTranscript('');
+        resetInactivityTimer();
       }
     };
 
@@ -163,6 +179,10 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     (window as any).shouldContinueListening = false;
     if ((window as any).currentRecognition) {
       (window as any).currentRecognition.stop();
+    }
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+      setInactivityTimer(null);
     }
     setIsListening(false);
     setTranscript('');
@@ -634,27 +654,47 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       <div className="p-4 space-y-4">
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex flex-col items-center">
-            <button
-              onClick={isListening ? stopListening : startListening}
-              className={`w-32 h-32 rounded-full flex items-center justify-center transition-all shadow-2xl ${
-                isListening
-                  ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                  : 'bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'
-              }`}
-            >
-              {isListening ? (
-                <MicOff className="w-16 h-16 text-white" />
-              ) : (
-                <Mic className="w-16 h-16 text-white" />
+            <div className="relative">
+              {isListening && (
+                <>
+                  <div className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-75"></div>
+                  <div className="absolute inset-0 rounded-full bg-red-300 animate-pulse"></div>
+                </>
               )}
-            </button>
+              <button
+                onClick={isListening ? stopListening : startListening}
+                className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-all shadow-2xl ${
+                  isListening
+                    ? 'bg-red-500 hover:bg-red-600 animate-mic-pulse'
+                    : 'bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'
+                }`}
+              >
+                {isListening ? (
+                  <Mic className="w-16 h-16 text-white animate-pulse" />
+                ) : (
+                  <Mic className="w-16 h-16 text-white" />
+                )}
+              </button>
+            </div>
             <p className="mt-6 text-lg font-medium text-gray-700">
-              {isListening ? 'Nagrywanie... Powiedz pozycję i zakończ słowem "kg"' : 'Kliknij aby rozpocząć nagrywanie'}
+              {isListening ? (
+                <span className="flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                  Słucham... Dyktuj pozycję
+                </span>
+              ) : (
+                'Kliknij aby rozpocząć nagrywanie'
+              )}
             </p>
             {isListening && (
-              <p className="mt-2 text-sm text-gray-500 text-center">
-                Przykład: "5 kg schab" lub "3 kg kiełbasa"
-              </p>
+              <>
+                <p className="mt-2 text-sm text-gray-500 text-center">
+                  Przykład: "5 kg schab" lub "3 kg kiełbasa"
+                </p>
+                <p className="mt-1 text-xs text-gray-400 text-center">
+                  Automatyczne zatrzymanie po 15 sekundach bezczynności
+                </p>
+              </>
             )}
           </div>
 
