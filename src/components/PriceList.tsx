@@ -343,38 +343,36 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       let orderId: string | undefined;
 
-      if (notebookMode === 'multiple') {
-        if (currentSessionNotebookId) {
-          orderId = currentSessionNotebookId;
-        } else {
-          const { data: existingOrder } = await supabase
-            .from('orders')
-            .select('id')
-            .eq('store_id', storeId)
-            .eq('created_by', userId)
-            .eq('status', 'notatnik')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+      // If we're adding to an existing notebook order
+      if (currentSessionNotebookId) {
+        orderId = currentSessionNotebookId;
 
-          if (existingOrder) {
-            orderId = existingOrder.id;
-            setCurrentSessionNotebookId(orderId);
-          }
+        // Check if product already exists in this order
+        const { data: existingItem } = await supabase
+          .from('order_items')
+          .select('id')
+          .eq('order_id', orderId)
+          .eq('product_id', product.id)
+          .maybeSingle();
+
+        if (existingItem) {
+          console.log('Product already in this order, skipping');
+          return;
         }
+      } else if (notebookMode === 'multiple') {
+        const { data: existingOrder } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('store_id', storeId)
+          .eq('created_by', userId)
+          .eq('status', 'notatnik')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-        if (orderId) {
-          const { data: existingItem } = await supabase
-            .from('order_items')
-            .select('id')
-            .eq('order_id', orderId)
-            .eq('product_id', product.id)
-            .maybeSingle();
-
-          if (existingItem) {
-            console.log('Product already in current session notebook, skipping');
-            return;
-          }
+        if (existingOrder) {
+          orderId = existingOrder.id;
+          setCurrentSessionNotebookId(orderId);
         }
       } else {
         const { data: existingOrder } = await supabase
@@ -578,13 +576,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               const isInNotebook = notebookItems.includes(product.id);
 
               // Debug first few products
-              if (categoryProducts.indexOf(product) < 2) {
-                console.log('Product check:', {
+              if (categoryProducts.indexOf(product) < 2 && category === filteredProducts[0]?.category) {
+                console.log('🎨 Rendering product:', {
                   name: product.name,
                   id: product.id,
                   isInNotebook,
-                  notebookItemsLength: notebookItems.length,
-                  firstNotebookItem: notebookItems[0]
+                  notebookItemsArray: notebookItems,
+                  includes: notebookItems.includes(product.id)
                 });
               }
 
