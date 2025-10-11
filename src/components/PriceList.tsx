@@ -115,17 +115,17 @@ export default function PriceList() {
     }
   });
 
-  const handleTouchStart = (e: React.TouchEvent, productId: string) => {
-    setTouchStart(e.touches[0].clientX);
+  const handlePointerStart = (e: React.PointerEvent, productId: string) => {
+    setTouchStart(e.clientX);
     setSwipedProduct(productId);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (touchStart === null) return;
-    setTouchCurrent(e.touches[0].clientX);
+    setTouchCurrent(e.clientX);
   };
 
-  const handleTouchEnd = async (product: Product) => {
+  const handlePointerEnd = async (product: Product) => {
     if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
       setTouchCurrent(null);
@@ -288,10 +288,15 @@ export default function PriceList() {
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''}`}
-                  onTouchStart={(e) => handleTouchStart(e, product.id)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={() => handleTouchEnd(product)}
+                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} touch-none`}
+                  onPointerDown={(e) => handlePointerStart(e, product.id)}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={() => handlePointerEnd(product)}
+                  onPointerCancel={() => {
+                    setTouchStart(null);
+                    setTouchCurrent(null);
+                    setSwipedProduct(null);
+                  }}
                 >
                     <div
                       className={`px-3 py-2 hover:bg-gray-50 transition ${isAdding ? 'opacity-0' : 'opacity-100'}`}
