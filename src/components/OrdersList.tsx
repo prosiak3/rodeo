@@ -26,10 +26,43 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'notatnik' : 'draft');
   const [sortAscending, setSortAscending] = useState(false);
+  const [initialFilterSet, setInitialFilterSet] = useState(false);
+
+  useEffect(() => {
+    if (showLimitedFilters && !initialFilterSet) {
+      setDefaultFilter();
+    }
+  }, [showLimitedFilters, initialFilterSet]);
 
   useEffect(() => {
     loadOrders();
   }, [storeId, filter, sortAscending]);
+
+  const setDefaultFilter = async () => {
+    try {
+      let query = supabase
+        .from('orders')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'notatnik');
+
+      if (storeId && userRole === 'store_manager') {
+        query = query.eq('store_id', storeId);
+      }
+
+      const { count } = await query;
+
+      if (count && count > 0) {
+        setFilter('notatnik');
+      } else {
+        setFilter('draft');
+      }
+    } catch (error) {
+      console.error('Error checking notatnik orders:', error);
+      setFilter('draft');
+    } finally {
+      setInitialFilterSet(true);
+    }
+  };
 
   const loadOrders = async () => {
     setLoading(true);
