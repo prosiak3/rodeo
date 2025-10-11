@@ -40,6 +40,12 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   }, [showLimitedFilters, initialFilterSet]);
 
   useEffect(() => {
+    if (initialFilter) {
+      setFilter(initialFilter);
+    }
+  }, [initialFilter]);
+
+  useEffect(() => {
     loadOrders();
   }, [storeId, filter, sortAscending]);
 

@@ -17,7 +17,7 @@ import PriceList from './components/PriceList';
 import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
-import { supabase } from './lib/supabase';
+import { supabase, OrderStatus } from './lib/supabase';
 import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
@@ -29,7 +29,7 @@ function AppContent() {
   const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
   const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
-  const [ordersListFilter, setOrdersListFilter] = useState<'sent' | null>(null);
+  const [ordersListFilter, setOrdersListFilter] = useState<OrderStatus | 'all' | null>(null);
 
   const createTestUsers = async () => {
     const testUsers = [
