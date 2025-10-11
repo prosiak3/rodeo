@@ -152,7 +152,7 @@ export default function PriceList() {
     const currentX = e.clientX;
     const swipeDistance = currentX - touchStart;
     const screenWidth = window.innerWidth;
-    const swipeThreshold = screenWidth * 0.66;
+    const swipeThreshold = screenWidth * 0.5;
 
     console.log('Swipe distance:', swipeDistance, 'threshold:', swipeThreshold, 'screen width:', screenWidth);
 
