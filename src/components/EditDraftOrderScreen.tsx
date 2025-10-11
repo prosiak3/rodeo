@@ -148,26 +148,41 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
 
     setSaving(true);
     try {
+      const { data: existingItems } = await supabase
+        .from('order_items')
+        .select('id, product_id, quantity, unit_price')
+        .eq('order_id', orderId);
+
+      const existingItemsMap = new Map(
+        (existingItems || []).map(item => [item.id, item])
+      );
+
       const existingItemIds = orderItems
         .filter(item => !item.id.startsWith('temp-'))
         .map(item => item.id);
 
-      const { data: allItems } = await supabase
-        .from('order_items')
-        .select('id')
-        .eq('order_id', orderId);
-
-      const itemsToDelete = (allItems || [])
+      const itemsToDelete = (existingItems || [])
         .filter(item => !existingItemIds.includes(item.id))
         .map(item => item.id);
 
-      if (itemsToDelete.length > 0) {
+      for (const itemId of itemsToDelete) {
+        const deletedItem = existingItemsMap.get(itemId);
         const { error: deleteError } = await supabase
           .from('order_items')
           .delete()
-          .in('id', itemsToDelete);
+          .eq('id', itemId);
 
         if (deleteError) throw deleteError;
+
+        await supabase.from('order_history').insert({
+          order_id: orderId,
+          action: 'Usunięto produkt',
+          performed_by: userId,
+          details: {
+            product_name: orderItems.find(i => i.id === itemId)?.products?.name || 'Nieznany produkt',
+            quantity: deletedItem?.quantity || 0
+          }
+        });
       }
 
       for (const item of orderItems) {
@@ -185,7 +200,33 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
             });
 
           if (insertError) throw insertError;
+
+          await supabase.from('order_history').insert({
+            order_id: orderId,
+            action: 'Dodano produkt',
+            performed_by: userId,
+            details: {
+              product_name: item.products?.name || 'Produkt',
+              quantity: item.quantity,
+              unit: item.unit
+            }
+          });
         } else {
+          const existingItem = existingItemsMap.get(item.id);
+          if (existingItem && existingItem.quantity !== item.quantity) {
+            await supabase.from('order_history').insert({
+              order_id: orderId,
+              action: 'Zmieniono ilość',
+              performed_by: userId,
+              details: {
+                product_name: item.products?.name || 'Produkt',
+                old_quantity: existingItem.quantity,
+                new_quantity: item.quantity,
+                unit: item.unit
+              }
+            });
+          }
+
           const { error: updateError } = await supabase
             .from('order_items')
             .update({

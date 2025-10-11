@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
 
@@ -20,6 +20,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [items, setItems] = useState<OrderItem[]>([]);
   const [history, setHistory] = useState<OrderHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   useEffect(() => {
     loadOrderDetails();
@@ -738,29 +739,58 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         )}
 
         {history.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-3">
-            <h3 className="font-semibold text-sm mb-2">Historia ({history.length})</h3>
-            <div className="space-y-1">
-              {history.map((entry) => (
-                <div key={entry.id} className="p-2 bg-gray-50 rounded text-xs">
-                  <div className="flex items-start gap-2">
-                    <Package className="w-3 h-3 text-gray-500 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-gray-800">{entry.action}</span>
-                        <span className="text-gray-400">{formatDate(entry.created_at)}</span>
-                      </div>
-                      {entry.users && (
-                        <div className="flex items-center gap-1 text-blue-600">
-                          <span className="font-medium">{entry.users.full_name}</span>
-                          <span className="text-gray-400">({entry.users.role})</span>
+          <div className="bg-white rounded-lg shadow">
+            <button
+              onClick={() => setHistoryExpanded(!historyExpanded)}
+              className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition"
+            >
+              <h3 className="font-semibold text-sm">Historia ({history.length})</h3>
+              {historyExpanded ? (
+                <ChevronUp className="w-4 h-4 text-gray-600" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+              )}
+            </button>
+            {historyExpanded && (
+              <div className="px-3 pb-3 space-y-2 border-t border-gray-100">
+                {history.map((entry) => (
+                  <div key={entry.id} className="p-2 bg-gray-50 rounded text-xs">
+                    <div className="flex items-start gap-2">
+                      <Package className="w-3 h-3 text-gray-500 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col gap-1 mb-1">
+                          <span className="font-medium text-gray-800">{entry.action}</span>
+                          {entry.details && typeof entry.details === 'object' && (
+                            <div className="text-gray-600">
+                              {(entry.details as any).product_name && (
+                                <div>Produkt: {(entry.details as any).product_name}</div>
+                              )}
+                              {(entry.details as any).old_quantity !== undefined && (
+                                <div>
+                                  {(entry.details as any).old_quantity} {(entry.details as any).unit} → {(entry.details as any).new_quantity} {(entry.details as any).unit}
+                                </div>
+                              )}
+                              {(entry.details as any).quantity !== undefined && (entry.details as any).old_quantity === undefined && (
+                                <div>
+                                  Ilość: {(entry.details as any).quantity} {(entry.details as any).unit}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          <span className="text-gray-400">{formatDate(entry.created_at)}</span>
                         </div>
-                      )}
+                        {entry.users && (
+                          <div className="flex items-center gap-1 text-blue-600">
+                            <span className="font-medium">{entry.users.full_name}</span>
+                            <span className="text-gray-400">({entry.users.role === 'store_manager' ? 'Ekspedient' : entry.users.role === 'salesperson' ? 'Handlowiec' : entry.users.role === 'operator' ? 'Operator' : entry.users.role})</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
