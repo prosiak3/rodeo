@@ -34,6 +34,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   const [requiresConfirmation, setRequiresConfirmation] = useState(false);
   const [notes, setNotes] = useState('');
   const [sending, setSending] = useState(false);
+  const [shouldContinueListening, setShouldContinueListening] = useState(false);
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -87,8 +88,10 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     const recognition = new SpeechRecognition();
 
     recognition.lang = 'pl-PL';
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = true;
+
+    setShouldContinueListening(true);
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -110,7 +113,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
       const currentText = finalTranscript || interimTranscript;
       setTranscript(currentText);
 
-      if (finalTranscript && finalTranscript.toLowerCase().includes('kg')) {
+      if (finalTranscript && (finalTranscript.toLowerCase().includes('kg') || finalTranscript.toLowerCase().includes('szt'))) {
         parseTranscript(finalTranscript);
         setTranscript('');
       }
@@ -122,7 +125,20 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
     };
 
     recognition.onend = () => {
-      setIsListening(false);
+      if (shouldContinueListening && isListening) {
+        setTimeout(() => {
+          if ((window as any).currentRecognition) {
+            try {
+              (window as any).currentRecognition.start();
+            } catch (error) {
+              console.error('Error restarting recognition:', error);
+              setIsListening(false);
+            }
+          }
+        }, 100);
+      } else {
+        setIsListening(false);
+      }
     };
 
     recognition.start();
@@ -130,6 +146,7 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
   };
 
   const stopListening = async () => {
+    setShouldContinueListening(false);
     if ((window as any).currentRecognition) {
       (window as any).currentRecognition.stop();
     }
