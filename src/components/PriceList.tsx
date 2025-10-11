@@ -204,6 +204,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   const categories = ['all', 'Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
 
+  console.log('🔍 FILTERING - notebookItems:', notebookItems.length, 'products:', products.length);
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
                          (product.index && product.index.toLowerCase().includes(search.toLowerCase()));
@@ -211,6 +213,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     const notInNotebook = !notebookItems.includes(product.id);
     return matchesSearch && matchesCategory && notInNotebook;
   });
+
+  console.log('✅ FILTERED RESULT:', filteredProducts.length, 'products');
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (selectedCategory === 'all') {
@@ -343,11 +347,14 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   }, [products]);
 
   const addToNotebook = async (product: Product) => {
+    console.log('📝 ADD TO NOTEBOOK:', product.name, 'Current items:', notebookItems.length);
+
     if (!storeId || !userId) {
       return;
     }
 
     if (notebookItems.includes(product.id)) {
+      console.log('⚠️ Product already in notebookItems, skipping');
       return;
     }
 
@@ -367,6 +374,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           .maybeSingle();
 
         if (existingItem) {
+          console.log('✅ Product already exists in order, adding to notebookItems');
           setNotebookItems([...notebookItems, product.id]);
           return;
         }
@@ -405,6 +413,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
             .maybeSingle();
 
           if (existingItem) {
+            console.log('✅ Product already exists in single mode order, adding to notebookItems');
             setNotebookItems([...notebookItems, product.id]);
             return;
           }
@@ -447,9 +456,10 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       if (itemError) throw itemError;
 
+      console.log('✅ Successfully added to order, adding to notebookItems');
       setNotebookItems([...notebookItems, product.id]);
     } catch (error) {
-      console.error('Error adding to notebook:', error);
+      console.error('❌ Error adding to notebook:', error);
     }
   };
 
