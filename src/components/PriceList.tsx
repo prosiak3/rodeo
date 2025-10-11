@@ -241,6 +241,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   const handleTouchStart = (e: React.TouchEvent, productId: string) => {
     const touch = e.touches[0];
+    console.log('📱 SWIPE START:', touch.clientX);
     setTouchStart(touch.clientX);
     setTouchCurrent(touch.clientX);
     setSwipedProduct(productId);
@@ -252,10 +253,12 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     }
     e.preventDefault();
     const touch = e.touches[0];
+    console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
     setTouchCurrent(touch.clientX);
   };
 
   const handleTouchEnd = async (product: Product) => {
+    console.log('📱 SWIPE END:', { touchStart, touchCurrent });
     if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
       setTouchCurrent(null);
@@ -267,7 +270,10 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     const screenWidth = window.innerWidth;
     const swipeThreshold = screenWidth * 0.5;
 
+    console.log('📱 SWIPE RESULT:', { swipeDistance, screenWidth, swipeThreshold, willAdd: swipeDistance > swipeThreshold });
+
     if (swipeDistance > swipeThreshold) {
+      console.log('📱 ADDING TO NOTEBOOK via swipe:', product.name);
       await addToNotebook(product);
     }
 
