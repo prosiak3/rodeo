@@ -87,28 +87,6 @@ export default function PriceList() {
       });
 
       setProducts(productsWithPrices);
-
-      // Load existing notebook items
-      if (userData?.store_id && authData.user.id) {
-        const { data: notebookOrder } = await supabase
-          .from('orders')
-          .select('id')
-          .eq('store_id', userData.store_id)
-          .eq('created_by', authData.user.id)
-          .eq('status', 'notatnik')
-          .maybeSingle();
-
-        if (notebookOrder) {
-          const { data: items } = await supabase
-            .from('order_items')
-            .select('product_id')
-            .eq('order_id', notebookOrder.id);
-
-          if (items) {
-            setNotebookItems(items.map(item => item.product_id));
-          }
-        }
-      }
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -227,10 +205,6 @@ export default function PriceList() {
         });
 
       if (itemError) throw itemError;
-
-      setTimeout(() => {
-        setNotebookItems(items => items.filter(id => id !== product.id));
-      }, 500);
     } catch (error) {
       console.error('Error adding to notebook:', error);
       setNotebookItems(items => items.filter(id => id !== product.id));
