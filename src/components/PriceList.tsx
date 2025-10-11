@@ -567,8 +567,19 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
-              const isAdding = notebookItems.includes(product.id);
               const isInNotebook = notebookItems.includes(product.id);
+
+              // Debug first few products
+              if (categoryProducts.indexOf(product) < 2) {
+                console.log('Product check:', {
+                  name: product.name,
+                  id: product.id,
+                  isInNotebook,
+                  notebookItemsLength: notebookItems.length,
+                  firstNotebookItem: notebookItems[0]
+                });
+              }
+
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
               const isDisabled = isPriceZero || isInNotebook;
