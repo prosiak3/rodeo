@@ -283,17 +283,20 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   };
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
-    console.log('🖱️ MOUSE DOWN:', e.clientX);
-    e.preventDefault();
+    console.log('🖱️ MOUSE DOWN:', e.clientX, 'productId:', productId);
     setIsDragging(true);
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
     setSwipedProduct(productId);
+    console.log('🖱️ State updated - isDragging will be true');
   };
 
   useEffect(() => {
+    console.log('🖱️ useEffect triggered - isDragging:', isDragging);
+
     const handleDocumentMouseMove = (e: MouseEvent) => {
       if (!isDragging || touchStart === null || swipedProduct === null) {
+        console.log('🖱️ MOUSE MOVE SKIPPED:', { isDragging, touchStart, swipedProduct });
         return;
       }
       e.preventDefault();
@@ -302,6 +305,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     };
 
     const handleDocumentMouseUp = async () => {
+      console.log('🖱️ MOUSE UP called, isDragging:', isDragging);
       if (!isDragging) return;
 
       console.log('🖱️ MOUSE UP:', { touchStart, touchCurrent, swipedProduct });
