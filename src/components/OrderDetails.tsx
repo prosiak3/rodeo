@@ -636,15 +636,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         {(canAddMore || canConvertToDraft) && (
           <div className="bg-white rounded-lg shadow p-3">
             <div className="grid grid-cols-2 gap-2">
-              {canConvertToDraft && (
-                <button
-                  onClick={convertToDraft}
-                  className="py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
-                >
-                  <FileEdit className="w-5 h-5" />
-                  Dalej
-                </button>
-              )}
               {canAddMore && (
                 <button
                   onClick={onAddProducts || onBack}
@@ -652,6 +643,15 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 >
                   <Plus className="w-5 h-5" />
                   Dodaj asortyment
+                </button>
+              )}
+              {canConvertToDraft && (
+                <button
+                  onClick={convertToDraft}
+                  className="py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
+                >
+                  <FileEdit className="w-5 h-5" />
+                  Dalej
                 </button>
               )}
             </div>
