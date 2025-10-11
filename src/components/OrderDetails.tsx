@@ -366,9 +366,10 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const canEdit = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canDelete = (userRole === 'store_manager' || userRole === 'salesperson') && (order.status === 'draft' || order.status === 'notatnik');
-  const canUseAsTemplate = (userRole === 'store_manager' || userRole === 'salesperson');
+  const canUseAsTemplate = (userRole === 'store_manager' || userRole === 'salesperson') && order.status !== 'notatnik';
   const canSend = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canConvertToDraft = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
+  const canAddMore = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
   const canStartProgress = (userRole === 'operator' || userRole === 'admin') && order.status === 'sent';
   const canConfirm = (userRole === 'operator' || userRole === 'admin') &&
                      (order.status === 'in_progress' || order.status === 'pending_confirmation');
@@ -590,6 +591,18 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           </div>
         </div>
 
+        {canAddMore && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <button
+              onClick={onBack}
+              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <Package className="w-5 h-5" />
+              Dodaj
+            </button>
+          </div>
+        )}
+
         {canConvertToDraft && (
           <div className="bg-white rounded-lg shadow p-3">
             <button
@@ -597,7 +610,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
             >
               <FileEdit className="w-5 h-5" />
-              Przekształć w szkic
+              Dalej
             </button>
           </div>
         )}

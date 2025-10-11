@@ -127,6 +127,23 @@ export default function PriceList() {
       });
 
       setProducts(productsWithPrices);
+
+      if ((userData as any)?.notebook_mode === 'multiple' && userData?.store_id && authData.user?.id) {
+        const { data: existingOrder } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('store_id', userData.store_id)
+          .eq('created_by', authData.user.id)
+          .eq('status', 'notatnik')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existingOrder) {
+          setCurrentSessionNotebookId(existingOrder.id);
+          console.log('Loaded existing notebook order:', existingOrder.id);
+        }
+      }
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -284,7 +301,24 @@ export default function PriceList() {
       if (notebookMode === 'multiple') {
         if (currentSessionNotebookId) {
           orderId = currentSessionNotebookId;
+        } else {
+          const { data: existingOrder } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('store_id', storeId)
+            .eq('created_by', userId)
+            .eq('status', 'notatnik')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
+          if (existingOrder) {
+            orderId = existingOrder.id;
+            setCurrentSessionNotebookId(orderId);
+          }
+        }
+
+        if (orderId) {
           const { data: existingItem } = await supabase
             .from('order_items')
             .select('id')
