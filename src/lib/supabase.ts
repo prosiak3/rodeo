@@ -43,6 +43,7 @@ export interface User {
   active: boolean;
   created_at: string;
   updated_at: string;
+  show_all_order_filters?: boolean;
 }
 
 export interface Product {

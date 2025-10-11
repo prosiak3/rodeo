@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 
 interface ProfileScreenProps {
@@ -16,6 +16,7 @@ const roleLabels: Record<string, string> = {
 
 export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [orderMode, setOrderMode] = useState<'quantity' | 'list'>((user as any).order_mode || 'quantity');
+  const [showAllFilters, setShowAllFilters] = useState<boolean>(user.show_all_order_filters || false);
   const [saving, setSaving] = useState(false);
 
   const handleOrderModeChange = async (mode: 'quantity' | 'list') => {
@@ -32,6 +33,26 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     } catch (error) {
       console.error('Error updating order mode:', error);
       alert('Błąd podczas zapisywania ustań');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleShowAllFiltersToggle = async () => {
+    setSaving(true);
+    try {
+      const newValue = !showAllFilters;
+      const { error } = await supabase
+        .from('users')
+        .update({ show_all_order_filters: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setShowAllFilters(newValue);
+      alert('Ustawienia zapisane!');
+    } catch (error) {
+      console.error('Error updating filter settings:', error);
+      alert('Błąd podczas zapisywania ustawień');
     } finally {
       setSaving(false);
     }
@@ -123,6 +144,42 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             </button>
           </div>
         </div>
+
+        {user.role === 'store_manager' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Filtry zamówień</h3>
+            </div>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 mb-3">Wybierz widok filtrów na karcie "Moje zamówienia":</p>
+              <button
+                onClick={handleShowAllFiltersToggle}
+                disabled={saving}
+                className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                  !showAllFilters
+                    ? 'border-amber-500 bg-amber-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-semibold text-gray-800 mb-1">Uproszczony widok</div>
+                <div className="text-sm text-gray-600">Pokazuj tylko filtry: Szkice i Wysłane</div>
+              </button>
+              <button
+                onClick={handleShowAllFiltersToggle}
+                disabled={saving}
+                className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                  showAllFilters
+                    ? 'border-amber-500 bg-amber-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-semibold text-gray-800 mb-1">Wszystkie filtry</div>
+                <div className="text-sm text-gray-600">Pokazuj wszystkie statusy zamówień</div>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="font-semibold text-lg mb-4">Informacje o aplikacji</h3>
