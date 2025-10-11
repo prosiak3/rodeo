@@ -64,20 +64,28 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   const loadNotebookItems = async (orderId: string) => {
     try {
-      console.log('Loading notebook items for order:', orderId);
-      const { data: orderItems } = await supabase
+      console.log('🔵 Loading notebook items for order:', orderId);
+      const { data: orderItems, error } = await supabase
         .from('order_items')
         .select('product_id')
         .eq('order_id', orderId);
 
-      console.log('Loaded notebook items:', orderItems);
-      if (orderItems) {
+      if (error) {
+        console.error('❌ Error loading notebook items:', error);
+        return;
+      }
+
+      console.log('✅ Loaded notebook items:', orderItems);
+      if (orderItems && orderItems.length > 0) {
         const productIds = orderItems.map(item => item.product_id);
-        console.log('Setting notebook items:', productIds);
+        console.log('📝 Setting notebook items:', productIds.length, 'items');
         setNotebookItems(productIds);
+      } else {
+        console.log('⚠️ No items found for this order');
+        setNotebookItems([]);
       }
     } catch (error) {
-      console.error('Error loading notebook items:', error);
+      console.error('💥 Exception loading notebook items:', error);
     }
   };
 

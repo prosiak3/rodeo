@@ -27,6 +27,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const loadOrderDetails = async () => {
     setLoading(true);
+    console.log('🔵 OrderDetails - Loading order:', orderId);
     try {
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -46,7 +47,11 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         .eq('id', orderId)
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('❌ OrderDetails - order error:', orderError);
+        throw orderError;
+      }
+      console.log('✅ OrderDetails - Order loaded:', orderData);
       setOrder(orderData);
 
       const { data: itemsData, error: itemsError } = await supabase
@@ -63,15 +68,16 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         .eq('order_id', orderId);
 
       if (itemsError) {
-        console.error('OrderDetails - items error:', itemsError);
+        console.error('❌ OrderDetails - items error:', itemsError);
         throw itemsError;
       }
-      console.log('OrderDetails - loaded items:', itemsData);
+      console.log('✅ OrderDetails - loaded items:', itemsData?.length || 0, 'items');
 
       const itemsWithProducts = (itemsData || []).map(item => ({
         ...item,
         products: item.product
       }));
+      console.log('📦 OrderDetails - Setting items:', itemsWithProducts.length);
       setItems(itemsWithProducts);
 
       const { data: historyData, error: historyError } = await supabase
