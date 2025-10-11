@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3, ArrowUpDown, PackageCheck } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3, ArrowUpDown } from 'lucide-react';
 import { supabase, Order, OrderStatus } from '../lib/supabase';
 
 interface OrdersListProps {
@@ -18,7 +18,6 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; icon: an
   confirmed: { label: 'Potwierdzone', color: 'text-green-700', icon: CheckCircle, bgColor: 'bg-green-100', hoverColor: 'hover:text-green-700 hover:bg-green-200' },
   partially_confirmed: { label: 'Częściowo', color: 'text-orange-700', icon: AlertCircle, bgColor: 'bg-orange-100', hoverColor: 'hover:text-orange-700 hover:bg-orange-200' },
   rejected: { label: 'Odrzucone', color: 'text-red-700', icon: XCircle, bgColor: 'bg-red-100', hoverColor: 'hover:text-red-700 hover:bg-red-200' },
-  uzupełnione: { label: 'Uzupełnione', color: 'text-emerald-700', icon: PackageCheck, bgColor: 'bg-emerald-100', hoverColor: 'hover:text-emerald-700 hover:bg-emerald-200' },
   archived: { label: 'Archiwum', color: 'text-gray-700', icon: Package, bgColor: 'bg-gray-100', hoverColor: 'hover:text-gray-700 hover:bg-gray-200' },
 };
 
@@ -124,7 +123,7 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   };
 
   const groupOrders = (orders: Order[]) => {
-    if (!['sent', 'in_progress', 'pending_confirmation', 'confirmed', 'partially_confirmed', 'uzupełnione'].includes(filter as string) && filter !== 'all') {
+    if (!['sent', 'in_progress', 'pending_confirmation', 'confirmed', 'partially_confirmed'].includes(filter as string) && filter !== 'all') {
       return { ungrouped: orders };
     }
 
@@ -132,7 +131,7 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
     const groupOrder = ['Dzisiaj', 'Wczoraj', 'Ten tydzień', 'Zeszły tydzień', 'Ten miesiąc', 'Starsze'];
 
     orders.forEach(order => {
-      const shouldGroup = ['sent', 'in_progress', 'pending_confirmation', 'confirmed', 'partially_confirmed', 'uzupełnione'].includes(order.status);
+      const shouldGroup = ['sent', 'in_progress', 'pending_confirmation', 'confirmed', 'partially_confirmed'].includes(order.status);
 
       if (shouldGroup) {
         const group = getDateGroup(order.created_at);

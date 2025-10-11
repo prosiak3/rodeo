@@ -22,7 +22,6 @@ export type OrderStatus =
   | 'confirmed'
   | 'partially_confirmed'
   | 'rejected'
-  | 'uzupełnione'
   | 'archived';
 
 export interface Store {

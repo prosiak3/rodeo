@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 
 interface OrderDetailsProps {
@@ -258,6 +258,33 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     onUseAsTemplate(order.id);
   };
 
+  const convertToDraft = async () => {
+    if (!order || order.status !== 'notatnik') return;
+    if (!confirm('Czy na pewno chcesz przekształcić to zamówienie w szkic? Będziesz mógł je wtedy edytować.')) return;
+
+    try {
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({ status: 'draft' })
+        .eq('id', orderId);
+
+      if (updateError) throw updateError;
+
+      await supabase.from('order_history').insert({
+        order_id: orderId,
+        action: 'converted_to_draft',
+        performed_by: userId,
+        details: { from_status: 'notatnik' },
+      });
+
+      alert('Zamówienie przekształcone w szkic. Możesz je teraz edytować.');
+      loadOrderDetails();
+    } catch (error) {
+      console.error('Error converting to draft:', error);
+      alert('Błąd podczas przekształcania zamówienia');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pl-PL', {
@@ -292,6 +319,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const canDelete = (userRole === 'store_manager' || userRole === 'salesperson') && (order.status === 'draft' || order.status === 'notatnik');
   const canUseAsTemplate = (userRole === 'store_manager' || userRole === 'salesperson');
   const canSend = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
+  const canConvertToDraft = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
   const canStartProgress = (userRole === 'operator' || userRole === 'admin') && order.status === 'sent';
   const canConfirm = (userRole === 'operator' || userRole === 'admin') &&
                      (order.status === 'in_progress' || order.status === 'pending_confirmation');
@@ -510,6 +538,18 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             <span className="font-bold text-lg text-amber-600">{order.total_amount.toFixed(2)} PLN</span>
           </div>
         </div>
+
+        {canConvertToDraft && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <button
+              onClick={convertToDraft}
+              className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <FileEdit className="w-5 h-5" />
+              Przekształć w szkic
+            </button>
+          </div>
+        )}
 
         {canEdit && onEdit && (
           <div className="bg-white rounded-lg shadow p-3 space-y-2">
