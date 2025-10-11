@@ -208,7 +208,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                   <p className="font-semibold text-gray-800">{product.name}</p>
                   <p className="text-sm text-gray-600">{product.barcode}</p>
                   <p className="text-sm text-amber-600 font-medium">
-                    {product.price_per_unit.toFixed(2)} PLN/{product.unit}
+                    {(product.price_per_unit || 0).toFixed(2)} PLN/{product.unit}
                   </p>
                 </div>
               ))}
@@ -226,7 +226,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                     <div className="flex-1">
                       <p className="font-semibold text-gray-800">{item.product_name}</p>
                       <p className="text-sm text-gray-600">
-                        {item.price_per_unit.toFixed(2)} PLN/{item.unit}
+                        {(item.price_per_unit || 0).toFixed(2)} PLN/{item.unit}
                       </p>
                     </div>
                     <button
@@ -259,7 +259,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                     </button>
                     <span className="text-sm text-gray-600">{item.unit}</span>
                     <span className="ml-auto font-bold text-gray-800">
-                      {item.total_price.toFixed(2)} PLN
+                      {(item.total_price || 0).toFixed(2)} PLN
                     </span>
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-lg">Suma:</span>
                 <span className="font-bold text-xl text-amber-600">
-                  {calculateTotal().toFixed(2)} PLN
+                  {(calculateTotal() || 0).toFixed(2)} PLN
                 </span>
               </div>
             </div>
