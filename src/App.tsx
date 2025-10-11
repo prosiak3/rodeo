@@ -26,7 +26,6 @@ function AppContent() {
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
   const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
-  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const createTestUsers = async () => {
     const testUsers = [
@@ -199,63 +198,55 @@ function AppContent() {
   }
 
   if (user.role === 'driver') {
+    const getHeaderForTab = () => {
+      if (activeTab === 'profile') return { title: 'Profil', subtitle: '' };
+      return { title: 'RODEO', subtitle: 'Kierowca' };
+    };
+    const header = getHeaderForTab();
+
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50">
         <Header
-          title="RODEO"
-          subtitle="Kierowca"
-          onProfileClick={() => setShowProfileModal(true)}
+          title={header.title}
+          subtitle={header.subtitle}
+          onProfileClick={() => setActiveTab('profile')}
+          showProfile={activeTab !== 'profile'}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
-          <DriverScreen userId={user.id} />
+          {activeTab === 'home' && <DriverScreen userId={user.id} />}
+          {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
-        {showProfileModal && (
-          <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <ProfileScreen user={user} onSignOut={signOut} />
-              <button
-                onClick={() => setShowProfileModal(false)}
-                className="w-full p-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition rounded-b-2xl"
-              >
-                Zamknij
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
 
   if (user.role === 'admin' || user.role === 'operator') {
+    const getHeaderForTab = () => {
+      if (activeTab === 'profile') return { title: 'Profil', subtitle: '' };
+      return { title: 'Panel Administracyjny', subtitle: user.role === 'admin' ? 'Administrator' : 'Operator' };
+    };
+    const header = getHeaderForTab();
+
     return (
       <div className="fixed inset-0 flex flex-col bg-gray-50">
         <Header
-          title="Panel Administracyjny"
-          subtitle={user.role === 'admin' ? 'Administrator' : 'Operator'}
-          onProfileClick={() => setShowProfileModal(true)}
+          title={header.title}
+          subtitle={header.subtitle}
+          onProfileClick={() => setActiveTab('profile')}
+          showProfile={activeTab !== 'profile'}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
-          <AdminPanel
-            userId={user.id}
-            userRole={user.role}
-            onSelectOrder={setSelectedOrderId}
-          />
+          {activeTab === 'home' && (
+            <AdminPanel
+              userId={user.id}
+              userRole={user.role}
+              onSelectOrder={setSelectedOrderId}
+            />
+          )}
+          {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
-        {showProfileModal && (
-          <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <ProfileScreen user={user} onSignOut={signOut} />
-              <button
-                onClick={() => setShowProfileModal(false)}
-                className="w-full p-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition rounded-b-2xl"
-              >
-                Zamknij
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -269,6 +260,8 @@ function AppContent() {
           return { title: 'Zamówienia', subtitle: 'Wszystkie zamówienia sklepów' };
         case 'prices':
           return { title: 'Cennik', subtitle: 'Aktualny cennik produktów' };
+        case 'profile':
+          return { title: 'Profil', subtitle: '' };
         default:
           return { title: 'RODEO', subtitle: '' };
       }
@@ -281,7 +274,8 @@ function AppContent() {
         <Header
           title={header.title}
           subtitle={header.subtitle}
-          onProfileClick={() => setShowProfileModal(true)}
+          onProfileClick={() => setActiveTab('profile')}
+          showProfile={activeTab !== 'profile'}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
@@ -298,21 +292,9 @@ function AppContent() {
               <PriceList />
             </div>
           )}
+          {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
-        {showProfileModal && (
-          <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <ProfileScreen user={user} onSignOut={signOut} />
-              <button
-                onClick={() => setShowProfileModal(false)}
-                className="w-full p-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition rounded-b-2xl"
-              >
-                Zamknij
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -329,6 +311,8 @@ function AppContent() {
         return { title: 'Cennik', subtitle: 'Aktualny cennik produktów' };
       case 'admin':
         return { title: 'Panel Administracyjny', subtitle: '' };
+      case 'profile':
+        return { title: 'Profil', subtitle: '' };
       default:
         return { title: 'RODEO', subtitle: '' };
     }
@@ -341,7 +325,7 @@ function AppContent() {
       <Header
         title={header.title}
         subtitle={header.subtitle}
-        onProfileClick={() => setShowProfileModal(true)}
+        onProfileClick={() => setActiveTab('profile')}
         showProfile={activeTab !== 'profile'}
       />
       <div className="flex-1 overflow-y-auto pt-20 pb-16">
@@ -509,23 +493,11 @@ function AppContent() {
             <PriceList />
           </div>
         )}
+
+        {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {showProfileModal && (
-        <div className="fixed inset-0 z-50 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <ProfileScreen user={user} onSignOut={signOut} />
-            <button
-              onClick={() => setShowProfileModal(false)}
-              className="w-full p-4 bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition rounded-b-2xl"
-            >
-              Zamknij
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
