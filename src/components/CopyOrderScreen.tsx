@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Send, Trash2, ChevronRight, Package } from 'lucide-react';
+import { Copy, FileText, ChevronRight, Package } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Order {
@@ -51,23 +51,16 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
   const loadCompletedOrders = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from('orders')
         .select('id, order_number, created_at, total_amount, status')
         .eq('store_id', storeId)
+        .in('status', ['sent', 'in_progress', 'confirmed', 'partially_confirmed'])
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
-      if (preselectedOrderId) {
-        const { data, error } = await query;
-        if (error) throw error;
-        setOrders(data || []);
-      } else {
-        query = query.in('status', ['confirmed', 'partially_confirmed', 'archived']);
-        const { data, error } = await query;
-        if (error) throw error;
-        setOrders(data || []);
-      }
+      if (error) throw error;
+      setOrders(data || []);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
@@ -82,10 +75,10 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
         .from('order_items')
         .select(`
           product_id,
-          quantity_ordered,
+          quantity,
           unit,
-          price_per_unit,
-          product:product_id (
+          unit_price,
+          products:product_id (
             name
           )
         `)
@@ -95,10 +88,10 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
 
       const items = data?.map(item => ({
         product_id: item.product_id,
-        product_name: (item.product as any)?.name || 'Nieznany produkt',
-        quantity_ordered: item.quantity_ordered,
+        product_name: (item.products as any)?.name || 'Nieznany produkt',
+        quantity_ordered: item.quantity,
         unit: item.unit,
-        price_per_unit: item.price_per_unit
+        price_per_unit: item.unit_price
       })) || [];
 
       setOrderItems(items);
@@ -134,7 +127,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
     return orderItems.reduce((sum, item) => sum + (item.quantity_ordered * item.price_per_unit), 0);
   };
 
-  const sendOrder = async () => {
+  const createDraftOrder = async () => {
     if (orderItems.length === 0) {
       alert('Zamówienie musi zawierać przynajmniej jeden produkt');
       return;
@@ -142,7 +135,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
 
     setSending(true);
     try {
-      const orderNumber = `ORD-${Date.now()}`;
+      const orderNumber = `DRAFT-${Date.now()}`;
       const totalAmount = calculateTotal();
 
       const { data: order, error: orderError } = await supabase
@@ -151,11 +144,10 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
           order_number: orderNumber,
           store_id: storeId,
           created_by: userId,
-          status: 'sent',
+          status: 'draft',
           requires_confirmation: false,
           total_amount: totalAmount,
-          notes: notes || null,
-          sent_at: new Date().toISOString()
+          notes: notes || null
         })
         .select()
         .single();
@@ -165,9 +157,9 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
       const orderItemsData = orderItems.map(item => ({
         order_id: order.id,
         product_id: item.product_id,
-        quantity_ordered: item.quantity_ordered,
+        quantity: item.quantity_ordered,
         unit: item.unit,
-        price_per_unit: item.price_per_unit,
+        unit_price: item.price_per_unit,
         total_price: item.quantity_ordered * item.price_per_unit
       }));
 
@@ -179,8 +171,8 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
 
       onOrderSent();
     } catch (error) {
-      console.error('Error sending order:', error);
-      alert('Błąd podczas wysyłania zamówienia');
+      console.error('Error creating draft order:', error);
+      alert('Błąd podczas tworzenia szkicu zamówienia');
     } finally {
       setSending(false);
     }
@@ -200,7 +192,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
       <div className="min-h-screen bg-gray-50 pb-20">
         <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
           <h2 className="text-xl font-bold">Kopiuj zamówienie</h2>
-          <p className="text-amber-100 text-sm mt-1">Wybierz wcześniejsze zamówienie do skopiowania</p>
+          <p className="text-amber-100 text-sm mt-1">Wybierz wysłane zamówienie do sklonowania</p>
         </div>
 
         <div className="p-6">
@@ -211,8 +203,8 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
           ) : orders.length === 0 ? (
             <div className="bg-white rounded-xl shadow p-12 text-center">
               <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">Brak zamówień do skopiowania</p>
-              <p className="text-gray-400 text-sm mt-2">Zrealizuj przynajmniej jedno zamówienie</p>
+              <p className="text-gray-500 text-lg">Brak wysłanych zamówień</p>
+              <p className="text-gray-400 text-sm mt-2">Wyślij przynajmniej jedno zamówienie</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -253,7 +245,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <h2 className="text-xl font-bold">Edytuj zamówienie</h2>
+        <h2 className="text-xl font-bold">Skopiuj do szkicu</h2>
         <p className="text-amber-100 text-sm mt-1">
           Kopiowanie z: {selectedOrder.order_number}
         </p>
@@ -343,16 +335,16 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
                 Wstecz
               </button>
               <button
-                onClick={sendOrder}
+                onClick={createDraftOrder}
                 disabled={sending || orderItems.length === 0}
                 className="flex-1 p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {sending ? (
-                  <>Wysyłanie...</>
+                  <>Tworzenie...</>
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
-                    Wyślij zamówienie
+                    <FileText className="w-5 h-5" />
+                    Zapisz jako szkic
                   </>
                 )}
               </button>
