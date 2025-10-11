@@ -453,7 +453,10 @@ function AppContent() {
                     setOrderMode(null);
                     setActiveTab('orders');
                   }}
-                  onCancel={() => setOrderMode(null)}
+                  onCancel={() => {
+                    setOrderMode(null);
+                    setActiveTab('prices');
+                  }}
                 />
               ) : (
                 <PriceListOrderScreen
@@ -463,7 +466,10 @@ function AppContent() {
                     setOrderMode(null);
                     setActiveTab('orders');
                   }}
-                  onCancel={() => setOrderMode(null)}
+                  onCancel={() => {
+                    setOrderMode(null);
+                    setActiveTab('prices');
+                  }}
                 />
               )
             )}

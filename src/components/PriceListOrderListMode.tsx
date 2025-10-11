@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft, Check, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownAZ, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, Trash2, Save, Check, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownAZ, ArrowUp, ArrowDown, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ProductCard from './ProductCard';
 
@@ -245,24 +245,21 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <button onClick={onCancel} className="flex items-center gap-2 mb-2 text-white hover:text-amber-100 transition">
+    <div className="bg-gray-50">
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-3 flex items-center justify-between shadow-sm">
+        <button
+          onClick={onCancel}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium text-gray-700"
+        >
           <ArrowLeft className="w-5 h-5" />
-          <span>Wróć</span>
+          <span>Wróć do cennika</span>
         </button>
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold">Buduj zamówienie z cennika</h2>
-            <p className="text-amber-100 text-sm mt-1">Dodaj produkty do listy</p>
+        {orderItems.length > 0 && (
+          <div className="bg-amber-100 rounded-lg px-3 py-2 text-right">
+            <p className="text-xs text-amber-700">Produkty</p>
+            <p className="font-bold text-lg text-amber-600">{orderItems.length}</p>
           </div>
-          {orderItems.length > 0 && (
-            <div className="bg-white/20 rounded-lg px-3 py-2 text-right">
-              <p className="text-xs text-amber-100">Produkty</p>
-              <p className="font-bold text-lg">{orderItems.length}</p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div className="p-3 space-y-3">
