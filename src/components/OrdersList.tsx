@@ -24,7 +24,7 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; icon: an
 export default function OrdersList({ storeId, userRole, onSelectOrder, showLimitedFilters = false }: OrdersListProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'notatnik' : 'all');
+  const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'notatnik' : 'draft');
   const [sortAscending, setSortAscending] = useState(false);
 
   useEffect(() => {
