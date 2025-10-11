@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Trash2, Save, Search } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Plus, Trash2, Save, Search, Mic, MicOff } from 'lucide-react';
 import { supabase, Product, OrderItem } from '../lib/supabase';
 
 interface EditDraftOrderScreenProps {
@@ -18,6 +18,9 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   const [orderNumber, setOrderNumber] = useState('');
   const [canEdit, setCanEdit] = useState(true);
   const [creatorId, setCreatorId] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const productsRef = useRef<Product[]>([]);
 
   useEffect(() => {
     loadData();
@@ -61,6 +64,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
 
       if (productsError) throw productsError;
       setProducts(productsData || []);
+      productsRef.current = productsData || [];
 
       const { data: itemsData, error: itemsError } = await supabase
         .from('order_items')
@@ -224,6 +228,101 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
     }
   };
 
+  const startVoiceRecognition = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy. Użyj Chrome lub Edge.');
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pl-PL';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    setIsListening(true);
+    setTranscript('');
+
+    recognition.onresult = (event: any) => {
+      const result = event.results[event.results.length - 1];
+      if (result.isFinal) {
+        const finalTranscript = result[0].transcript;
+        setTranscript(finalTranscript);
+        parseVoiceInput(finalTranscript);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+    (window as any).currentRecognition = recognition;
+  };
+
+  const stopVoiceRecognition = () => {
+    if ((window as any).currentRecognition) {
+      (window as any).currentRecognition.stop();
+    }
+    setIsListening(false);
+  };
+
+  const parseVoiceInput = (text: string) => {
+    const pattern1 = /(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)\s+([a-ząćęłńóśźż\s]+)/gi;
+    const pattern2 = /([a-ząćęłńóśźż\s]+?)\s+(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)/gi;
+
+    const matches = [];
+    let match;
+
+    while ((match = pattern1.exec(text)) !== null) {
+      matches.push({ quantity: match[1], unit: match[2], productName: match[3] });
+    }
+
+    while ((match = pattern2.exec(text)) !== null) {
+      matches.push({ productName: match[1], quantity: match[2], unit: match[3] });
+    }
+
+    for (const matchData of matches) {
+      const quantity = parseFloat(matchData.quantity.replace(',', '.'));
+      const productName = matchData.productName?.trim();
+
+      if (productName && productName.length > 2) {
+        const normalizedName = productName.toLowerCase().trim();
+        const product = productsRef.current.find(p => {
+          const pName = p.name.toLowerCase();
+          return pName.includes(normalizedName) || normalizedName.includes(pName);
+        });
+
+        if (product) {
+          const existingItem = orderItems.find(item => item.product_id === product.id);
+          if (existingItem) {
+            updateQuantity(existingItem.id, existingItem.quantity + quantity);
+          } else {
+            const newItem: any = {
+              id: `temp-${Date.now()}-${Math.random()}`,
+              order_id: orderId,
+              product_id: product.id,
+              quantity: quantity,
+              unit: product.unit,
+              unit_price: product.base_price,
+              total_price: product.base_price * quantity,
+              status: 'pending',
+              products: product,
+            };
+            setOrderItems(prev => [...prev, newItem]);
+          }
+        }
+      }
+    }
+
+    setTranscript('');
+  };
+
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,6 +349,32 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
       </div>
 
       <div className="p-4 space-y-4">
+        <div className="bg-white rounded-xl shadow-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-lg">Dodaj głosem</h3>
+            <button
+              onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
+              className={`p-3 rounded-full transition-all duration-200 ${
+                isListening
+                  ? 'bg-red-500 text-white animate-pulse shadow-lg'
+                  : 'bg-amber-500 text-white hover:bg-amber-600'
+              }`}
+            >
+              {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+            </button>
+          </div>
+          {transcript && (
+            <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+              "{transcript}"
+            </div>
+          )}
+          {isListening && (
+            <div className="text-center text-sm text-gray-600 mt-2">
+              Powiedz: "boczek 10 kg" lub "5 kg schabu"
+            </div>
+          )}
+        </div>
+
         {orderItems.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-4">
             <h3 className="font-semibold text-lg mb-3">Produkty w zamówieniu ({orderItems.length})</h3>
