@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
 
@@ -626,27 +626,28 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           </div>
         </div>
 
-        {canAddMore && (
+        {(canAddMore || canConvertToDraft) && (
           <div className="bg-white rounded-lg shadow p-3">
-            <button
-              onClick={onBack}
-              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
-            >
-              <Package className="w-5 h-5" />
-              Dodaj asortyment
-            </button>
-          </div>
-        )}
-
-        {canConvertToDraft && (
-          <div className="bg-white rounded-lg shadow p-3">
-            <button
-              onClick={convertToDraft}
-              className="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
-            >
-              <FileEdit className="w-5 h-5" />
-              Dalej
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              {canConvertToDraft && (
+                <button
+                  onClick={convertToDraft}
+                  className="py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
+                >
+                  <FileEdit className="w-5 h-5" />
+                  Dalej
+                </button>
+              )}
+              {canAddMore && (
+                <button
+                  onClick={onBack}
+                  className="py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
+                >
+                  <Plus className="w-5 h-5" />
+                  Dodaj asortyment
+                </button>
+              )}
+            </div>
           </div>
         )}
 
