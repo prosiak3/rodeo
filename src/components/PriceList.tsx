@@ -125,22 +125,26 @@ export default function PriceList() {
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (touchStart === null) return;
+    if (touchStart === null || swipedProduct === null) return;
     e.preventDefault();
-    setTouchCurrent(e.clientX);
+    const currentX = e.clientX;
+    setTouchCurrent(currentX);
   };
 
   const handlePointerEnd = async (e: React.PointerEvent, product: Product) => {
     e.preventDefault();
 
-    if (touchStart === null || touchCurrent === null) {
+    if (touchStart === null) {
       setTouchStart(null);
       setTouchCurrent(null);
       setSwipedProduct(null);
       return;
     }
 
-    const swipeDistance = touchCurrent - touchStart;
+    const currentX = e.clientX;
+    const swipeDistance = currentX - touchStart;
+
+    console.log('Swipe distance:', swipeDistance, 'from', touchStart, 'to', currentX);
 
     if (swipeDistance > 100) {
       await addToNotebook(product);
