@@ -116,16 +116,23 @@ export default function PriceList() {
   });
 
   const handlePointerStart = (e: React.PointerEvent, productId: string) => {
+    e.preventDefault();
+    const target = e.currentTarget as HTMLElement;
+    target.setPointerCapture(e.pointerId);
     setTouchStart(e.clientX);
+    setTouchCurrent(e.clientX);
     setSwipedProduct(productId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (touchStart === null) return;
+    e.preventDefault();
     setTouchCurrent(e.clientX);
   };
 
-  const handlePointerEnd = async (product: Product) => {
+  const handlePointerEnd = async (e: React.PointerEvent, product: Product) => {
+    e.preventDefault();
+
     if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
       setTouchCurrent(null);
@@ -288,10 +295,10 @@ export default function PriceList() {
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} touch-none`}
+                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} touch-none select-none cursor-grab active:cursor-grabbing`}
                   onPointerDown={(e) => handlePointerStart(e, product.id)}
                   onPointerMove={handlePointerMove}
-                  onPointerUp={() => handlePointerEnd(product)}
+                  onPointerUp={(e) => handlePointerEnd(e, product)}
                   onPointerCancel={() => {
                     setTouchStart(null);
                     setTouchCurrent(null);
