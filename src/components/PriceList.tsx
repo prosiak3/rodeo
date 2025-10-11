@@ -146,30 +146,61 @@ export default function PriceList() {
     groupedProducts[selectedCategory] = sortedProducts;
   }
 
-  const handlePointerStart = (e: React.PointerEvent, productId: string) => {
-    const target = e.currentTarget as HTMLElement;
-    target.setPointerCapture(e.pointerId);
-    setTouchStart(e.clientX);
-    setTouchCurrent(e.clientX);
+  const handleTouchStart = (e: React.TouchEvent, productId: string) => {
+    const touch = e.touches[0];
+    setTouchStart(touch.clientX);
+    setTouchCurrent(touch.clientX);
     setSwipedProduct(productId);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStart === null || swipedProduct === null) return;
-    const currentX = e.clientX;
-    setTouchCurrent(currentX);
+    const touch = e.touches[0];
+    setTouchCurrent(touch.clientX);
   };
 
-  const handlePointerEnd = async (e: React.PointerEvent, product: Product) => {
-    if (touchStart === null) {
+  const handleTouchEnd = async (product: Product) => {
+    if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
       setTouchCurrent(null);
       setSwipedProduct(null);
       return;
     }
 
-    const currentX = e.clientX;
-    const swipeDistance = currentX - touchStart;
+    const swipeDistance = touchCurrent - touchStart;
+    const screenWidth = window.innerWidth;
+    const swipeThreshold = screenWidth * 0.5;
+
+    if (swipeDistance > swipeThreshold) {
+      await addToNotebook(product);
+    }
+
+    setTouchStart(null);
+    setTouchCurrent(null);
+    setSwipedProduct(null);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent, productId: string) => {
+    setTouchStart(e.clientX);
+    setTouchCurrent(e.clientX);
+    setSwipedProduct(productId);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (touchStart === null || swipedProduct === null) return;
+    if (e.buttons !== 1) return;
+    setTouchCurrent(e.clientX);
+  };
+
+  const handleMouseUp = async (product: Product) => {
+    if (touchStart === null || touchCurrent === null) {
+      setTouchStart(null);
+      setTouchCurrent(null);
+      setSwipedProduct(null);
+      return;
+    }
+
+    const swipeDistance = touchCurrent - touchStart;
     const screenWidth = window.innerWidth;
     const swipeThreshold = screenWidth * 0.5;
 
@@ -420,12 +451,14 @@ export default function PriceList() {
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-40 bg-gray-100 cursor-not-allowed' : 'touch-none select-none cursor-grab active:cursor-grabbing'}`}
-                  style={{ touchAction: isDisabled ? 'auto' : 'none' }}
-                  onPointerDown={isDisabled ? undefined : (e) => handlePointerStart(e, product.id)}
-                  onPointerMove={isDisabled ? undefined : handlePointerMove}
-                  onPointerUp={isDisabled ? undefined : (e) => handlePointerEnd(e, product)}
-                  onPointerCancel={isDisabled ? undefined : () => {
+                  className={`relative overflow-hidden ${hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-40 bg-gray-100 cursor-not-allowed' : 'select-none cursor-grab active:cursor-grabbing'}`}
+                  onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
+                  onTouchMove={isDisabled ? undefined : handleTouchMove}
+                  onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
+                  onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
+                  onMouseMove={isDisabled ? undefined : handleMouseMove}
+                  onMouseUp={isDisabled ? undefined : () => handleMouseUp(product)}
+                  onMouseLeave={isDisabled ? undefined : () => {
                     setTouchStart(null);
                     setTouchCurrent(null);
                     setSwipedProduct(null);
@@ -435,8 +468,7 @@ export default function PriceList() {
                       className={`px-3 py-2 ${isDisabled ? '' : 'hover:bg-gray-50'} transition ${isAdding ? 'opacity-0' : 'opacity-100'}`}
                       style={{
                         transform: isDisabled ? 'none' : `translateX(${swipeOffset}px)`,
-                        transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none',
-                        pointerEvents: isDisabled ? 'auto' : 'none'
+                        transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
                       }}
                     >
                     <div className="flex items-center gap-2">
