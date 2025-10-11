@@ -21,6 +21,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [allowCollaboration, setAllowCollaboration] = useState<boolean>((user as any).allow_collaborative_editing ?? true);
   const [showDescription, setShowDescription] = useState<boolean>((user as any).show_product_description ?? true);
   const [showIndex, setShowIndex] = useState<boolean>((user as any).show_product_index ?? true);
+  const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>((user as any).notebook_mode || 'multiple');
   const [saving, setSaving] = useState(false);
 
   const handleOrderModeChange = async (mode: 'quantity' | 'list') => {
@@ -110,6 +111,25 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
+  const handleNotebookModeChange = async (mode: 'single' | 'multiple') => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ notebook_mode: mode })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setNotebookMode(mode);
+      alert('Ustawienia zapisane!');
+    } catch (error) {
+      console.error('Error updating notebook mode:', error);
+      alert('Błąd podczas zapisywania ustawień');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
@@ -193,6 +213,40 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             >
               <div className="font-semibold text-gray-800 mb-1">Z cennika lista</div>
               <div className="text-sm text-gray-600">Budujesz listę produktów, potem podajesz ilości i zapisujesz jako szkic</div>
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Settings className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Tryb notatnika</h3>
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600 mb-3">Jak dodawać produkty do notatnika przez przesunięcie w prawo?</p>
+            <button
+              onClick={() => handleNotebookModeChange('multiple')}
+              disabled={saving}
+              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                notebookMode === 'multiple'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-semibold text-gray-800 mb-1">Twórz nowy notatnik za każdym razem</div>
+              <div className="text-sm text-gray-600">Każde wejście w cennik tworzy nowy notatnik</div>
+            </button>
+            <button
+              onClick={() => handleNotebookModeChange('single')}
+              disabled={saving}
+              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                notebookMode === 'single'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-semibold text-gray-800 mb-1">Dodawaj do jednego notatnika</div>
+              <div className="text-sm text-gray-600">Wszystkie produkty trafiają do tego samego notatnika (bez duplikatów)</div>
             </button>
           </div>
         </div>

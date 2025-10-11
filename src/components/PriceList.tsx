@@ -38,6 +38,7 @@ export default function PriceList() {
   const [userId, setUserId] = useState<string>('');
   const [showDescription, setShowDescription] = useState<boolean>(true);
   const [showIndex, setShowIndex] = useState<boolean>(true);
+  const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>('multiple');
 
   useEffect(() => {
     loadProducts();
@@ -52,7 +53,7 @@ export default function PriceList() {
 
       const { data: userData } = await supabase
         .from('users')
-        .select('store_id, show_product_description, show_product_index')
+        .select('store_id, show_product_description, show_product_index, notebook_mode')
         .eq('id', authData.user.id)
         .single();
 
@@ -61,6 +62,7 @@ export default function PriceList() {
       }
       setShowDescription(userData?.show_product_description ?? true);
       setShowIndex(userData?.show_product_index ?? true);
+      setNotebookMode((userData as any)?.notebook_mode || 'multiple');
 
       const { data, error } = await supabase
         .from('products')
@@ -168,15 +170,33 @@ export default function PriceList() {
     try {
       setNotebookItems([...notebookItems, product.id]);
 
-      const { data: existingOrder } = await supabase
-        .from('orders')
-        .select('id')
-        .eq('store_id', storeId)
-        .eq('created_by', userId)
-        .eq('status', 'notatnik')
-        .maybeSingle();
+      let orderId: string | undefined;
 
-      let orderId = existingOrder?.id;
+      if (notebookMode === 'single') {
+        const { data: existingOrder } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('store_id', storeId)
+          .eq('created_by', userId)
+          .eq('status', 'notatnik')
+          .maybeSingle();
+
+        orderId = existingOrder?.id;
+
+        if (orderId) {
+          const { data: existingItem } = await supabase
+            .from('order_items')
+            .select('id')
+            .eq('order_id', orderId)
+            .eq('product_id', product.id)
+            .maybeSingle();
+
+          if (existingItem) {
+            console.log('Product already in notebook, skipping');
+            return;
+          }
+        }
+      }
 
       if (!orderId) {
         const orderNumber = `NOT-${Date.now()}`;
