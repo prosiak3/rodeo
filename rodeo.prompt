@@ -12,32 +12,37 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - **Tryb ilościowy (quantity)** - standardowe wprowadzanie ilości produktów i natychmiastowe wysyłanie
    - **Tryb listowy (list)** - szybkie zaznaczanie produktów bez podawania ilości, budowanie listy, zapisywanie jako szkic
 
-2. **Cztery sposoby składania zamówień:**
+2. **Pięć sposobów składania zamówień:**
    - **Głosowo** - dyktowanie zamówienia przez mikrofon, automatyczne rozpoznawanie produktów i ilości, weryfikacja i zatwierdzenie na ekranie
-   - **Z cennika** - wybieranie produktów bezpośrednio z aktywnego cennika
+   - **Z cennika** - wybieranie produktów bezpośrednio z aktywnego cennika z możliwością dodawania przez swipe
    - **Wprowadzanie ręczne** - wybieranie produktów z pełnej listy
    - **Kopiowanie zamówienia** - wykorzystanie wcześniejszych zamówień jako szablonu
+   - **Notatnik (swipe)** - szybkie dodawanie produktów do notatnika poprzez przesunięcie palcem w prawo w cenniku
 
 3. **Zarządzanie zamówieniami:**
    - Przeglądanie historii zamówień z filtrowaniem
    - Szkice zamówień (draft) - można edytować i usuwać
+   - Notatnik (notatnik) - lista produktów bez ilości, dodawane przez swipe w cenniku
    - Wysłane zamówienia (sent) - widoczne w historii
    - Szczegóły zamówienia z datami utworzenia i modyfikacji
-   - Możliwość usunięcia szkicu zamówienia
+   - Możliwość usunięcia szkicu i notatnika
    - Status zamówienia śledzony przez cały proces
    - Współdzielenie edycji szkiców z kolegami z tego samego sklepu (opcjonalne)
    - Historia modyfikacji z informacją kto i kiedy zmienił zamówienie
 
 4. **Cennik:**
    - Przeglądanie aktualnych cen produktów
-   - Podział na kategorie wyświetlania
-   - System tagów do grupowania produktów
-   - Wyszukiwanie produktów
+   - Wyszukiwanie produktów po nazwie i indeksie
+   - **Swipe-to-add** - przesunięcie produktu palcem w prawo dodaje go do notatnika
+   - Produkt znika z widoku po dodaniu do notatnika
+   - Sortowanie (nazwa A-Z, Z-A, cena rosnąco/malejąco)
+   - Dwa układy wyświetlania cen (poziomy/pionowy)
    - Wyświetlanie trzech rodzajów cen:
-     - Cena bazowa (base_price)
-     - Twoja cena (your_price) - indywidualna cena dla sklepu
-     - Cena promocyjna (promo_price) - najniższa cena specjalna
+     - Cena bazowa (base_price) - oznaczona jako "N:"
+     - Twoja cena (your_price) - oznaczona jako "T:" (kolor niebieski)
+     - Cena promocyjna (promo_price) - oznaczona jako "S:" (kolor czerwony, pulsująca)
    - Produkty z limitami ilościowymi (min_quantity, quantity_step)
+   - Produkty pogrupowane według kategorii wyświetlania
 
 5. **Profil:**
    - Informacje o użytkowniku i sklepie
@@ -80,6 +85,7 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - **Sklepy** - dodawanie i edycja sklepów
    - **Produkty** - pełne zarządzanie katalogiem produktów
    - **Cenniki** - zarządzanie cennikami i cenami specjalnymi
+   - **Tagi** - zarządzanie tagami produktów
    - **Użytkownicy** - tworzenie i zarządzanie użytkownikami systemu
    - **Ustawienia** - konfiguracja parametrów systemowych
 
@@ -106,9 +112,16 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
 5. **Zarządzanie produktami:**
    - Dodawanie nowych produktów
    - Edycja istniejących produktów
-   - Ustawianie kodów kreskowych
+   - Ustawianie indeksów produktów
    - Zarządzanie kategoriami i tagami
    - Archiwizacja produktów
+   - Min. ilość i krok ilości
+
+6. **Zarządzanie tagami:**
+   - Tworzenie nowych tagów
+   - Edycja nazw tagów
+   - Usuwanie tagów
+   - Wyświetlanie liczby produktów z danym tagiem
 
 ### Dla Kierowców (driver)
 
@@ -139,6 +152,7 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
 - Service Worker (opcjonalnie)
 - Responsywny design z mobile-first approach
 - Dolna nawigacja optymalizowana pod urządzenia mobilne
+- Obsługa gestów swipe dla dodawania produktów
 
 ## Struktura Bazy Danych
 
@@ -158,13 +172,14 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - Role: admin, store_manager, salesperson, operator, driver
 
 3. **products** - Produkty
-   - id, name, code (barcode), original_category, display_category
-   - unit, base_price, image_url, description, index
+   - id, name, code (kod produktu), original_category, display_category
+   - unit, base_price, image_url, description, index (numer indeksowy)
    - price_list_id - przypisanie do cennika
    - min_quantity, quantity_step - limity zamawiania
    - tags[] - tablica tagów do grupowania
    - active, created_at, updated_at
    - Katalog produktów mięsno-wędliniarskich (147 produktów)
+   - **UWAGA:** Kody kreskowe zostały zastąpione indeksami produktów
 
 4. **price_lists** - Cenniki
    - id, name, description, is_active
@@ -181,17 +196,19 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
 
 6. **orders** - Zamówienia
    - id, order_number, store_id, created_by
-   - status: draft, sent, in_progress, pending_confirmation, confirmed, partially_confirmed, rejected
+   - status: draft, notatnik, sent, in_progress, pending_confirmation, confirmed, partially_confirmed, rejected
    - requires_confirmation, total_amount
    - voice_transcript, notes
    - sent_at, in_progress_at, confirmed_at, delivery_date
    - created_at, updated_at
+   - **Nowy status:** notatnik - lista produktów bez ilości, dodawane przez swipe
 
 7. **order_items** - Pozycje Zamówienia
    - id, order_id, product_id
    - quantity, unit, unit_price, total_price
    - confirmed_quantity, status
    - created_at
+   - **Dla zamówień notatnik:** quantity może być 0
 
 8. **order_history** - Historia Zamówień
    - id, order_id, action, performed_by, details (jsonb)
@@ -221,11 +238,16 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
     - created_at, updated_at
     - Globalne ustawienia systemu zarządzane przez administratora
 
+13. **tags** - Tagi
+    - id, name
+    - created_at, updated_at
+    - System tagów do grupowania produktów
+
 ### Zabezpieczenia (RLS)
 
 Każda tabela ma włączone Row Level Security z politykami:
 - Ekspedienci widzą tylko dane swojego sklepu
-- Ekspedienci mogą usuwać tylko swoje szkice zamówień (status: draft)
+- Ekspedienci mogą usuwać tylko swoje szkice i notatniki (status: draft, notatnik)
 - Ekspedienci mogą edytować szkice współpracowników z tego samego sklepu (jeśli allow_collaborative_editing = true)
 - Handlowcy widzą dane sklepów, które obsługują
 - Pracownicy hurtowni i admini mają pełny dostęp do wszystkich danych
@@ -252,9 +274,9 @@ Każda tabela ma włączone Row Level Security z politykami:
 6. **ManualOrderScreen.tsx** - Ręczne wprowadzanie zamówienia
 7. **CopyOrderScreen.tsx** - Kopiowanie wcześniejszego zamówienia
 8. **EditDraftOrderScreen.tsx** - Edycja szkicu zamówienia z historią modyfikacji
-9. **OrdersList.tsx** - Lista zamówień z filtrowaniem i możliwością usuwania szkiców
+9. **OrdersList.tsx** - Lista zamówień z filtrowaniem i możliwością usuwania szkiców i notatników
 10. **OrderDetails.tsx** - Szczegóły zamówienia z komunikatem sukcesu po wysłaniu
-11. **PriceList.tsx** - Cennik produktów z wyszukiwaniem
+11. **PriceList.tsx** - Cennik produktów z wyszukiwaniem i swipe-to-add
 12. **ProfileScreen.tsx** - Profil użytkownika z ustawieniami
 13. **AdminPanel.tsx** - Panel administracyjny z zakładkami
 14. **ProductManager.tsx** - Zarządzanie produktami
@@ -283,11 +305,37 @@ Każda tabela ma włączone Row Level Security z politykami:
    - **Z cennika**: Przeglądanie cennika, dodawanie produktów, wysłanie
    - **Ręczne**: Wyszukanie produktów, dodanie do koszyka, określenie ilości, wysłanie
    - **Kopiowanie**: Wybór wcześniejszego zamówienia, modyfikacja, wysłanie
+   - **Notatnik (swipe)**:
+     1. Przeglądanie cennika
+     2. Przesunięcie produktu palcem w prawo
+     3. Produkt znika i dodaje się do notatnika
+     4. Automatyczne tworzenie zamówienia ze statusem "notatnik"
+     5. Możliwość uzupełnienia ilości później
 4. Zamówienie zapisywane jako szkic (draft) można edytować
 5. Po kliknięciu "Zamów w hurtowni" pojawia się komunikat sukcesu i powrót do ekranu głównego
 6. Status zmienia się na "sent"
 7. Można sprawdzić status w zakładce "Zamówienia"
-8. Szkice można edytować, kopiować i usuwać
+8. Szkice i notatniki można edytować, kopiować i usuwać
+
+### Notatnik - Nowa Funkcjonalność
+
+1. **Dodawanie produktów przez swipe:**
+   - Otwórz cennik
+   - Przesuń dowolny produkt palcem w prawo
+   - Produkt znika z ekranu (animacja opacity)
+   - Automatycznie dodaje się do notatnika
+
+2. **Automatyczne tworzenie zamówienia:**
+   - Przy pierwszym dodaniu tworzy się zamówienie ze statusem "notatnik"
+   - Numer zamówienia: NOT-[timestamp]
+   - Kolejne produkty dodawane są do tego samego zamówienia
+   - Produkty mają quantity = 0 (do uzupełnienia później)
+
+3. **Uzupełnianie ilości:**
+   - Otwórz listę zamówień
+   - Znajdź zamówienie z filtrem "Notatnik" (kolor turkusowy)
+   - Edytuj zamówienie i uzupełnij ilości
+   - Wyślij do hurtowni
 
 ### Przetwarzanie Zamówienia (Hurtownia/Admin)
 
@@ -316,6 +364,7 @@ Każda tabela ma włączone Row Level Security z politykami:
    - Sklepy - dodawanie/edycja sklepów
    - Produkty - zarządzanie katalogiem
    - Cenniki - zarządzanie cenami
+   - Tagi - zarządzanie tagami produktów
    - Użytkownicy - tworzenie i zarządzanie kontami
    - Ustawienia - konfiguracja systemu
 
@@ -336,7 +385,8 @@ Każda tabela ma włączone Row Level Security z politykami:
 - Mięso (schab, karkówka, żeberka, łopatka, itp.)
 - Wędliny (szynka, kiełbasa, parówki, salami, boczki, itp.)
 - Drób (kurczak, indyk, kaczka)
-- Dodatkowo system tagów do precyzyjnego grupowania
+- System tagów do precyzyjnego grupowania
+- Każdy produkt ma indeks (zamiast kodu kreskowego)
 
 ## Zmienne Środowiskowe
 
@@ -378,12 +428,21 @@ npm run typecheck
   - "Parówki 20 opakowań"
   - "Karkówka bez kości 15 kg"
 
+### Swipe-to-Add w Cenniku
+- **Gest przesunięcia** - przesuń produkt palcem w prawo aby dodać do notatnika
+- **Animacja znikania** - produkt płynnie znika po dodaniu
+- **Automatyczne tworzenie zamówienia** - pierwsze przesunięcie tworzy zamówienie "notatnik"
+- **Agregacja produktów** - kolejne produkty dodawane do tego samego zamówienia
+- **Bez konieczności podawania ilości** - ilości można uzupełnić później
+- **Szybkie budowanie listy zakupów** - idealne do tworzenia list produktów
+
 ### System Cen
-- **Cena bazowa (base_price)** - podstawowa cena produktu
-- **Twoja cena (your_price)** - indywidualna cena negocjowana dla sklepu
-- **Cena promocyjna (promo_price)** - najniższa cena specjalna/promocyjna
+- **Cena bazowa (base_price)** - podstawowa cena produktu (oznaczenie "N:")
+- **Twoja cena (your_price)** - indywidualna cena negocjowana dla sklepu (oznaczenie "T:", kolor niebieski)
+- **Cena promocyjna (promo_price)** - najniższa cena specjalna/promocyjna (oznaczenie "S:", kolor czerwony, pulsująca)
 - Automatyczne wyświetlanie najkorzystniejszej ceny
 - Śledzenie okresów ważności cen
+- Dwa układy wyświetlania (poziomy i pionowy)
 
 ### Limity Zamawiania
 - **min_quantity** - minimalna ilość do zamówienia
@@ -401,13 +460,14 @@ npm run typecheck
 
 ### Statusy Zamówień
 1. **draft** - szkic, można edytować i usunąć (ikona: ołówek, kolor: bursztynowy)
-2. **sent** - wysłane do hurtowni (ikona: samolot, kolor: niebieski)
-3. **in_progress** - w realizacji przez hurtownię (ikona: play, kolor: fioletowy)
-4. **pending_confirmation** - oczekuje na potwierdzenie (ikona: wykrzyknik, kolor: żółty)
-5. **confirmed** - potwierdzone (ikona: check, kolor: zielony)
-6. **partially_confirmed** - częściowo potwierdzone (ikona: wykrzyknik, kolor: pomarańczowy)
-7. **rejected** - odrzucone (ikona: X, kolor: czerwony)
-8. **archived** - archiwum (ikona: paczka, kolor: szary)
+2. **notatnik** - lista produktów bez ilości, dodane przez swipe (ikona: notatnik, kolor: turkusowy)
+3. **sent** - wysłane do hurtowni (ikona: samolot, kolor: niebieski)
+4. **in_progress** - w realizacji przez hurtownię (ikona: play, kolor: fioletowy)
+5. **pending_confirmation** - oczekuje na potwierdzenie (ikona: wykrzyknik, kolor: żółty)
+6. **confirmed** - potwierdzone (ikona: check, kolor: zielony)
+7. **partially_confirmed** - częściowo potwierdzone (ikona: wykrzyknik, kolor: pomarańczowy)
+8. **rejected** - odrzucone (ikona: X, kolor: czerwony)
+9. **archived** - archiwum (ikona: paczka, kolor: szary)
 
 ### Statusy Dostaw
 1. **loaded** - załadowana, czeka na wyjazd
@@ -467,10 +527,11 @@ Motywy można zaimplementować poprzez:
 4. **Statystyki** - wykresy sprzedaży, najpopularniejsze produkty
 5. **Zaawansowane planowanie tras** - optymalizacja dostaw
 6. **Chat** - komunikacja między ekspedientami a handlowcami
-7. **Skanowanie kodów kreskowych** - przy składaniu zamówień
-8. **Historia cen** - śledzenie zmian cen produktów w czasie
-9. **Ulubione zestawy** - zapisywanie często zamawianych kombinacji
-10. **Ulepszenia zamawiania głosowego** - lepsza precyzja rozpoznawania i więcej języków
+7. **Historia cen** - śledzenie zmian cen produktów w czasie
+8. **Ulubione zestawy** - zapisywanie często zamawianych kombinacji
+9. **Ulepszenia zamawiania głosowego** - lepsza precyzja rozpoznawania i więcej języków
+10. **Więcej gestów swipe** - przesunięcie w lewo dla innych akcji
+11. **Etykiety QR** - generowanie kodów QR dla produktów
 
 ## Deployment
 
@@ -494,6 +555,7 @@ Aplikacja wspiera:
 - Urządzenia: Desktop, Tablet, Mobile
 - Systemy: Windows, macOS, Linux, iOS, Android
 - Orientacja: Portrait i Landscape (responsywny design)
+- Gesty dotykowe: swipe, tap, długie przytrzymanie
 
 ## Bezpieczeństwo
 
@@ -518,7 +580,71 @@ Wszystkie migracje znajdują się w katalogu `/supabase/migrations/`:
 - System dostaw
 - System modyfikacji zamówień
 - Ustawienia systemowe
+- Dodanie statusu "notatnik" dla zamówień
+- Polityki usuwania zamówień draft i notatnik
+
+## Szczegóły Techniczne - Cennik
+
+### PriceList.tsx
+Główny komponent cennika z następującymi funkcjami:
+
+1. **Stan komponentu:**
+   - products - lista produktów z cenami
+   - search - wyszukiwanie po nazwie i indeksie
+   - sortBy - sortowanie (name-asc, name-desc, price-asc, price-desc)
+   - priceLayout - układ wyświetlania (horizontal, vertical)
+   - swipedProduct - aktualnie przeciągany produkt
+   - touchStart/touchCurrent - koordynaty gestu swipe
+   - notebookItems - lista produktów dodawanych do notatnika
+   - storeId/userId - identyfikatory do tworzenia zamówień
+
+2. **Funkcje swipe:**
+   - handleTouchStart() - początek gestu
+   - handleTouchMove() - śledzenie ruchu palca
+   - handleTouchEnd() - zakończenie gestu, sprawdzenie dystansu
+   - addToNotebook() - dodanie produktu do zamówienia notatnik
+   - getSwipeTransform() - obliczanie przesunięcia dla animacji
+
+3. **Logika dodawania do notatnika:**
+   - Sprawdzenie czy istnieje zamówienie notatnik dla użytkownika
+   - Jeśli nie - utworzenie nowego z numerem NOT-[timestamp]
+   - Dodanie produktu z quantity=0
+   - Animacja znikania produktu (opacity)
+   - Automatyczne usunięcie z listy notebookItems po 500ms
+
+4. **Wyświetlanie:**
+   - Grupowanie produktów według kategorii
+   - Sortowanie według wybranego kryterium
+   - Bez filtrów kategorii i tagów (usunięte)
+   - Bez kodów kreskowych (usunięte)
+   - Tylko nazwa produktu i ceny
 
 ## Licencja
 
 Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do automatyzacji procesu zamawiania towarów i zarządzania dostawami.
+
+## Najważniejsze Zmiany (Ostatnia Aktualizacja)
+
+1. **Usunięto kody kreskowe:**
+   - Z wyświetlania w cenniku (grafika + tekst)
+   - Z wyszukiwania w ManualOrderScreen
+   - Pozostawiono indeksy produktów do wyszukiwania
+
+2. **Dodano mechanizm Swipe-to-Add:**
+   - Przesunięcie produktu w prawo w cenniku
+   - Automatyczne dodawanie do zamówienia "notatnik"
+   - Produkty znikają po dodaniu (animacja)
+   - Ilość = 0, do uzupełnienia później
+
+3. **Nowy status zamówienia "notatnik":**
+   - Dodany do bazy danych (constraint)
+   - Dodany do TypeScript types
+   - Dodany do OrdersList z ikoną i kolorem
+   - Możliwość filtrowania zamówień notatnik
+   - Możliwość usuwania zamówień notatnik
+
+4. **Uproszczenie cennika:**
+   - Usunięto filtry kategorii
+   - Usunięto filtry tagów
+   - Wyszukiwanie tylko po nazwie i indeksie
+   - Czysty, minimalistyczny interfejs
