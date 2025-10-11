@@ -84,14 +84,14 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (isDragging && touchStart !== null && swipedProduct !== null) {
-        console.log('🌍 Global mouse MOVE - position:', e.clientX);
+        e.stopPropagation();
         setTouchCurrent(e.clientX);
       }
     };
 
-    const handleGlobalMouseUp = () => {
+    const handleGlobalMouseUp = (e: MouseEvent) => {
       if (isDragging) {
-        console.log('🌍 Global mouse UP - stopping drag');
+        e.stopPropagation();
         setIsDragging(false);
         setTouchStart(null);
         setTouchCurrent(null);
@@ -100,13 +100,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     };
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleGlobalMouseMove);
-      document.addEventListener('mouseup', handleGlobalMouseUp);
+      document.addEventListener('mousemove', handleGlobalMouseMove, { capture: true });
+      document.addEventListener('mouseup', handleGlobalMouseUp, { capture: true });
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleGlobalMouseMove);
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('mousemove', handleGlobalMouseMove, { capture: true });
+      document.removeEventListener('mouseup', handleGlobalMouseUp, { capture: true });
     };
   }, [isDragging, touchStart, swipedProduct]);
 
@@ -160,7 +160,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       setProducts(productsWithPrices);
 
-      if ((userData as any)?.notebook_mode === 'multiple' && userData?.store_id && authData.user?.id) {
+      if ((userData as any)?.notebook_mode === 'multiple' && userData?.store_id && authData.user?.id && !notebookOrderId) {
         const { data: existingOrder } = await supabase
           .from('orders')
           .select('id')
@@ -174,15 +174,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         if (existingOrder) {
           setCurrentSessionNotebookId(existingOrder.id);
           console.log('Loaded existing notebook order:', existingOrder.id);
-
-          const { data: orderItems } = await supabase
-            .from('order_items')
-            .select('product_id')
-            .eq('order_id', existingOrder.id);
-
-          if (orderItems) {
-            setNotebookItems(orderItems.map(item => item.product_id));
-          }
         }
       }
     } catch (error) {
@@ -463,7 +454,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   return (
     <div className="space-y-3">
       {notebookOrderId && onBackToOrder && (
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-20">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-30 mb-3">
           <button
             onClick={onBackToOrder}
             className="w-full flex items-center justify-center gap-2 text-white font-medium hover:opacity-90 transition"
@@ -473,7 +464,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           </button>
         </div>
       )}
-      <div className="bg-white rounded-lg shadow p-3 sticky top-[72px] z-10">
+      <div className={`bg-white rounded-lg shadow p-3 sticky z-20 ${notebookOrderId ? 'top-[60px]' : 'top-0'}`}>
         <div className="flex items-center gap-2 mb-2">
           <Search className="w-4 h-4 text-gray-400" />
           <input
@@ -565,6 +556,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         </div>
       ) : (
         <div className="space-y-3">
+          {console.log('Rendering with notebookItems:', notebookItems.length, notebookItems)}
           {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
             <div key={category}>
               {selectedCategory === 'all' && (
@@ -580,10 +572,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
               const isDisabled = isPriceZero || isInNotebook;
-
-              if (isInNotebook) {
-                console.log('Product in notebook:', product.name, product.id);
-              }
               return (
                 <div
                   key={product.id}
