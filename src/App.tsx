@@ -28,6 +28,7 @@ function AppContent() {
   const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
   const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
+  const [ordersListFilter, setOrdersListFilter] = useState<'sent' | null>(null);
 
   const createTestUsers = async () => {
     const testUsers = [
@@ -187,6 +188,7 @@ function AppContent() {
         }}
         onOrderSent={() => {
           setSelectedOrderId(null);
+          setOrdersListFilter('sent');
           setActiveTab('orders');
         }}
         onUseAsTemplate={(orderId) => {
@@ -223,7 +225,12 @@ function AppContent() {
           {activeTab === 'home' && <DriverScreen userId={user.id} />}
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'orders') {
+            setOrdersListFilter(null);
+          }
+        }} userRole={user.role} />
       </div>
     );
   }
@@ -253,7 +260,12 @@ function AppContent() {
           )}
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'orders') {
+            setOrdersListFilter(null);
+          }
+        }} userRole={user.role} />
       </div>
     );
   }
@@ -291,6 +303,7 @@ function AppContent() {
               <OrdersList
                 userRole={user.role}
                 onSelectOrder={setSelectedOrderId}
+                initialFilter={ordersListFilter || undefined}
               />
             </div>
           )}
@@ -312,6 +325,9 @@ function AppContent() {
           setActiveTab(tab);
           if (tab !== 'prices') {
             setAddingToNotebookOrderId(null);
+          }
+          if (tab === 'orders') {
+            setOrdersListFilter(null);
           }
         }} userRole={user.role} />
       </div>
@@ -506,6 +522,7 @@ function AppContent() {
               userRole={user.role}
               onSelectOrder={setSelectedOrderId}
               showLimitedFilters={!user.show_all_order_filters}
+              initialFilter={ordersListFilter || undefined}
             />
           </div>
         )}
@@ -530,6 +547,9 @@ function AppContent() {
         setActiveTab(tab);
         if (tab !== 'prices') {
           setAddingToNotebookOrderId(null);
+        }
+        if (tab === 'orders') {
+          setOrdersListFilter(null);
         }
       }} />
     </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
+import { showAlert } from '../lib/alerts';
 
 interface ProfileScreenProps {
   user: User;
@@ -38,10 +39,10 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
       if (error) throw error;
       setShowAllFilters(newValue);
-      alert('Ustawienia zapisane!');
+      showAlert('Ustawienia zapisane!', 'success');
     } catch (error) {
       console.error('Error updating filter settings:', error);
-      alert('Błąd podczas zapisywania ustawień');
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
     }
@@ -58,10 +59,10 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
       if (error) throw error;
       setAllowCollaboration(newValue);
-      alert('Ustawienia zapisane!');
+      showAlert('Ustawienia zapisane!', 'success');
     } catch (error) {
       console.error('Error updating collaboration settings:', error);
-      alert('Błąd podczas zapisywania ustawień');
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
     }
@@ -94,11 +95,13 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
         setShowPriceLayoutToggle(newValue);
       }
 
-      alert('Ustawienia zapisane! Odśwież cennik, aby zobaczyć zmiany.');
-      window.location.reload();
+      showAlert('Ustawienia zapisane!', 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       console.error('Error updating display settings:', error);
-      alert('Błąd podczas zapisywania ustawień');
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
     }
@@ -114,10 +117,10 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
       if (error) throw error;
       setNotebookMode(mode);
-      alert('Ustawienia zapisane!');
+      showAlert('Ustawienia zapisane!', 'success');
     } catch (error) {
       console.error('Error updating notebook mode:', error);
-      alert('Błąd podczas zapisywania ustawień');
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
     }

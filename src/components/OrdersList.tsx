@@ -8,6 +8,7 @@ interface OrdersListProps {
   userRole: string;
   onSelectOrder: (orderId: string) => void;
   showLimitedFilters?: boolean;
+  initialFilter?: OrderStatus | 'all';
 }
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: any; bgColor: string; hoverColor: string }> = {
@@ -22,11 +23,13 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; icon: an
   archived: { label: 'Archiwum', color: 'text-gray-700', icon: Package, bgColor: 'bg-gray-100', hoverColor: 'hover:text-gray-700 hover:bg-gray-200' },
 };
 
-export default function OrdersList({ storeId, userRole, onSelectOrder, showLimitedFilters = false }: OrdersListProps) {
+export default function OrdersList({ storeId, userRole, onSelectOrder, showLimitedFilters = false, initialFilter }: OrdersListProps) {
   const { confirm, ConfirmComponent } = useConfirm();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<OrderStatus | 'all'>(showLimitedFilters ? 'notatnik' : 'draft');
+  const [filter, setFilter] = useState<OrderStatus | 'all'>(
+    initialFilter || (showLimitedFilters ? 'notatnik' : 'draft')
+  );
   const [sortAscending, setSortAscending] = useState(false);
   const [initialFilterSet, setInitialFilterSet] = useState(false);
 
