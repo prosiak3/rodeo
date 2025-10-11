@@ -169,18 +169,44 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
           });
         } else {
           const suggestions = findSimilarProducts(productName);
-          items.push({
-            productName,
-            quantity,
-            unit,
-            matched: false,
-            suggestions,
-          });
+          if (suggestions.length > 0) {
+            items.push({
+              productName,
+              quantity,
+              unit,
+              matched: false,
+              suggestions,
+            });
+          } else {
+            items.push({
+              productName,
+              quantity,
+              unit,
+              matched: false,
+              suggestions: [],
+            });
+          }
         }
       }
     }
 
-    setOrderItems(prev => [...prev, ...items]);
+    if (items.length > 0) {
+      setOrderItems(prev => [...prev, ...items]);
+
+      const unmatchedCount = items.filter(item => !item.matched).length;
+      if (unmatchedCount > 0) {
+        const unmatchedNames = items
+          .filter(item => !item.matched)
+          .map(item => item.productName)
+          .join(', ');
+
+        if (items.filter(item => !item.matched && (!item.suggestions || item.suggestions.length === 0)).length > 0) {
+          setTimeout(() => {
+            alert(`Uwaga! Nie znaleziono ${unmatchedCount} produktów w cenniku: ${unmatchedNames}`);
+          }, 100);
+        }
+      }
+    }
     setTranscript('');
   };
 
@@ -494,21 +520,30 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
                         </div>
                       )}
 
-                      {!item.matched && item.suggestions && item.suggestions.length > 0 && (
+                      {!item.matched && (
                         <div className="mt-3 p-3 bg-white rounded-lg border border-yellow-200">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Czy chodziło o:</p>
-                          <div className="space-y-1">
-                            {item.suggestions.map((suggestion) => (
-                              <button
-                                key={suggestion.id}
-                                onClick={() => selectSuggestion(index, suggestion)}
-                                className="w-full text-left p-2 text-sm bg-gray-50 hover:bg-blue-50 rounded border border-gray-200 hover:border-blue-300 transition"
-                              >
-                                <span className="font-medium text-blue-600">{suggestion.name}</span>
-                                <span className="text-gray-500 ml-2">({suggestion.index})</span>
-                              </button>
-                            ))}
-                          </div>
+                          {item.suggestions && item.suggestions.length > 0 ? (
+                            <>
+                              <p className="text-sm font-medium text-gray-700 mb-2">Czy chodziło o:</p>
+                              <div className="space-y-1">
+                                {item.suggestions.map((suggestion) => (
+                                  <button
+                                    key={suggestion.id}
+                                    onClick={() => selectSuggestion(index, suggestion)}
+                                    className="w-full text-left p-2 text-sm bg-gray-50 hover:bg-blue-50 rounded border border-gray-200 hover:border-blue-300 transition"
+                                  >
+                                    <span className="font-medium text-blue-600">{suggestion.name}</span>
+                                    <span className="text-gray-500 ml-2">({suggestion.index})</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-sm text-red-600">
+                              <p className="font-medium mb-1">⚠️ Produkt nie istnieje w cenniku</p>
+                              <p className="text-xs text-gray-600">Usuń tę pozycję lub zmień nazwę produktu</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
