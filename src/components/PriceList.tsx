@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown, ArrowLeft } from 'lucide-react';
+import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown, ArrowLeft, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -748,6 +748,19 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                             </>
                           )}
                         </div>
+                      )}
+                      {!isDisabled && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log('➕ Add button clicked for:', product.name);
+                            addToNotebook(product);
+                          }}
+                          className="ml-2 flex-shrink-0 w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition"
+                          title="Dodaj do notatnika"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
                       )}
                     </div>
                     </div>
