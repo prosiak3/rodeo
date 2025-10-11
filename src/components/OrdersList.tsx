@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2 } from 'lucide-react';
 import { supabase, Order, OrderStatus } from '../lib/supabase';
 
 interface OrdersListProps {
@@ -66,6 +66,24 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
       console.error('Error loading orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteOrder = async (orderId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Czy na pewno chcesz usunąć to zamówienie?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (error) throw error;
+      loadOrders();
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert('Błąd podczas usuwania zamówienia');
     }
   };
 
@@ -209,7 +227,18 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
                       </p>
                     )}
                   </div>
-                  <ChevronRight className="w-6 h-6 text-gray-400" />
+                  <div className="flex items-center gap-2">
+                    {order.status === 'draft' && (userRole === 'store_manager' || userRole === 'salesperson') && (
+                      <button
+                        onClick={(e) => deleteOrder(order.id, e)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        title="Usuń zamówienie"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                    <ChevronRight className="w-6 h-6 text-gray-400" />
+                  </div>
                 </div>
               </div>
             );

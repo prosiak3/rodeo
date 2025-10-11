@@ -268,56 +268,34 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 <span className="text-gray-500">Status:</span>
                 <span className="ml-1 font-medium">{order.status}</span>
               </div>
-              <div>
+              <div className="col-span-2">
                 <span className="text-gray-500">Utworzono:</span>
                 <span className="ml-1 font-medium">{formatDate(order.created_at)}</span>
               </div>
-              {order.store && (
-                <div className="col-span-2">
-                  <span className="text-gray-500">Sklep:</span>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.store.address || order.store.name)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-1 font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    {order.store.name}
-                  </a>
-                  <span className="text-gray-400 text-xs ml-1">({order.store.code})</span>
-                  {order.store.address && (
-                    <div className="text-xs text-gray-600 mt-1">
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.store.address)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 hover:underline"
-                      >
-                        {order.store.address}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="col-span-2">
+                <span className="text-gray-500">Ostatnia modyfikacja:</span>
+                <span className="ml-1 font-medium">{formatDate(order.updated_at)}</span>
+              </div>
               {order.sent_at && (
-                <div>
+                <div className="col-span-2">
                   <span className="text-gray-500">Wysłano:</span>
                   <span className="ml-1 font-medium">{formatDate(order.sent_at)}</span>
                 </div>
               )}
               {(order as any).in_progress_at && (
-                <div>
+                <div className="col-span-2">
                   <span className="text-gray-500">W realizacji:</span>
                   <span className="ml-1 font-medium">{formatDate((order as any).in_progress_at)}</span>
                 </div>
               )}
               {order.confirmed_at && (
-                <div>
+                <div className="col-span-2">
                   <span className="text-gray-500">Potwierdzono:</span>
                   <span className="ml-1 font-medium">{formatDate(order.confirmed_at)}</span>
                 </div>
               )}
               {order.delivery_date && (
-                <div>
+                <div className="col-span-2">
                   <span className="text-gray-500">Dostawa:</span>
                   <span className="ml-1 font-medium">{order.delivery_date}</span>
                 </div>
