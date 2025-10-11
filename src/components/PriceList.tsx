@@ -149,22 +149,28 @@ export default function PriceList() {
   }
 
   const handleTouchStart = (e: React.TouchEvent, productId: string) => {
+    console.log('🟢 Touch START - productId:', productId);
     e.preventDefault();
     const touch = e.touches[0];
+    console.log('Touch position:', touch.clientX);
     setTouchStart(touch.clientX);
     setTouchCurrent(touch.clientX);
     setSwipedProduct(productId);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStart === null || swipedProduct === null) return;
+    if (touchStart === null || swipedProduct === null) {
+      console.log('🔴 Touch MOVE ignored - no active touch');
+      return;
+    }
     e.preventDefault();
     const touch = e.touches[0];
+    console.log('🔵 Touch MOVE - position:', touch.clientX);
     setTouchCurrent(touch.clientX);
   };
 
   const handleTouchEnd = async (product: Product) => {
-    console.log('Touch end triggered', { touchStart, touchCurrent });
+    console.log('🟡 Touch END - product:', product.name, { touchStart, touchCurrent });
 
     if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
