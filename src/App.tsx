@@ -18,6 +18,7 @@ import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import { supabase } from './lib/supabase';
+import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
   const { session, user, loading, signIn, signOut } = useAuth();
@@ -377,19 +378,49 @@ function AppContent() {
         {activeTab === 'new-order' && user.store_id && (
           <>
             {orderMode === null && (
-              <div className={`p-6 ${(user as any).order_mode_layout === 'grid' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}`}>
+              <>
+                <div className="flex justify-end p-4 pb-0">
+                  <button
+                    onClick={async () => {
+                      const newLayout = (user as any).order_mode_layout === 'grid' ? 'list' : 'grid';
+                      await supabase
+                        .from('users')
+                        .update({ order_mode_layout: newLayout })
+                        .eq('id', user.id);
+                      window.location.reload();
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow hover:shadow-md transition text-sm"
+                  >
+                    {(user as any).order_mode_layout === 'grid' ? (
+                      <>
+                        <List className="w-4 h-4" />
+                        <span>Lista</span>
+                      </>
+                    ) : (
+                      <>
+                        <Grid3x3 className="w-4 h-4" />
+                        <span>Siatka</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className={`p-6 pt-3 ${(user as any).order_mode_layout === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}`}>
                 {((user as any).enable_voice_orders ?? true) && (
                   <button
                     onClick={() => setOrderMode('voice')}
-                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                    className={`w-full bg-white rounded-lg shadow hover:shadow-lg transition text-left ${
+                      (user as any).order_mode_layout === 'grid' ? 'p-4' : 'p-3'
+                    }`}
                   >
-                    <div className="flex flex-col items-center gap-3 text-center">
-                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">🎤</span>
+                    <div className={`flex gap-3 ${
+                      (user as any).order_mode_layout === 'grid' ? 'flex-col items-center text-center' : 'items-center'
+                    }`}>
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-xl">🎤</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-gray-800">Zamówienie głosowe</h3>
-                        <p className="text-sm text-gray-600">Dyktuj zamówienie przez mikrofon</p>
+                        <h3 className="font-semibold text-base text-gray-800">Zamówienie głosowe</h3>
+                        <p className="text-xs text-gray-600">Dyktuj zamówienie przez mikrofon</p>
                       </div>
                     </div>
                   </button>
@@ -401,15 +432,19 @@ function AppContent() {
                       setOrderMode(null);
                       setActiveTab('prices');
                     }}
-                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                    className={`w-full bg-white rounded-lg shadow hover:shadow-lg transition text-left ${
+                      (user as any).order_mode_layout === 'grid' ? 'p-4' : 'p-3'
+                    }`}
                   >
-                    <div className="flex flex-col items-center gap-3 text-center">
-                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">📋</span>
+                    <div className={`flex gap-3 ${
+                      (user as any).order_mode_layout === 'grid' ? 'flex-col items-center text-center' : 'items-center'
+                    }`}>
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-xl">📋</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-gray-800">Z cennika</h3>
-                        <p className="text-sm text-gray-600">Przejdź do cennika</p>
+                        <h3 className="font-semibold text-base text-gray-800">Z cennika</h3>
+                        <p className="text-xs text-gray-600">Przejdź do cennika</p>
                       </div>
                     </div>
                   </button>
@@ -418,15 +453,19 @@ function AppContent() {
                 {((user as any).enable_copy_orders ?? true) && (
                   <button
                     onClick={() => setOrderMode('copy')}
-                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                    className={`w-full bg-white rounded-lg shadow hover:shadow-lg transition text-left ${
+                      (user as any).order_mode_layout === 'grid' ? 'p-4' : 'p-3'
+                    }`}
                   >
-                    <div className="flex flex-col items-center gap-3 text-center">
-                      <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">🔄</span>
+                    <div className={`flex gap-3 ${
+                      (user as any).order_mode_layout === 'grid' ? 'flex-col items-center text-center' : 'items-center'
+                    }`}>
+                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-xl">🔄</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-gray-800">Kopiuj zamówienie</h3>
-                        <p className="text-sm text-gray-600">Wykorzystaj wcześniejsze zamówienie</p>
+                        <h3 className="font-semibold text-base text-gray-800">Kopiuj zamówienie</h3>
+                        <p className="text-xs text-gray-600">Wykorzystaj wcześniejsze zamówienie</p>
                       </div>
                     </div>
                   </button>
@@ -435,20 +474,25 @@ function AppContent() {
                 {((user as any).enable_manual_orders ?? true) && (
                   <button
                     onClick={() => setOrderMode('manual')}
-                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                    className={`w-full bg-white rounded-lg shadow hover:shadow-lg transition text-left ${
+                      (user as any).order_mode_layout === 'grid' ? 'p-4' : 'p-3'
+                    }`}
                   >
-                    <div className="flex flex-col items-center gap-3 text-center">
-                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                        <span className="text-2xl">✏️</span>
+                    <div className={`flex gap-3 ${
+                      (user as any).order_mode_layout === 'grid' ? 'flex-col items-center text-center' : 'items-center'
+                    }`}>
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-xl">✏️</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-gray-800">Wprowadź ręcznie</h3>
-                        <p className="text-sm text-gray-600">Dodaj produkty z listy</p>
+                        <h3 className="font-semibold text-base text-gray-800">Wprowadź ręcznie</h3>
+                        <p className="text-xs text-gray-600">Dodaj produkty z listy</p>
                       </div>
                     </div>
                   </button>
                 )}
               </div>
+              </>
             )}
 
             {orderMode === 'voice' && (
