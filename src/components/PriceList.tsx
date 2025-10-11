@@ -374,8 +374,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           .maybeSingle();
 
         if (existingItem) {
-          console.log('✅ Product already exists in order, adding to notebookItems');
-          setNotebookItems([...notebookItems, product.id]);
+          console.log('✅ Product already exists in order, reloading items');
+          await loadNotebookItems(orderId);
           return;
         }
       } else if (notebookMode === 'multiple') {
@@ -413,8 +413,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
             .maybeSingle();
 
           if (existingItem) {
-            console.log('✅ Product already exists in single mode order, adding to notebookItems');
-            setNotebookItems([...notebookItems, product.id]);
+            console.log('✅ Product already exists in single mode order, reloading items');
+            await loadNotebookItems(orderId);
             return;
           }
         }
@@ -456,8 +456,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       if (itemError) throw itemError;
 
-      console.log('✅ Successfully added to order, adding to notebookItems');
-      setNotebookItems([...notebookItems, product.id]);
+      console.log('✅ Successfully added to order, reloading notebook items');
+      await loadNotebookItems(orderId);
     } catch (error) {
       console.error('❌ Error adding to notebook:', error);
     }
