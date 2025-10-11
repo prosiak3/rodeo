@@ -134,7 +134,12 @@ export default function VoiceOrderScreen({ storeId, userId, onOrderSent }: Voice
 
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech' || event.error === 'aborted') {
+        console.log('Ignoring error:', event.error);
+        return;
+      }
       setIsListening(false);
+      (window as any).shouldContinueListening = false;
     };
 
     recognition.onend = () => {
