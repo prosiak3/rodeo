@@ -40,12 +40,6 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
             full_name,
             email,
             role
-          ),
-          store:store_id (
-            name,
-            code,
-            address,
-            phone
           )
         `)
         .order('created_at', { ascending: false });
@@ -200,23 +194,6 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
                       <p className="text-sm text-blue-600 mb-1">
                         👤 {order.creator.full_name}
                       </p>
-                    )}
-                    {order.store && (
-                      <div className="text-sm text-gray-600 mb-1 space-y-1">
-                        <p className="font-medium">🏪 {order.store.name}</p>
-                        {(order.store as any).address && (
-                          <p className="text-xs pl-5">📍 {(order.store as any).address}</p>
-                        )}
-                        {(order.store as any).phone && (
-                          <a
-                            href={`tel:${(order.store as any).phone}`}
-                            className="text-xs pl-5 text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 w-fit"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            📞 {(order.store as any).phone}
-                          </a>
-                        )}
-                      </div>
                     )}
                     {order.sent_at && (
                       <p className="text-sm text-gray-600">Wysłano: {formatDate(order.sent_at)}</p>

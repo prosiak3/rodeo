@@ -448,13 +448,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               </div>
             </div>
           </div>
-
-          {order.notes && (
-            <div className="mt-3 p-2 bg-gray-50 rounded text-xs">
-              <span className="font-medium text-gray-700">Uwagi:</span>
-              <span className="ml-1 text-gray-600">{order.notes}</span>
-            </div>
-          )}
         </div>
 
         <div className="bg-white rounded-lg shadow p-3">
