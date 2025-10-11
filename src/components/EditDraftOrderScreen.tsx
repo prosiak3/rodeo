@@ -45,7 +45,7 @@ export default function EditDraftOrderScreen({ orderId, onSave, onCancel }: Edit
         .from('order_items')
         .select(`
           *,
-          products (
+          product:product_id (
             id,
             name,
             code,
@@ -55,8 +55,16 @@ export default function EditDraftOrderScreen({ orderId, onSave, onCancel }: Edit
         `)
         .eq('order_id', orderId);
 
-      if (itemsError) throw itemsError;
-      setOrderItems(itemsData || []);
+      if (itemsError) {
+        console.error('EditDraft - items error:', itemsError);
+        throw itemsError;
+      }
+
+      const itemsWithProducts = (itemsData || []).map(item => ({
+        ...item,
+        products: item.product
+      }));
+      setOrderItems(itemsWithProducts);
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Błąd podczas ładowania danych');

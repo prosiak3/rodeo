@@ -48,7 +48,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         .from('order_items')
         .select(`
           *,
-          products (
+          product:product_id (
             name,
             code,
             image_url,
@@ -58,9 +58,17 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         `)
         .eq('order_id', orderId);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('OrderDetails - items error:', itemsError);
+        throw itemsError;
+      }
       console.log('OrderDetails - loaded items:', itemsData);
-      setItems(itemsData || []);
+
+      const itemsWithProducts = (itemsData || []).map(item => ({
+        ...item,
+        products: item.product
+      }));
+      setItems(itemsWithProducts);
 
       const { data: historyData, error: historyError } = await supabase
         .from('order_history')
