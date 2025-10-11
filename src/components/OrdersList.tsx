@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3, ArrowUpDown } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3, ArrowUpDown, PackageCheck } from 'lucide-react';
 import { supabase, Order, OrderStatus } from '../lib/supabase';
 
 interface OrdersListProps {
@@ -13,11 +13,12 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; icon: an
   draft: { label: 'Szkic', color: 'text-amber-700', icon: Edit3, bgColor: 'bg-amber-100', hoverColor: 'hover:text-amber-700 hover:bg-amber-200' },
   notatnik: { label: 'Notatnik', color: 'text-teal-700', icon: FileText, bgColor: 'bg-teal-100', hoverColor: 'hover:text-teal-700 hover:bg-teal-200' },
   sent: { label: 'Wysłane', color: 'text-blue-700', icon: Send, bgColor: 'bg-blue-100', hoverColor: 'hover:text-blue-700 hover:bg-blue-200' },
-  in_progress: { label: 'W realizacji', color: 'text-purple-700', icon: PlayCircle, bgColor: 'bg-purple-100', hoverColor: 'hover:text-purple-700 hover:bg-purple-200' },
+  in_progress: { label: 'W realizacji', color: 'text-violet-700', icon: PlayCircle, bgColor: 'bg-violet-100', hoverColor: 'hover:text-violet-700 hover:bg-violet-200' },
   pending_confirmation: { label: 'Oczekuje', color: 'text-yellow-700', icon: AlertCircle, bgColor: 'bg-yellow-100', hoverColor: 'hover:text-yellow-700 hover:bg-yellow-200' },
   confirmed: { label: 'Potwierdzone', color: 'text-green-700', icon: CheckCircle, bgColor: 'bg-green-100', hoverColor: 'hover:text-green-700 hover:bg-green-200' },
   partially_confirmed: { label: 'Częściowo', color: 'text-orange-700', icon: AlertCircle, bgColor: 'bg-orange-100', hoverColor: 'hover:text-orange-700 hover:bg-orange-200' },
   rejected: { label: 'Odrzucone', color: 'text-red-700', icon: XCircle, bgColor: 'bg-red-100', hoverColor: 'hover:text-red-700 hover:bg-red-200' },
+  uzupełnione: { label: 'Uzupełnione', color: 'text-emerald-700', icon: PackageCheck, bgColor: 'bg-emerald-100', hoverColor: 'hover:text-emerald-700 hover:bg-emerald-200' },
   archived: { label: 'Archiwum', color: 'text-gray-700', icon: Package, bgColor: 'bg-gray-100', hoverColor: 'hover:text-gray-700 hover:bg-gray-200' },
 };
 
@@ -92,6 +93,64 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
+  };
+
+  const getDateGroup = (dateString: string): string => {
+    const orderDate = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const isToday = orderDate.toDateString() === today.toDateString();
+    const isYesterday = orderDate.toDateString() === yesterday.toDateString();
+
+    if (isToday) return 'Dzisiaj';
+    if (isYesterday) return 'Wczoraj';
+
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const startOfLastWeek = new Date(startOfWeek);
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+    if (orderDate >= startOfWeek) return 'Ten tydzień';
+    if (orderDate >= startOfLastWeek) return 'Zeszły tydzień';
+
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    if (orderDate >= startOfMonth) return 'Ten miesiąc';
+
+    return 'Starsze';
+  };
+
+  const groupOrders = (orders: Order[]) => {
+    if (!['sent', 'in_progress', 'pending_confirmation', 'confirmed', 'partially_confirmed', 'uzupełnione'].includes(filter as string) && filter !== 'all') {
+      return { ungrouped: orders };
+    }
+
+    const grouped: Record<string, Order[]> = {};
+    const groupOrder = ['Dzisiaj', 'Wczoraj', 'Ten tydzień', 'Zeszły tydzień', 'Ten miesiąc', 'Starsze'];
+
+    orders.forEach(order => {
+      const shouldGroup = ['sent', 'in_progress', 'pending_confirmation', 'confirmed', 'partially_confirmed', 'uzupełnione'].includes(order.status);
+
+      if (shouldGroup) {
+        const group = getDateGroup(order.created_at);
+        if (!grouped[group]) grouped[group] = [];
+        grouped[group].push(order);
+      } else {
+        if (!grouped['ungrouped']) grouped['ungrouped'] = [];
+        grouped['ungrouped'].push(order);
+      }
+    });
+
+    const sorted: Record<string, Order[]> = {};
+    groupOrder.forEach(group => {
+      if (grouped[group]) sorted[group] = grouped[group];
+    });
+    if (grouped['ungrouped']) sorted['ungrouped'] = grouped['ungrouped'];
+
+    return sorted;
   };
 
   if (loading) {
@@ -176,8 +235,14 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
           <p className="text-gray-500 text-lg">Brak zamówień</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {orders.map((order) => {
+        <div className="space-y-6">
+          {Object.entries(groupOrders(orders)).map(([groupName, groupedOrders]) => (
+            <div key={groupName}>
+              {groupName !== 'ungrouped' && (
+                <h3 className="text-lg font-bold text-gray-700 mb-3 px-1">{groupName}</h3>
+              )}
+              <div className="space-y-3">
+                {groupedOrders.map((order) => {
             const config = statusConfig[order.status];
             const Icon = config.icon;
 
@@ -234,6 +299,9 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
               </div>
             );
           })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
