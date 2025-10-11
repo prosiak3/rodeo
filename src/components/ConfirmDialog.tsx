@@ -1,4 +1,3 @@
-import { useTheme } from '../contexts/ThemeContext';
 import { AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react';
 
 interface ConfirmDialogProps {
@@ -22,7 +21,6 @@ export default function ConfirmDialog({
   cancelText = 'Anuluj',
   variant = 'warning'
 }: ConfirmDialogProps) {
-  const { colors } = useTheme();
 
   if (!isOpen) return null;
 
@@ -64,8 +62,7 @@ export default function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
       <div
-        className={`w-full max-w-md rounded-2xl shadow-2xl border-t-4 ${style.accentColor} overflow-hidden animate-[scale-in_0.2s_ease-out]`}
-        style={{ backgroundColor: colors.surface }}
+        className={`w-full max-w-md bg-white rounded-2xl shadow-2xl border-t-4 ${style.accentColor} overflow-hidden animate-[scale-in_0.2s_ease-out]`}
       >
         <div className="p-6">
           <div className="flex items-start gap-4">
@@ -73,33 +70,20 @@ export default function ConfirmDialog({
               <Icon size={32} />
             </div>
             <div className="flex-1">
-              <h3
-                className="text-xl font-bold mb-2"
-                style={{ color: colors.text }}
-              >
+              <h3 className="text-xl font-bold mb-2 text-gray-900">
                 {title}
               </h3>
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: colors.textSecondary }}
-              >
+              <p className="text-sm leading-relaxed text-gray-700">
                 {message}
               </p>
             </div>
           </div>
         </div>
 
-        <div
-          className="flex gap-3 p-4 border-t"
-          style={{ borderColor: colors.border }}
-        >
+        <div className="flex gap-3 p-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 rounded-lg font-medium transition-all hover:scale-105 active:scale-95"
-            style={{
-              backgroundColor: colors.backgroundAlt,
-              color: colors.text
-            }}
+            className="flex-1 px-4 py-3 rounded-lg font-medium transition-all hover:scale-105 active:scale-95 bg-gray-100 hover:bg-gray-200 text-gray-900"
           >
             {cancelText}
           </button>
