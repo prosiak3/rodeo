@@ -36,6 +36,7 @@ export default function PriceList() {
   const [swipedProduct, setSwipedProduct] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchCurrent, setTouchCurrent] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [notebookItems, setNotebookItems] = useState<string[]>([]);
   const [storeId, setStoreId] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
@@ -47,6 +48,35 @@ export default function PriceList() {
   useEffect(() => {
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isDragging && touchStart !== null && swipedProduct !== null) {
+        console.log('🌍 Global mouse MOVE - position:', e.clientX);
+        setTouchCurrent(e.clientX);
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        console.log('🌍 Global mouse UP - stopping drag');
+        setIsDragging(false);
+        setTouchStart(null);
+        setTouchCurrent(null);
+        setSwipedProduct(null);
+      }
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, touchStart, swipedProduct]);
 
   const loadProducts = async () => {
     setLoading(true);
@@ -197,17 +227,14 @@ export default function PriceList() {
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
     console.log('🖱️ Mouse DOWN - productId:', productId, 'position:', e.clientX);
     e.preventDefault();
+    setIsDragging(true);
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
     setSwipedProduct(productId);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (touchStart === null || swipedProduct === null) {
-      return;
-    }
-    if (e.buttons !== 1) {
-      console.log('🔴 Mouse MOVE ignored - button not pressed');
+    if (!isDragging || touchStart === null || swipedProduct === null) {
       return;
     }
     console.log('🖱️ Mouse MOVE - position:', e.clientX);
@@ -216,7 +243,8 @@ export default function PriceList() {
   };
 
   const handleMouseUp = async (product: Product) => {
-    console.log('🖱️ Mouse UP - product:', product.name, { touchStart, touchCurrent });
+    console.log('🖱️ Mouse UP - product:', product.name, { touchStart, touchCurrent, isDragging });
+    setIsDragging(false);
 
     if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
