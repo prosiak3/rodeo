@@ -241,7 +241,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   const handleTouchStart = (e: React.TouchEvent, productId: string) => {
     console.log('🟢 Touch START - productId:', productId);
-    e.preventDefault();
     const touch = e.touches[0];
     console.log('Touch position:', touch.clientX);
     setTouchStart(touch.clientX);
@@ -287,7 +286,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
     console.log('🖱️ Mouse DOWN - productId:', productId, 'position:', e.clientX);
-    e.preventDefault();
     setIsDragging(true);
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
@@ -614,7 +612,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'select-none cursor-grab active:cursor-grabbing'}`}
+                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                  style={{ touchAction: isDisabled ? 'auto' : 'none' }}
                   onTouchStart={isDisabled ? undefined : (e) => {
                     console.log('🟢🟢🟢 TOUCH START CALLED!', product.name);
                     handleTouchStart(e, product.id);
