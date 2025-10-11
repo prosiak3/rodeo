@@ -22,6 +22,7 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile'>('home');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [orderRefreshKey, setOrderRefreshKey] = useState(0);
   const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
 
   const createTestUsers = async () => {
@@ -150,6 +151,7 @@ function AppContent() {
         onSave={() => {
           setEditingOrderId(null);
           setSelectedOrderId(editingOrderId);
+          setOrderRefreshKey(prev => prev + 1);
         }}
         onCancel={() => {
           setEditingOrderId(null);
@@ -162,6 +164,7 @@ function AppContent() {
   if (selectedOrderId) {
     return (
       <OrderDetails
+        key={`order-${selectedOrderId}-${orderRefreshKey}`}
         orderId={selectedOrderId}
         userRole={user.role}
         userId={user.id}
