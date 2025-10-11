@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 
 interface OrderDetailsProps {
@@ -9,9 +9,10 @@ interface OrderDetailsProps {
   onBack: () => void;
   onEdit?: () => void;
   onOrderSent?: () => void;
+  onUseAsTemplate?: (orderId: string) => void;
 }
 
-export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit, onOrderSent }: OrderDetailsProps) {
+export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit, onOrderSent, onUseAsTemplate }: OrderDetailsProps) {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [history, setHistory] = useState<OrderHistory[]>([]);
@@ -214,6 +215,30 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     }
   };
 
+  const deleteOrder = async () => {
+    if (!order || order.status !== 'draft') return;
+    if (!confirm('Czy na pewno chcesz usunąć to zamówienie?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', order.id);
+
+      if (error) throw error;
+      alert('Zamówienie zostało usunięte');
+      onBack();
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert('Błąd podczas usuwania zamówienia');
+    }
+  };
+
+  const useAsTemplate = () => {
+    if (!order || !onUseAsTemplate) return;
+    onUseAsTemplate(order.id);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pl-PL', {
@@ -245,6 +270,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   }
 
   const canEdit = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
+  const canDelete = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
+  const canUseAsTemplate = (userRole === 'store_manager' || userRole === 'salesperson');
   const canSend = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canStartProgress = (userRole === 'operator' || userRole === 'admin') && order.status === 'sent';
   const canConfirm = (userRole === 'operator' || userRole === 'admin') &&
@@ -446,6 +473,25 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             >
               <Package className="w-5 h-5" />
               Zamów w hurtowni
+            </button>
+            <button
+              onClick={deleteOrder}
+              className="w-full py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <Trash2 className="w-5 h-5" />
+              Usuń zamówienie
+            </button>
+          </div>
+        )}
+
+        {canUseAsTemplate && onUseAsTemplate && order.status !== 'draft' && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <button
+              onClick={useAsTemplate}
+              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <Copy className="w-5 h-5" />
+              Użyj jako szablon
             </button>
           </div>
         )}

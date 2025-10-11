@@ -24,6 +24,7 @@ function AppContent() {
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
   const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
+  const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
 
   const createTestUsers = async () => {
     const testUsers = [
@@ -176,6 +177,12 @@ function AppContent() {
         onOrderSent={() => {
           setSelectedOrderId(null);
           setActiveTab('orders');
+        }}
+        onUseAsTemplate={(orderId) => {
+          setTemplateOrderId(orderId);
+          setOrderMode('copy');
+          setSelectedOrderId(null);
+          setActiveTab('new-order');
         }}
       />
     );
@@ -399,9 +406,14 @@ function AppContent() {
                 userId={user.id}
                 onOrderSent={() => {
                   setOrderMode(null);
+                  setTemplateOrderId(null);
                   setActiveTab('orders');
                 }}
-                onCancel={() => setOrderMode(null)}
+                onCancel={() => {
+                  setOrderMode(null);
+                  setTemplateOrderId(null);
+                }}
+                preselectedOrderId={templateOrderId || undefined}
               />
             )}
           </>

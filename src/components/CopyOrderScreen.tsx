@@ -23,9 +23,10 @@ interface CopyOrderScreenProps {
   userId: string;
   onOrderSent: () => void;
   onCancel: () => void;
+  preselectedOrderId?: string;
 }
 
-export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel }: CopyOrderScreenProps) {
+export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel, preselectedOrderId }: CopyOrderScreenProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -38,19 +39,35 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
     loadCompletedOrders();
   }, [storeId]);
 
+  useEffect(() => {
+    if (preselectedOrderId && orders.length > 0 && !selectedOrder) {
+      const order = orders.find(o => o.id === preselectedOrderId);
+      if (order) {
+        selectOrder(order);
+      }
+    }
+  }, [preselectedOrderId, orders, selectedOrder]);
+
   const loadCompletedOrders = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('orders')
         .select('id, order_number, created_at, total_amount, status')
         .eq('store_id', storeId)
-        .in('status', ['confirmed', 'partially_confirmed', 'archived'])
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
-      setOrders(data || []);
+      if (preselectedOrderId) {
+        const { data, error } = await query;
+        if (error) throw error;
+        setOrders(data || []);
+      } else {
+        query = query.in('status', ['confirmed', 'partially_confirmed', 'archived']);
+        const { data, error } = await query;
+        if (error) throw error;
+        setOrders(data || []);
+      }
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
