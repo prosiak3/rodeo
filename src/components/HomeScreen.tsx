@@ -1,8 +1,9 @@
 interface HomeScreenProps {
-  onNavigate?: (tab: 'new-order' | 'orders') => void;
+  onNavigate?: (tab: 'new-order' | 'orders' | 'admin') => void;
+  userRole?: string;
 }
 
-export default function HomeScreen({ onNavigate }: HomeScreenProps) {
+export default function HomeScreen({ onNavigate, userRole }: HomeScreenProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -31,6 +32,14 @@ export default function HomeScreen({ onNavigate }: HomeScreenProps) {
             >
               Pokaż aktualne zamówienia
             </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => onNavigate?.('admin')}
+                className="w-full p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition shadow cursor-pointer"
+              >
+                Panel administracyjny
+              </button>
+            )}
           </div>
         </div>
 

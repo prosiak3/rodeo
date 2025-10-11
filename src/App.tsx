@@ -19,7 +19,7 @@ import { supabase } from './lib/supabase';
 
 function AppContent() {
   const { session, user, loading, signIn, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
@@ -231,7 +231,7 @@ function AppContent() {
     return (
       <>
         <div className="pb-16">
-          {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} />}
+          {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
 
           {activeTab === 'orders' && (
             <div className="min-h-screen bg-gray-50 pb-20">
@@ -279,7 +279,15 @@ function AppContent() {
   return (
     <>
       <div className="pb-16">
-        {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} />}
+        {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
+
+        {activeTab === 'admin' && user.role === 'admin' && (
+          <AdminPanel
+            userId={user.id}
+            userRole={user.role}
+            onSelectOrder={setSelectedOrderId}
+          />
+        )}
 
         {activeTab === 'new-order' && user.store_id && (
           <>

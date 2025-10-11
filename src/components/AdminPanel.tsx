@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Package, Users, ShoppingBag, DollarSign } from 'lucide-react';
+import { Package, Users, ShoppingBag, DollarSign, Settings } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresManager from './StoresManager';
 import PriceList from './PriceList';
 import ProductManager from './ProductManager';
+import SystemSettings from './SystemSettings';
 
 interface AdminPanelProps {
   userId: string;
@@ -13,7 +14,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'settings'>('orders');
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -72,6 +73,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             <DollarSign className="w-5 h-5" />
             Cenniki
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'settings'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+            Ustawienia
+          </button>
         </div>
       </div>
 
@@ -85,6 +97,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'products' && <ProductManager />}
 
         {activeTab === 'pricelists' && <PriceListManager />}
+
+        {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>
     </div>
   );

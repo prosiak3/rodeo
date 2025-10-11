@@ -146,12 +146,31 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         details: {},
       });
 
-      alert('Zamówienie zostało wysłane do hurtowni!');
-      if (onOrderSent) {
-        onOrderSent();
-      } else {
-        onBack();
-      }
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed inset-0 flex items-center justify-center z-50 bg-black/50 animate-fade-in';
+      successMessage.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 shadow-2xl max-w-md mx-4 animate-scale-in">
+          <div class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Sukces!</h3>
+            <p class="text-gray-600 text-lg">Zamówienie zostało wysłane do hurtowni</p>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(successMessage);
+
+      setTimeout(() => {
+        successMessage.remove();
+        if (onOrderSent) {
+          onOrderSent();
+        } else {
+          onBack();
+        }
+      }, 2000);
     } catch (error) {
       console.error('Error sending order:', error);
       alert('Błąd podczas wysyłania zamówienia');
