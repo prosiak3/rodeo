@@ -44,7 +44,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
       const query = searchQuery.toLowerCase();
       const filtered = products.filter(p =>
         p.name.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query)
+        (p.description || '').toLowerCase().includes(query)
       );
       setFilteredProducts(filtered);
     } else {
