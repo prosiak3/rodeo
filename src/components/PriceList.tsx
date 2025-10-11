@@ -240,9 +240,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   }
 
   const handleTouchStart = (e: React.TouchEvent, productId: string) => {
-    console.log('🟢 Touch START - productId:', productId);
     const touch = e.touches[0];
-    console.log('Touch position:', touch.clientX);
     setTouchStart(touch.clientX);
     setTouchCurrent(touch.clientX);
     setSwipedProduct(productId);
@@ -250,18 +248,14 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStart === null || swipedProduct === null) {
-      console.log('🔴 Touch MOVE ignored - no active touch');
       return;
     }
     e.preventDefault();
     const touch = e.touches[0];
-    console.log('🔵 Touch MOVE - position:', touch.clientX);
     setTouchCurrent(touch.clientX);
   };
 
   const handleTouchEnd = async (product: Product) => {
-    console.log('🟡 Touch END - product:', product.name, { touchStart, touchCurrent });
-
     if (touchStart === null || touchCurrent === null) {
       setTouchStart(null);
       setTouchCurrent(null);
@@ -273,8 +267,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     const screenWidth = window.innerWidth;
     const swipeThreshold = screenWidth * 0.5;
 
-    console.log('Swipe distance:', swipeDistance, 'Threshold:', swipeThreshold);
-
     if (swipeDistance > swipeThreshold) {
       await addToNotebook(product);
     }
@@ -285,7 +277,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   };
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
-    console.log('🖱️ Mouse DOWN - productId:', productId, 'position:', e.clientX);
     setIsDragging(true);
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
@@ -296,13 +287,11 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     if (!isDragging || touchStart === null || swipedProduct === null) {
       return;
     }
-    console.log('🖱️ Mouse MOVE - position:', e.clientX);
     e.preventDefault();
     setTouchCurrent(e.clientX);
   };
 
   const handleMouseUp = async (product: Product) => {
-    console.log('🖱️ Mouse UP - product:', product.name, { touchStart, touchCurrent, isDragging });
     setIsDragging(false);
 
     if (touchStart === null || touchCurrent === null) {
@@ -316,8 +305,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     const screenWidth = window.innerWidth;
     const swipeThreshold = screenWidth * 0.5;
 
-    console.log('🖱️ Mouse swipe distance:', swipeDistance, 'Threshold:', swipeThreshold);
-
     if (swipeDistance > swipeThreshold) {
       await addToNotebook(product);
     }
@@ -328,18 +315,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   };
 
   const addToNotebook = async (product: Product) => {
-    console.log('🔵 addToNotebook called for:', product.name, { storeId, userId });
     if (!storeId || !userId) {
-      console.log('❌ Cannot add to notebook: storeId or userId missing', { storeId, userId });
       return;
     }
 
     if (notebookItems.includes(product.id)) {
-      console.log('Product already in notebook, skipping');
       return;
     }
-
-    console.log('Adding to notebook:', product.name);
 
     try {
       setNotebookItems([...notebookItems, product.id]);
@@ -359,7 +341,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           .maybeSingle();
 
         if (existingItem) {
-          console.log('Product already in this order, skipping');
           return;
         }
       } else if (notebookMode === 'multiple') {
@@ -569,7 +550,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         </div>
       ) : (
         <div className="space-y-3">
-          {console.log('Rendering with notebookItems:', notebookItems.length, notebookItems)}
           {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
             <div key={category}>
               {selectedCategory === 'all' && (
@@ -581,65 +561,21 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
               const isInNotebook = notebookItems.includes(product.id);
-
-              // Debug first few products
-              if (categoryProducts.indexOf(product) < 2 && category === filteredProducts[0]?.category) {
-                console.log('🎨 Rendering product:', {
-                  name: product.name,
-                  id: product.id,
-                  isInNotebook,
-                  notebookItemsArray: notebookItems,
-                  includes: notebookItems.includes(product.id)
-                });
-              }
-
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
               const isDisabled = isPriceZero || isInNotebook;
-
-              // Debug first product
-              if (categoryProducts.indexOf(product) === 0 && category === filteredProducts[0]?.category) {
-                console.log('🔍 First product state:', {
-                  name: product.name,
-                  isPriceZero,
-                  isInNotebook,
-                  isDisabled,
-                  base_price: product.base_price,
-                  your_price: product.your_price,
-                  promo_price: product.promo_price
-                });
-              }
               return (
                 <div
                   key={product.id}
                   className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
                   style={{ touchAction: isDisabled ? 'auto' : 'none' }}
-                  onTouchStart={isDisabled ? undefined : (e) => {
-                    console.log('🟢🟢🟢 TOUCH START CALLED!', product.name);
-                    handleTouchStart(e, product.id);
-                  }}
-                  onTouchMove={isDisabled ? undefined : (e) => {
-                    console.log('🔵🔵🔵 TOUCH MOVE CALLED!');
-                    handleTouchMove(e);
-                  }}
-                  onTouchEnd={isDisabled ? undefined : () => {
-                    console.log('🟡🟡🟡 TOUCH END CALLED!', product.name);
-                    handleTouchEnd(product);
-                  }}
-                  onMouseDown={isDisabled ? undefined : (e) => {
-                    console.log('🖱️🖱️🖱️ MOUSE DOWN CALLED!', product.name);
-                    handleMouseDown(e, product.id);
-                  }}
-                  onMouseMove={isDisabled ? undefined : (e) => {
-                    console.log('🖱️🖱️🖱️ MOUSE MOVE CALLED!');
-                    handleMouseMove(e);
-                  }}
-                  onMouseUp={isDisabled ? undefined : () => {
-                    console.log('🖱️🖱️🖱️ MOUSE UP CALLED!', product.name);
-                    handleMouseUp(product);
-                  }}
+                  onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
+                  onTouchMove={isDisabled ? undefined : handleTouchMove}
+                  onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
+                  onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
+                  onMouseMove={isDisabled ? undefined : handleMouseMove}
+                  onMouseUp={isDisabled ? undefined : () => handleMouseUp(product)}
                   onMouseLeave={isDisabled ? undefined : () => {
-                    console.log('🖱️🖱️🖱️ MOUSE LEAVE CALLED!');
                     setTouchStart(null);
                     setTouchCurrent(null);
                     setSwipedProduct(null);
@@ -650,7 +586,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         onPointerDown={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          console.log('➕➕➕ PLUS BUTTON CLICKED FOR:', product.name);
                           addToNotebook(product);
                         }}
                         onTouchStart={(e) => {
