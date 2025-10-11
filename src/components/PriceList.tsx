@@ -290,7 +290,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   };
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
-    console.log('🖱️ MOUSE DOWN:', e.clientX, 'productId:', productId);
     mouseStateRef.current = {
       isDragging: true,
       startX: e.clientX,
@@ -309,14 +308,11 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       }
       e.preventDefault();
       mouseStateRef.current.currentX = e.clientX;
-      console.log('🖱️ MOUSE MOVE:', e.clientX, 'distance:', e.clientX - mouseStateRef.current.startX);
       setTouchCurrent(e.clientX);
     };
 
     const handleDocumentMouseUp = async () => {
       if (!mouseStateRef.current.isDragging) return;
-
-      console.log('🖱️ MOUSE UP:', mouseStateRef.current);
 
       const { startX, currentX, productId } = mouseStateRef.current;
       mouseStateRef.current.isDragging = false;
@@ -325,12 +321,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       const screenWidth = window.innerWidth;
       const swipeThreshold = screenWidth * 0.5;
 
-      console.log('🖱️ MOUSE RESULT:', { swipeDistance, screenWidth, swipeThreshold, willAdd: swipeDistance > swipeThreshold });
-
       if (swipeDistance > swipeThreshold && productId) {
         const product = products.find(p => p.id === productId);
         if (product) {
-          console.log('🖱️ ADDING TO NOTEBOOK via mouse:', product.name);
           await addToNotebook(product);
         }
       }
