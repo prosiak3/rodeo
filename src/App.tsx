@@ -296,7 +296,14 @@ function AppContent() {
           )}
           {activeTab === 'prices' && (
             <div className="p-3">
-              <PriceList notebookOrderId={addingToNotebookOrderId} />
+              <PriceList
+                notebookOrderId={addingToNotebookOrderId}
+                onBackToOrder={addingToNotebookOrderId ? () => {
+                  setSelectedOrderId(addingToNotebookOrderId);
+                  setAddingToNotebookOrderId(null);
+                  setActiveTab('orders');
+                } : undefined}
+              />
             </div>
           )}
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
@@ -505,7 +512,14 @@ function AppContent() {
 
         {activeTab === 'prices' && (
           <div className="p-3">
-            <PriceList notebookOrderId={addingToNotebookOrderId} />
+            <PriceList
+              notebookOrderId={addingToNotebookOrderId}
+              onBackToOrder={addingToNotebookOrderId ? () => {
+                setSelectedOrderId(addingToNotebookOrderId);
+                setAddingToNotebookOrderId(null);
+                setActiveTab('orders');
+              } : undefined}
+            />
           </div>
         )}
 

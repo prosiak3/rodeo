@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -27,9 +27,10 @@ type PriceLayout = 'horizontal' | 'vertical';
 
 interface PriceListProps {
   notebookOrderId?: string | null;
+  onBackToOrder?: () => void;
 }
 
-export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
+export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListProps = {}) {
   const { colors } = useTheme();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +56,7 @@ export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
 
   useEffect(() => {
     if (notebookOrderId) {
+      console.log('Setting notebook order ID:', notebookOrderId);
       setCurrentSessionNotebookId(notebookOrderId);
       loadNotebookItems(notebookOrderId);
     }
@@ -62,13 +64,17 @@ export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
 
   const loadNotebookItems = async (orderId: string) => {
     try {
+      console.log('Loading notebook items for order:', orderId);
       const { data: orderItems } = await supabase
         .from('order_items')
         .select('product_id')
         .eq('order_id', orderId);
 
+      console.log('Loaded notebook items:', orderItems);
       if (orderItems) {
-        setNotebookItems(orderItems.map(item => item.product_id));
+        const productIds = orderItems.map(item => item.product_id);
+        console.log('Setting notebook items:', productIds);
+        setNotebookItems(productIds);
       }
     } catch (error) {
       console.error('Error loading notebook items:', error);
@@ -456,6 +462,17 @@ export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
 
   return (
     <div className="space-y-3">
+      {notebookOrderId && onBackToOrder && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3">
+          <button
+            onClick={onBackToOrder}
+            className="w-full flex items-center justify-center gap-2 text-white font-medium hover:opacity-90 transition"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Powrót do zamówienia notatnikowego
+          </button>
+        </div>
+      )}
       <div className="bg-white rounded-lg shadow p-3 sticky top-0 z-10">
         <div className="flex items-center gap-2 mb-2">
           <Search className="w-4 h-4 text-gray-400" />
