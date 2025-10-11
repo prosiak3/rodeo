@@ -289,6 +289,15 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             <span className="font-medium">Powrót</span>
           </button>
           <h2 className="text-xl font-bold flex-1">{order.order_number}</h2>
+          {canDelete && (
+            <button
+              onClick={deleteOrder}
+              className="flex items-center justify-center bg-red-500/90 hover:bg-red-600 rounded-lg p-3 transition-all active:scale-95"
+              title="Usuń zamówienie"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -346,7 +355,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                   <div className="flex items-start gap-2 text-xs">
                     <span className="text-2xl">📝</span>
                     <div>
-                      <div className="font-medium text-gray-700">Złożył zamówienie</div>
+                      <div className="font-medium text-gray-700">
+                        {order.status === 'draft' ? 'Utworzył zamówienie' : 'Złożył zamówienie'}
+                      </div>
                       <div className="text-blue-600 font-medium">{order.creator.full_name}</div>
                       <div className="text-gray-500">
                         {order.creator.role === 'store_manager' ? 'Kierownik sklepu' :
@@ -478,13 +489,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             >
               <Package className="w-5 h-5" />
               Zamów w hurtowni
-            </button>
-            <button
-              onClick={deleteOrder}
-              className="w-full py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center justify-center gap-2 shadow"
-            >
-              <Trash2 className="w-5 h-5" />
-              Usuń zamówienie
             </button>
           </div>
         )}
