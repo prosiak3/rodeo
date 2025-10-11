@@ -378,68 +378,76 @@ function AppContent() {
           <>
             {orderMode === null && (
               <div className="p-6 space-y-4">
-                <button
-                  onClick={() => setOrderMode('voice')}
-                  className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <span className="text-2xl">🎤</span>
+                {((user as any).enable_voice_orders ?? true) && (
+                  <button
+                    onClick={() => setOrderMode('voice')}
+                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <span className="text-2xl">🎤</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800">Zamówienie głosowe</h3>
+                        <p className="text-sm text-gray-600">Dyktuj zamówienie przez mikrofon</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-800">Zamówienie głosowe</h3>
-                      <p className="text-sm text-gray-600">Dyktuj zamówienie przez mikrofon</p>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setOrderMode('manual')}
-                  className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                      <span className="text-2xl">✏️</span>
+                {((user as any).enable_pricelist_orders ?? true) && (
+                  <button
+                    onClick={() => {
+                      setOrderMode(null);
+                      setActiveTab('prices');
+                    }}
+                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <span className="text-2xl">📋</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800">Z cennika</h3>
+                        <p className="text-sm text-gray-600">Przejdź do cennika</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-800">Wprowadź ręcznie</h3>
-                      <p className="text-sm text-gray-600">Dodaj produkty z listy</p>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => {
-                    setOrderMode(null);
-                    setActiveTab('prices');
-                  }}
-                  className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <span className="text-2xl">📋</span>
+                {((user as any).enable_copy_orders ?? true) && (
+                  <button
+                    onClick={() => setOrderMode('copy')}
+                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                        <span className="text-2xl">🔄</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800">Kopiuj zamówienie</h3>
+                        <p className="text-sm text-gray-600">Wykorzystaj wcześniejsze zamówienie</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-800">Z cennika</h3>
-                      <p className="text-sm text-gray-600">Przejdź do cennika</p>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setOrderMode('copy')}
-                  className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-                      <span className="text-2xl">🔄</span>
+                {((user as any).enable_manual_orders ?? true) && (
+                  <button
+                    onClick={() => setOrderMode('manual')}
+                    className="w-full p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition text-left"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                        <span className="text-2xl">✏️</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800">Wprowadź ręcznie</h3>
+                        <p className="text-sm text-gray-600">Dodaj produkty z listy</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-800">Kopiuj zamówienie</h3>
-                      <p className="text-sm text-gray-600">Wykorzystaj wcześniejsze zamówienie</p>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                )}
               </div>
             )}
 

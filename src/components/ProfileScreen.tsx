@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { showAlert } from '../lib/alerts';
@@ -26,6 +26,10 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>((user as any).notebook_mode || 'multiple');
   const [showSortIcons, setShowSortIcons] = useState<boolean>((user as any).show_sort_icons ?? true);
   const [showPriceLayoutToggle, setShowPriceLayoutToggle] = useState<boolean>((user as any).show_price_layout_toggle ?? true);
+  const [enableVoiceOrders, setEnableVoiceOrders] = useState<boolean>((user as any).enable_voice_orders ?? true);
+  const [enablePricelistOrders, setEnablePricelistOrders] = useState<boolean>((user as any).enable_pricelist_orders ?? true);
+  const [enableCopyOrders, setEnableCopyOrders] = useState<boolean>((user as any).enable_copy_orders ?? true);
+  const [enableManualOrders, setEnableManualOrders] = useState<boolean>((user as any).enable_manual_orders ?? true);
   const [saving, setSaving] = useState(false);
 
   const handleShowAllFiltersToggle = async () => {
@@ -126,6 +130,45 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
+  const handleOrderModeToggle = async (field: 'enable_voice_orders' | 'enable_pricelist_orders' | 'enable_copy_orders' | 'enable_manual_orders') => {
+    setSaving(true);
+    try {
+      let currentValue: boolean;
+      if (field === 'enable_voice_orders') currentValue = enableVoiceOrders;
+      else if (field === 'enable_pricelist_orders') currentValue = enablePricelistOrders;
+      else if (field === 'enable_copy_orders') currentValue = enableCopyOrders;
+      else currentValue = enableManualOrders;
+
+      const newValue = !currentValue;
+      const { error } = await supabase
+        .from('users')
+        .update({ [field]: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      if (field === 'enable_voice_orders') {
+        setEnableVoiceOrders(newValue);
+      } else if (field === 'enable_pricelist_orders') {
+        setEnablePricelistOrders(newValue);
+      } else if (field === 'enable_copy_orders') {
+        setEnableCopyOrders(newValue);
+      } else {
+        setEnableManualOrders(newValue);
+      }
+
+      showAlert('Ustawienia zapisane!', 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error('Error updating order mode settings:', error);
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const themeNames: Record<Theme, string> = {
     amber: 'Bursztynowy',
     blue: 'Niebieski',
@@ -208,6 +251,104 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 </div>
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Plus className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Tryby składania zamówień</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">Włącz lub wyłącz poszczególne sposoby składania zamówień:</p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Mic className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800">Zamówienia głosowe</div>
+                  <div className="text-sm text-gray-600">Składaj zamówienia za pomocą głosu</div>
+                </div>
+              </div>
+              <button
+                onClick={() => handleOrderModeToggle('enable_voice_orders')}
+                disabled={saving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  enableVoiceOrders ? 'bg-amber-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    enableVoiceOrders ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <ListOrdered className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800">Zamówienia z cennika</div>
+                  <div className="text-sm text-gray-600">Składaj zamówienia wybierając z cennika</div>
+                </div>
+              </div>
+              <button
+                onClick={() => handleOrderModeToggle('enable_pricelist_orders')}
+                disabled={saving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  enablePricelistOrders ? 'bg-amber-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    enablePricelistOrders ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Copy className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800">Kopiuj zamówienie</div>
+                  <div className="text-sm text-gray-600">Twórz nowe zamówienia na bazie poprzednich</div>
+                </div>
+              </div>
+              <button
+                onClick={() => handleOrderModeToggle('enable_copy_orders')}
+                disabled={saving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  enableCopyOrders ? 'bg-amber-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    enableCopyOrders ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Edit className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800">Zamówienia ręczne</div>
+                  <div className="text-sm text-gray-600">Wprowadzaj zamówienia ręcznie</div>
+                </div>
+              </div>
+              <button
+                onClick={() => handleOrderModeToggle('enable_manual_orders')}
+                disabled={saving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  enableManualOrders ? 'bg-amber-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    enableManualOrders ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 
