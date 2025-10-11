@@ -25,7 +25,11 @@ type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
 
 type PriceLayout = 'horizontal' | 'vertical';
 
-export default function PriceList() {
+interface PriceListProps {
+  notebookOrderId?: string | null;
+}
+
+export default function PriceList({ notebookOrderId }: PriceListProps = {}) {
   const { colors } = useTheme();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +47,7 @@ export default function PriceList() {
   const [showDescription, setShowDescription] = useState<boolean>(true);
   const [showIndex, setShowIndex] = useState<boolean>(true);
   const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>('multiple');
-  const [currentSessionNotebookId, setCurrentSessionNotebookId] = useState<string | null>(null);
+  const [currentSessionNotebookId, setCurrentSessionNotebookId] = useState<string | null>(notebookOrderId || null);
 
   useEffect(() => {
     loadProducts();

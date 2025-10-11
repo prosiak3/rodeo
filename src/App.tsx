@@ -27,6 +27,7 @@ function AppContent() {
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
   const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
+  const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
 
   const createTestUsers = async () => {
     const testUsers = [
@@ -194,6 +195,11 @@ function AppContent() {
           setSelectedOrderId(null);
           setActiveTab('new-order');
         }}
+        onAddProducts={() => {
+          setAddingToNotebookOrderId(selectedOrderId);
+          setSelectedOrderId(null);
+          setActiveTab('prices');
+        }}
       />
     );
   }
@@ -290,12 +296,17 @@ function AppContent() {
           )}
           {activeTab === 'prices' && (
             <div className="p-3">
-              <PriceList />
+              <PriceList notebookOrderId={addingToNotebookOrderId} />
             </div>
           )}
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} userRole={user.role} />
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab !== 'prices') {
+            setAddingToNotebookOrderId(null);
+          }
+        }} userRole={user.role} />
       </div>
     );
   }
@@ -494,14 +505,19 @@ function AppContent() {
 
         {activeTab === 'prices' && (
           <div className="p-3">
-            <PriceList />
+            <PriceList notebookOrderId={addingToNotebookOrderId} />
           </div>
         )}
 
         {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+        setActiveTab(tab);
+        if (tab !== 'prices') {
+          setAddingToNotebookOrderId(null);
+        }
+      }} />
     </div>
   );
 }

@@ -11,9 +11,10 @@ interface OrderDetailsProps {
   onEdit?: () => void;
   onOrderSent?: () => void;
   onUseAsTemplate?: (orderId: string) => void;
+  onAddProducts?: () => void;
 }
 
-export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit, onOrderSent, onUseAsTemplate }: OrderDetailsProps) {
+export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit, onOrderSent, onUseAsTemplate, onAddProducts }: OrderDetailsProps) {
   const { confirm, ConfirmComponent } = useConfirm();
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
@@ -640,7 +641,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               )}
               {canAddMore && (
                 <button
-                  onClick={onBack}
+                  onClick={onAddProducts || onBack}
                   className="py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
                 >
                   <Plus className="w-5 h-5" />
