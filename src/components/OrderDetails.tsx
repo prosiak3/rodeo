@@ -21,6 +21,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [history, setHistory] = useState<OrderHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingQuantity, setEditingQuantity] = useState<string>('');
 
   useEffect(() => {
     loadOrderDetails();
@@ -412,6 +414,57 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     }
   };
 
+  const startEditingItem = (item: OrderItem) => {
+    setEditingItemId(item.id);
+    setEditingQuantity(item.quantity.toString());
+  };
+
+  const cancelEditingItem = () => {
+    setEditingItemId(null);
+    setEditingQuantity('');
+  };
+
+  const saveItemQuantity = async (item: OrderItem) => {
+    const newQuantity = parseFloat(editingQuantity);
+    if (isNaN(newQuantity) || newQuantity <= 0) {
+      alert('Podaj prawidłową ilość');
+      return;
+    }
+
+    try {
+      const newTotalPrice = newQuantity * item.unit_price;
+
+      const { error } = await supabase
+        .from('order_items')
+        .update({
+          quantity: newQuantity,
+          total_price: newTotalPrice
+        })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      await supabase.from('order_history').insert({
+        order_id: orderId,
+        action: 'modified_quantity',
+        performed_by: userId,
+        details: {
+          product_name: item.products?.name,
+          old_quantity: item.quantity,
+          new_quantity: newQuantity,
+          unit: item.unit
+        },
+      });
+
+      setEditingItemId(null);
+      setEditingQuantity('');
+      await loadOrderDetails();
+    } catch (error) {
+      console.error('Error updating item quantity:', error);
+      alert('Błąd podczas aktualizacji ilości');
+    }
+  };
+
   const canEdit = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'draft';
   const canDelete = (userRole === 'store_manager' || userRole === 'salesperson') && (order.status === 'draft' || order.status === 'notatnik');
   const canUseAsTemplate = (userRole === 'store_manager' || userRole === 'salesperson') && order.status !== 'notatnik';
@@ -419,6 +472,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const canConvertToDraft = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
   const canAddMore = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
   const canDeleteItems = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
+  const canEditItems = (userRole === 'store_manager' || userRole === 'salesperson') && order.status === 'notatnik';
   const canStartProgress = (userRole === 'operator' || userRole === 'admin') && order.status === 'sent';
   const canConfirm = (userRole === 'operator' || userRole === 'admin') &&
                      (order.status === 'in_progress' || order.status === 'pending_confirmation');
@@ -607,7 +661,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           ) : (
             <div className="space-y-1">
               {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition text-sm">
+                <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
                   <div className="flex-1 min-w-0 mr-2">
                     <div className="flex items-center gap-2">
                       <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
@@ -621,22 +675,61 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                          item.status === 'rejected' ? '✗' :
                          '○'}
                       </span>
-                      <span className="font-medium text-gray-800 truncate">{item.products?.name || 'Produkt'}</span>
+                      <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-600 flex-shrink-0">
-                    <span className="font-medium">{item.quantity} {item.unit}</span>
-                    <span className="text-gray-400">×</span>
-                    <span>{item.unit_price.toFixed(2)}</span>
-                    <span className="font-bold text-amber-600 min-w-[60px] text-right">{item.total_price.toFixed(2)} PLN</span>
-                    {canDeleteItems && (
-                      <button
-                        onClick={() => deleteOrderItem(item.id)}
-                        className="ml-2 p-1 text-red-500 hover:bg-red-50 rounded transition"
-                        title="Usuń pozycję"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                  <div className="flex items-center gap-3 text-gray-600 flex-shrink-0">
+                    {editingItemId === item.id ? (
+                      <>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editingQuantity}
+                          onChange={(e) => setEditingQuantity(e.target.value)}
+                          className="w-20 px-2 py-1 border border-blue-500 rounded text-[15px] font-medium text-center"
+                          autoFocus
+                        />
+                        <span className="text-[15px]">{item.unit}</span>
+                        <button
+                          onClick={() => saveItemQuantity(item)}
+                          className="p-1 text-green-600 hover:bg-green-50 rounded transition"
+                          title="Zapisz"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={cancelEditingItem}
+                          className="p-1 text-gray-600 hover:bg-gray-200 rounded transition"
+                          title="Anuluj"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-medium text-[15px]">{item.quantity} {item.unit}</span>
+                        <span className="text-gray-400 text-[15px]">×</span>
+                        <span className="text-[15px]">{item.unit_price.toFixed(2)}</span>
+                        <span className="font-bold text-amber-600 min-w-[60px] text-right text-[15px]">{item.total_price.toFixed(2)} PLN</span>
+                        {canEditItems && (
+                          <button
+                            onClick={() => startEditingItem(item)}
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
+                            title="Edytuj ilość"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canDeleteItems && (
+                          <button
+                            onClick={() => deleteOrderItem(item.id)}
+                            className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                            title="Usuń pozycję"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
