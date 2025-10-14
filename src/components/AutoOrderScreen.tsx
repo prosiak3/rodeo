@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, RefreshCw, Plus, Trash2, Send, Save, AlertCircle, Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Sparkles, RefreshCw, Plus, Trash2, Save, AlertCircle, Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { showSuccess, showError } from '../lib/alerts';
 
@@ -479,18 +479,10 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
           <button
             onClick={() => handleSendOrder(true)}
             disabled={sending || orderItems.size === 0}
-            className="flex-1 px-4 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <Save className="w-5 h-5" />
-            Szkic
-          </button>
-          <button
-            onClick={() => handleSendOrder(false)}
-            disabled={sending || orderItems.size === 0}
             className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            <Send className="w-5 h-5" />
-            Wyślij
+            <Save className="w-5 h-5" />
+            Zapisz szkic
           </button>
         </div>
       </div>
