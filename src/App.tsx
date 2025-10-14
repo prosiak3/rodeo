@@ -251,6 +251,7 @@ function AppContent() {
           setSelectedOrderId(null);
           setOrdersListFilter('sent');
           setActiveTab('orders');
+          setOrderRefreshKey(prev => prev + 1);
         }}
         onUseAsTemplate={(orderId) => {
           setTemplateOrderId(orderId);
