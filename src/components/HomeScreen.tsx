@@ -30,20 +30,53 @@ export default function HomeScreen({ onNavigate, userRole }: HomeScreenProps) {
             </button>
             <div className="flex items-start gap-4">
               <Tag className="w-8 h-8 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-bold text-xl mb-2">Nowe promocje w cenniku!</h3>
-                <ul className="space-y-1 text-sm mb-4">
-                  <li>🔥 <strong>-15%</strong> na 10 wybranych produktów</li>
-                  <li>🎁 <strong>10+1 GRATIS</strong> na 5 produktów premium</li>
-                </ul>
+              <div className="w-full">
+                <h3 className="font-bold text-xl mb-3">Nowe promocje w cenniku!</h3>
+
+                <div className="space-y-3 mb-4">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🔥</span>
+                      <span className="font-bold">PROMOCJA -15%</span>
+                    </div>
+                    <div className="space-y-1 text-sm pl-7">
+                      <div className="flex justify-between items-center">
+                        <span>Kurczak</span>
+                        <span className="font-bold">8.49 / 1kg</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Boczek świeży</span>
+                        <span className="font-bold">24.57 / 1kg</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🎁</span>
+                      <span className="font-bold">PROMOCJA 10+1 GRATIS</span>
+                    </div>
+                    <div className="space-y-1 text-sm pl-7">
+                      <div className="flex justify-between items-center">
+                        <span>Karkówka extra Rytel</span>
+                        <span className="font-bold">18.49 / 1kg</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Polędwiczki wp vac</span>
+                        <span className="font-bold">23.90 / 1kg</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   onClick={() => {
                     setShowPromoAlert(false);
                     onNavigate?.('prices');
                   }}
-                  className="bg-white text-orange-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition"
+                  className="bg-white text-orange-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition w-full"
                 >
-                  Zobacz promocje
+                  Zobacz promocje w cenniku
                 </button>
               </div>
             </div>
