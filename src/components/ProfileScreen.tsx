@@ -31,6 +31,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [enableCopyOrders, setEnableCopyOrders] = useState<boolean>((user as any).enable_copy_orders ?? true);
   const [enableManualOrders, setEnableManualOrders] = useState<boolean>((user as any).enable_manual_orders ?? true);
   const [orderModeLayout, setOrderModeLayout] = useState<'list' | 'grid'>((user as any).order_mode_layout || 'list');
+  const [autoOrderAnalysisDays, setAutoOrderAnalysisDays] = useState<number>((user as any).auto_order_analysis_days || 180);
   const [saving, setSaving] = useState(false);
 
   const handleShowAllFiltersToggle = async () => {
@@ -192,6 +193,25 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
+  const handleAutoOrderAnalysisDaysChange = async (days: number) => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ auto_order_analysis_days: days })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setAutoOrderAnalysisDays(days);
+      showAlert('Ustawienia zapisane!', 'success');
+    } catch (error) {
+      console.error('Error updating auto order analysis period:', error);
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const themeNames: Record<Theme, string> = {
     amber: 'Bursztynowy',
     blue: 'Niebieski',
@@ -272,6 +292,70 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 <p className="font-medium text-gray-800">{roleLabels[user.role] || user.role}</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Automatyczne zamówienia</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Wybierz okres analizy historii zamówień dla generowania automatycznych propozycji:
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleAutoOrderAnalysisDaysChange(90)}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                autoOrderAnalysisDays === 90
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-semibold text-gray-800 mb-1">90 dni</div>
+              <div className="text-sm text-gray-600">3 miesiące</div>
+              <div className="text-xs text-gray-500 mt-1">Szybka reakcja na zmiany</div>
+            </button>
+            <button
+              onClick={() => handleAutoOrderAnalysisDaysChange(180)}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                autoOrderAnalysisDays === 180
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-semibold text-gray-800 mb-1">180 dni</div>
+              <div className="text-sm text-gray-600">6 miesięcy (domyślnie)</div>
+              <div className="text-xs text-gray-500 mt-1">Zrównoważony okres</div>
+            </button>
+            <button
+              onClick={() => handleAutoOrderAnalysisDaysChange(270)}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                autoOrderAnalysisDays === 270
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-semibold text-gray-800 mb-1">270 dni</div>
+              <div className="text-sm text-gray-600">9 miesięcy</div>
+              <div className="text-xs text-gray-500 mt-1">Więcej danych historycznych</div>
+            </button>
+            <button
+              onClick={() => handleAutoOrderAnalysisDaysChange(365)}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                autoOrderAnalysisDays === 365
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-semibold text-gray-800 mb-1">365 dni</div>
+              <div className="text-sm text-gray-600">1 rok</div>
+              <div className="text-xs text-gray-500 mt-1">Pełny cykl roczny</div>
+            </button>
           </div>
         </div>
 

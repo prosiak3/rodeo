@@ -84,10 +84,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Get user info to verify permissions
+    // Get user info to verify permissions and preferences
     const { data: userData, error: userDataError } = await supabase
       .from('users')
-      .select('role, store_id')
+      .select('role, store_id, auto_order_analysis_days')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -153,12 +153,13 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Generate new suggestion
+    // Generate new suggestion with user's preferred analysis period
     const startTime = Date.now();
-    
+    const analysisDays = userData.auto_order_analysis_days || 180;
+
     const { data: suggestionData, error: genError } = await supabase.rpc(
       'generate_auto_order_suggestion',
-      { p_store_id: storeId }
+      { p_store_id: storeId, p_analysis_days: analysisDays }
     );
 
     const executionTime = Date.now() - startTime;

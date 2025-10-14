@@ -47,6 +47,7 @@ export interface User {
   created_at: string;
   updated_at: string;
   show_all_order_filters?: boolean;
+  auto_order_analysis_days?: number;
 }
 
 export interface Product {

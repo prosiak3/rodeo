@@ -355,7 +355,16 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
           ) : (
             <p>Świeżo wygenerowana propozycja</p>
           )}
-          <p>Na podstawie {suggestion?.metadata.based_on_orders_count || 0} zamówień</p>
+          <p>
+            Na podstawie {suggestion?.metadata.based_on_orders_count || 0} zamówień
+            {suggestion?.metadata.analysis_period_days && ` z ostatnich ${
+              suggestion.metadata.analysis_period_days === 90 ? '3 miesięcy' :
+              suggestion.metadata.analysis_period_days === 180 ? '6 miesięcy' :
+              suggestion.metadata.analysis_period_days === 270 ? '9 miesięcy' :
+              suggestion.metadata.analysis_period_days === 365 ? '1 roku' :
+              `${suggestion.metadata.analysis_period_days} dni`
+            }`}
+          </p>
         </div>
       </div>
 
