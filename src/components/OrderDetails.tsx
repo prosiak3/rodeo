@@ -660,7 +660,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             <h3 className="font-semibold text-base">Produkty ({items.length})</h3>
             {canEditItems && items.length > 0 && (
               <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
-                Kliknij pozycję aby edytować
+                Edytuj ilość bezpośrednio
               </span>
             )}
           </div>
@@ -671,15 +671,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           ) : (
             <div className="space-y-1">
               {items.map((item) => (
-                <div key={item.id} className={`flex items-center justify-between p-2 rounded transition ${
-                  editingItemId === item.id
-                    ? 'bg-blue-50 border-2 border-blue-500'
-                    : canEditItems
-                      ? 'bg-gray-50 hover:bg-blue-50 cursor-pointer border-2 border-transparent'
-                      : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
-                }`}
-                onClick={() => canEditItems && editingItemId !== item.id && startEditingItem(item)}
-                >
+                <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
                   <div className="flex-1 min-w-0 mr-2">
                     <div className="flex items-center gap-2">
                       <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
@@ -696,66 +688,67 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                       <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-gray-600 flex-shrink-0" onClick={(e) => editingItemId === item.id && e.stopPropagation()}>
-                    {editingItemId === item.id ? (
+                  <div className="flex items-center gap-3 text-gray-600 flex-shrink-0">
+                    {canEditItems ? (
                       <>
                         <input
                           type="number"
                           step="0.01"
-                          value={editingQuantity}
-                          onChange={(e) => setEditingQuantity(e.target.value)}
-                          className="w-20 px-2 py-1 border-2 border-blue-500 rounded text-[15px] font-medium text-center focus:ring-2 focus:ring-blue-300 outline-none"
-                          autoFocus
-                          onClick={(e) => e.stopPropagation()}
+                          defaultValue={item.quantity}
+                          onBlur={(e) => {
+                            const newQuantity = parseFloat(e.target.value);
+                            if (!isNaN(newQuantity) && newQuantity > 0 && newQuantity !== item.quantity) {
+                              const newTotalPrice = newQuantity * item.unit_price;
+                              supabase
+                                .from('order_items')
+                                .update({
+                                  quantity: newQuantity,
+                                  total_price: newTotalPrice
+                                })
+                                .eq('id', item.id)
+                                .then(() => {
+                                  supabase.from('order_history').insert({
+                                    order_id: orderId,
+                                    action: 'modified_quantity',
+                                    performed_by: userId,
+                                    details: {
+                                      product_name: item.products?.name,
+                                      old_quantity: item.quantity,
+                                      new_quantity: newQuantity,
+                                      unit: item.unit
+                                    },
+                                  });
+                                  loadOrderDetails();
+                                });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-[15px] font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
                         />
                         <span className="text-[15px] font-medium">{item.unit}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            saveItemQuantity(item);
-                          }}
-                          className="px-2 py-1 bg-green-600 text-white hover:bg-green-700 rounded transition font-medium text-xs"
-                          title="Zapisz"
-                        >
-                          Zapisz
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cancelEditingItem();
-                          }}
-                          className="px-2 py-1 bg-gray-400 text-white hover:bg-gray-500 rounded transition font-medium text-xs"
-                          title="Anuluj"
-                        >
-                          Anuluj
-                        </button>
                       </>
                     ) : (
+                      <span className="font-medium text-[15px]">{item.quantity} {item.unit}</span>
+                    )}
+                    {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
                       <>
-                        <span className={`font-medium text-[15px] ${canEditItems ? 'text-blue-600' : ''}`}>
-                          {item.quantity} {item.unit}
-                          {canEditItems && <span className="ml-1">✏️</span>}
-                        </span>
-                        {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
-                          <>
-                            <span className="text-gray-400 text-[15px]">×</span>
-                            <span className="text-[15px]">{item.unit_price.toFixed(2)}</span>
-                            <span className="font-bold text-amber-600 min-w-[60px] text-right text-[15px]">{item.total_price.toFixed(2)} PLN</span>
-                          </>
-                        )}
-                        {canDeleteItems && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteOrderItem(item.id);
-                            }}
-                            className="p-1 text-red-500 hover:bg-red-50 rounded transition"
-                            title="Usuń pozycję"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
+                        <span className="text-gray-400 text-[15px]">×</span>
+                        <span className="text-[15px]">{item.unit_price.toFixed(2)}</span>
+                        <span className="font-bold text-amber-600 min-w-[60px] text-right text-[15px]">{item.total_price.toFixed(2)} PLN</span>
                       </>
+                    )}
+                    {canDeleteItems && (
+                      <button
+                        onClick={() => deleteOrderItem(item.id)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                        title="Usuń pozycję"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
                 </div>
