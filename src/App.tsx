@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import LoginScreen from './components/LoginScreen';
@@ -30,6 +30,40 @@ function AppContent() {
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
   const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
   const [ordersListFilter, setOrdersListFilter] = useState<OrderStatus | 'all' | null>(null);
+  const [aiPreloaded, setAiPreloaded] = useState(false);
+
+  useEffect(() => {
+    if (session && user && !aiPreloaded) {
+      const preloadAI = async () => {
+        try {
+          console.log('[AI Preload] Starting background initialization...');
+          const { embeddingsManager } = await import('./lib/embeddingsManager');
+
+          await embeddingsManager.initialize();
+          console.log('[AI Preload] Model loaded successfully');
+
+          const { data: products } = await supabase
+            .from('products')
+            .select('id, name, index, base_price')
+            .eq('active', true);
+
+          if (products && products.length > 0) {
+            console.log('[AI Preload] Generating embeddings for', products.length, 'products...');
+            await embeddingsManager.generateProductEmbeddings(products);
+            console.log('[AI Preload] All embeddings ready!');
+          }
+
+          setAiPreloaded(true);
+        } catch (error) {
+          console.error('[AI Preload] Failed:', error);
+        }
+      };
+
+      setTimeout(() => {
+        preloadAI();
+      }, 1000);
+    }
+  }, [session, user, aiPreloaded]);
 
   const createTestUsers = async () => {
     const testUsers = [

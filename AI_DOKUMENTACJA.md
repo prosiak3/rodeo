@@ -65,17 +65,40 @@ System rozpoznawania mowy nie jest idealny. AI kompensuje te błędy:
 
 ## Proces działania
 
-### Pierwsze uruchomienie (jednorazowo):
+### Inteligentny Preloading (automatyczny)
 
-1. **Ładowanie modelu AI** (~10-20 sekund)
-   - Model pobierany z CDN (~25 MB)
-   - Cache'owany na zawsze w przeglądarce
+Aplikacja automatycznie ładuje AI w tle po zalogowaniu:
 
-2. **Generowanie embeddingów** (~5-10 sekund dla 500 produktów)
-   - Dla każdego produktu generowany jest embedding
-   - Zapisywane w IndexedDB na telefonie
+1. **Użytkownik się loguje** (0 sekund)
+   - Aplikacja pokazuje się natychmiast
+   - Interfejs w pełni responsywny
 
-### Każde kolejne użycie (szybkie):
+2. **W tle (po 1 sekundzie):**
+   - **Ładowanie modelu AI** (~10-20 sekund)
+     - Model pobierany z CDN (~25 MB) tylko raz
+     - Cache'owany na zawsze w przeglądarce
+   - **Generowanie embeddingów** (~5-10 sekund dla 500 produktów)
+     - Dla każdego produktu generowany jest embedding
+     - Zapisywane w IndexedDB na telefonie
+
+3. **AI gotowe!**
+   - Ekspedient może od razu zacząć dyktować
+   - Nie ma żadnego opóźnienia przy pierwszym użyciu
+
+### Pierwsze użycie po zalogowaniu:
+
+**Scenariusz 1: AI już gotowe (preloaded)**
+1. Ekspedient wchodzi w zamówienia głosowe
+2. AI już działa - "✨ AI gotowe"
+3. Natychmiastowe dopasowanie produktów
+
+**Scenariusz 2: AI jeszcze się ładuje**
+1. Ekspedient wchodzi w zamówienia głosowe
+2. Pokazuje się "✨ Ładowanie AI..."
+3. Po kilku sekundach AI gotowe
+4. Alternatywnie: używa klasycznego dopasowania
+
+### Każde kolejne użycie (błyskawiczne):
 
 1. **Ekspedient dyktuje:** "3 kg schab"
 2. **AI generuje embedding** (~10ms)

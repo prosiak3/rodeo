@@ -49,6 +49,20 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy. Użyj Chrome lub Edge.');
     }
     loadProducts();
+
+    const checkAIStatus = async () => {
+      try {
+        const { embeddingsManager } = await import('../lib/embeddingsManager');
+        if (embeddingsManager.isReady()) {
+          console.log('[AI] Detected preloaded AI');
+          setAiReady(true);
+        }
+      } catch (error) {
+        console.log('[AI] Not yet loaded');
+      }
+    };
+
+    setTimeout(checkAIStatus, 500);
   }, []);
 
   const initializeAI = async () => {
@@ -56,9 +70,18 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
 
     try {
       setAiInitializing(true);
-      console.log('[AI] Starting initialization...');
+      console.log('[AI] Checking initialization...');
 
       const { embeddingsManager } = await import('../lib/embeddingsManager');
+
+      if (embeddingsManager.isReady()) {
+        console.log('[AI] Already initialized (preloaded)!');
+        setAiReady(true);
+        setAiInitializing(false);
+        return;
+      }
+
+      console.log('[AI] Starting initialization...');
       await embeddingsManager.initialize();
 
       setAiReady(true);
@@ -89,14 +112,6 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     }
   };
 
-  useEffect(() => {
-    if (aiReady && allProducts.length > 0) {
-      console.log('[AI] Generating embeddings for products...');
-      import('../lib/embeddingsManager').then(({ embeddingsManager }) => {
-        embeddingsManager.generateProductEmbeddings(allProducts).catch(console.error);
-      });
-    }
-  }, [aiReady, allProducts]);
 
   const findSimilarProducts = (searchName: string, products: Product[], limit = 3): Product[] => {
     const normalized = searchName.toLowerCase().trim();
