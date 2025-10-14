@@ -5,7 +5,11 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: ['lucide-react', '@xenova/transformers'],
+    exclude: ['@xenova/transformers'],
+    include: ['onnxruntime-web'],
+  },
+  worker: {
+    format: 'es',
   },
   build: {
     rollupOptions: {
@@ -14,6 +18,12 @@ export default defineConfig({
           'transformers': ['@xenova/transformers'],
         },
       },
+    },
+  },
+  server: {
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'credentialless',
+      'Cross-Origin-Opener-Policy': 'same-origin',
     },
   },
 });

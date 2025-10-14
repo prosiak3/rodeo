@@ -40,18 +40,29 @@ function AppContent() {
 
           if (typeof window === 'undefined') {
             console.log('[AI Preload] Not in browser environment, skipping');
+            setAiPreloaded(false);
             return;
           }
 
+          // Dynamiczny import z obsługą błędów
           const { embeddingsManager } = await import('./lib/embeddingsManager');
 
+          console.log('[AI Preload] Initializing AI model...');
           await embeddingsManager.initialize();
           console.log('[AI Preload] Model loaded successfully');
 
-          const { data: products } = await supabase
+          // Załaduj produkty
+          console.log('[AI Preload] Loading products...');
+          const { data: products, error: productsError } = await supabase
             .from('products')
             .select('id, name, index, base_price')
             .eq('active', true);
+
+          if (productsError) {
+            console.error('[AI Preload] Failed to load products:', productsError);
+            setAiPreloaded(false);
+            return;
+          }
 
           if (products && products.length > 0) {
             console.log('[AI Preload] Generating embeddings for', products.length, 'products...');
@@ -60,15 +71,22 @@ function AppContent() {
           }
 
           setAiPreloaded(true);
+          console.log('[AI Preload] ✅ Complete!');
         } catch (error) {
-          console.error('[AI Preload] Failed:', error);
+          console.error('[AI Preload] ❌ Failed:', error);
+          // Nie blokuj aplikacji - AI jest opcjonalne
           setAiPreloaded(false);
         }
       };
 
-      setTimeout(() => {
-        preloadAI();
-      }, 2000);
+      // Opóźnij inicjalizację, żeby nie blokować UI
+      const timer = setTimeout(() => {
+        preloadAI().catch(err => {
+          console.error('[AI Preload] Unhandled error:', err);
+        });
+      }, 3000);
+
+      return () => clearTimeout(timer);
     }
   }, [session, user, aiPreloaded]);
 

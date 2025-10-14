@@ -44,17 +44,33 @@ class EmbeddingsManager {
     try {
       console.log('[AI] Initializing embeddings manager...');
 
+      // Sprawdź czy jesteśmy w środowisku przeglądarki
+      if (typeof window === 'undefined') {
+        throw new Error('Not in browser environment');
+      }
+
       this.db = await this.openDatabase();
 
+      console.log('[AI] Loading transformers pipeline...');
+
+      // Załaduj pipeline z obsługą błędów
       this.pipeline = await pipeline(
         'feature-extraction',
-        'Xenova/all-MiniLM-L6-v2'
+        'Xenova/all-MiniLM-L6-v2',
+        {
+          progress_callback: (progress: any) => {
+            if (progress.status === 'progress') {
+              console.log(`[AI] Loading: ${progress.file} - ${Math.round(progress.progress)}%`);
+            }
+          }
+        }
       );
 
       console.log('[AI] Model loaded successfully');
       this.isInitialized = true;
     } catch (error) {
       console.error('[AI] Failed to initialize:', error);
+      this.isInitialized = false;
       throw error;
     }
   }

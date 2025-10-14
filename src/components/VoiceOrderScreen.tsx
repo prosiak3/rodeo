@@ -78,11 +78,25 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         console.log('[AI] Already initialized (preloaded)!');
         setAiReady(true);
         setAiInitializing(false);
+
+        // Jeśli mamy już produkty, wygeneruj embeddingi
+        if (allProductsRef.current.length > 0) {
+          console.log('[AI] Generating embeddings for existing products...');
+          await embeddingsManager.generateProductEmbeddings(allProductsRef.current);
+          console.log('[AI] Embeddings ready!');
+        }
         return;
       }
 
       console.log('[AI] Starting initialization...');
       await embeddingsManager.initialize();
+
+      // Wygeneruj embeddingi dla produktów
+      if (allProductsRef.current.length > 0) {
+        console.log('[AI] Generating embeddings for', allProductsRef.current.length, 'products...');
+        await embeddingsManager.generateProductEmbeddings(allProductsRef.current);
+        console.log('[AI] Embeddings ready!');
+      }
 
       setAiReady(true);
       console.log('[AI] Ready!');
@@ -106,6 +120,18 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         console.log('Loaded products:', data.length);
         setAllProducts(data);
         allProductsRef.current = data;
+
+        // Jeśli AI jest gotowe, wygeneruj embeddingi dla produktów
+        if (aiReady && useAI) {
+          try {
+            console.log('[AI] Generating embeddings for loaded products...');
+            const { embeddingsManager } = await import('../lib/embeddingsManager');
+            await embeddingsManager.generateProductEmbeddings(data);
+            console.log('[AI] Embeddings ready for', data.length, 'products');
+          } catch (error) {
+            console.error('[AI] Failed to generate embeddings:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading products:', error);
@@ -318,10 +344,13 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             aiMatched: false,
           });
         } else if (useAI && aiReady) {
-          console.log('[AI] Using AI to find similar products...');
+          console.log('[AI] Using AI to find similar products for:', productName);
+          console.log('[AI] useAI:', useAI, 'aiReady:', aiReady);
           try {
             const { embeddingsManager } = await import('../lib/embeddingsManager');
+            console.log('[AI] embeddingsManager loaded, isReady:', embeddingsManager.isReady());
             const aiResults = await embeddingsManager.findSimilarProducts(productName, products, 5);
+            console.log('[AI] Found', aiResults.length, 'results');
 
             if (aiResults.length > 0 && aiResults[0].confidence >= 85) {
               console.log('[AI] High confidence match:', aiResults[0].product.name, aiResults[0].confidence);
@@ -366,8 +395,10 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             });
           }
         } else {
-          console.log('Using fallback text matching');
+          console.log('[Fallback] Using text matching for:', productName);
+          console.log('[Fallback] useAI:', useAI, 'aiReady:', aiReady);
           const suggestions = findSimilarProducts(productName, products);
+          console.log('[Fallback] Found', suggestions.length, 'suggestions');
           if (suggestions.length > 0) {
             items.push({
               productName,
