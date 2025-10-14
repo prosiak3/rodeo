@@ -15,10 +15,11 @@ interface OrderItem {
   unit: string;
   productIndex?: string;
   productId?: string;
-  matched?: boolean;
+  matched?: boolean | 'ambiguous';
   suggestions?: Product[];
   confidence?: number;
   aiMatched?: boolean;
+  matchCount?: number;
 }
 
 interface VoiceOrderScreenProps {
@@ -326,22 +327,34 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         const normalizedName = productName.toLowerCase().trim();
         console.log('Looking for product:', normalizedName, 'in', products.length, 'products');
 
-        const exactProduct = products.find(p => {
+        const allMatches = products.filter(p => {
           const pName = p.name.toLowerCase();
           return pName === normalizedName || pName.includes(normalizedName) || normalizedName.includes(pName);
         });
 
-        if (exactProduct) {
-          console.log('Found exact match:', exactProduct.name);
+        if (allMatches.length === 1) {
+          console.log('Found exact match:', allMatches[0].name);
           items.push({
-            productName: exactProduct.name,
+            productName: allMatches[0].name,
             quantity,
             unit,
-            productIndex: exactProduct.index,
-            productId: exactProduct.id,
+            productIndex: allMatches[0].index,
+            productId: allMatches[0].id,
             matched: true,
             confidence: 100,
             aiMatched: false,
+          });
+        } else if (allMatches.length > 1) {
+          console.log('Found multiple matches:', allMatches.length, allMatches.map(p => p.name));
+          items.push({
+            productName,
+            quantity,
+            unit,
+            matched: 'ambiguous',
+            suggestions: allMatches,
+            confidence: 100,
+            aiMatched: false,
+            matchCount: allMatches.length,
           });
         } else if (useAI && aiReady) {
           console.log('[AI] Using AI to find similar products for:', productName);
@@ -352,8 +365,8 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             const aiResults = await embeddingsManager.findSimilarProducts(productName, products, 5);
             console.log('[AI] Found', aiResults.length, 'results');
 
-            if (aiResults.length > 0 && aiResults[0].confidence >= 85) {
-              console.log('[AI] High confidence match:', aiResults[0].product.name, aiResults[0].confidence);
+            if (aiResults.length > 0 && aiResults[0].confidence >= 95) {
+              console.log('[AI] Very high confidence match:', aiResults[0].product.name, aiResults[0].confidence);
               items.push({
                 productName: aiResults[0].product.name,
                 quantity,
@@ -364,6 +377,35 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 confidence: aiResults[0].confidence,
                 aiMatched: true,
               });
+            } else if (aiResults.length > 1 && aiResults[0].confidence >= 85) {
+              const topResults = aiResults.slice(0, Math.min(5, aiResults.length));
+              const confidenceDiff = topResults[0].confidence - topResults[topResults.length - 1].confidence;
+
+              if (confidenceDiff <= 10) {
+                console.log('[AI] Multiple similar confidence matches:', topResults.map(r => `${r.product.name} (${r.confidence}%)`));
+                items.push({
+                  productName,
+                  quantity,
+                  unit,
+                  matched: 'ambiguous',
+                  suggestions: topResults.map(r => r.product),
+                  confidence: topResults[0].confidence,
+                  aiMatched: true,
+                  matchCount: topResults.length,
+                });
+              } else {
+                console.log('[AI] High confidence match with gap:', aiResults[0].product.name, aiResults[0].confidence);
+                items.push({
+                  productName: aiResults[0].product.name,
+                  quantity,
+                  unit,
+                  productIndex: aiResults[0].product.index,
+                  productId: aiResults[0].product.id,
+                  matched: true,
+                  confidence: aiResults[0].confidence,
+                  aiMatched: true,
+                });
+              }
             } else if (aiResults.length > 0) {
               console.log('[AI] Found suggestions:', aiResults.length);
               items.push({
@@ -430,19 +472,34 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         return newList;
       });
 
-      const unmatchedCount = items.filter(item => !item.matched).length;
-      if (unmatchedCount > 0) {
-        const unmatchedItems = items.filter(item => !item.matched);
-        const unmatchedNames = unmatchedItems.map(item => item.productName).join(', ');
+      const ambiguousCount = items.filter(item => item.matched === 'ambiguous').length;
+      const unmatchedCount = items.filter(item => item.matched === false).length;
+      const matchedCount = items.filter(item => item.matched === true).length;
 
-        const hasSuggestions = unmatchedItems.some(item => item.suggestions && item.suggestions.length > 0);
+      if (ambiguousCount > 0 || unmatchedCount > 0) {
+        let message = '';
 
-        if (hasSuggestions) {
-          setNotification(`⚠️ Nie znaleziono w cenniku: ${unmatchedNames}. Zobacz sugestie poniżej lub podyktuj ponownie.`);
-        } else {
-          setNotification(`⚠️ Nie znaleziono w cenniku: ${unmatchedNames}. Proszę podyktować ponownie lub sprawdzić nazwę produktu.`);
+        if (ambiguousCount > 0) {
+          const ambiguousItems = items.filter(item => item.matched === 'ambiguous');
+          const ambiguousNames = ambiguousItems.map(item => item.productName).join(', ');
+          message += `🔶 Doprecyzuj: ${ambiguousNames} (${ambiguousCount} opcji)`;
         }
-        setTimeout(() => setNotification(''), 7000);
+
+        if (unmatchedCount > 0) {
+          const unmatchedItems = items.filter(item => item.matched === false);
+          const unmatchedNames = unmatchedItems.map(item => item.productName).join(', ');
+          if (message) message += '\n';
+          message += `⚠️ Nie znaleziono: ${unmatchedNames}`;
+        }
+
+        if (matchedCount > 0) {
+          const matchedNames = items.filter(item => item.matched === true).map(item => item.productName).join(', ');
+          if (message) message += '\n';
+          message += `✓ Dodano: ${matchedNames}`;
+        }
+
+        setNotification(message);
+        setTimeout(() => setNotification(''), 8000);
       } else {
         const addedNames = items.map(item => item.productName).join(', ');
         setNotification(`✓ Dodano: ${addedNames}`);
@@ -500,16 +557,27 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       return;
     }
 
-    const unmatchedItems = orderItems.filter(item => !item.matched);
+    const unmatchedItems = orderItems.filter(item => item.matched !== true);
     if (unmatchedItems.length > 0) {
-      alert(`Nie wszystkie produkty zostały dopasowane. Wybierz sugestie lub usuń niedopasowane pozycje (${unmatchedItems.length} pozycji).`);
+      const ambiguousCount = unmatchedItems.filter(item => item.matched === 'ambiguous').length;
+      const notFoundCount = unmatchedItems.filter(item => !item.matched).length;
+
+      let message = 'Nie wszystkie produkty zostały dopasowane:\n';
+      if (ambiguousCount > 0) {
+        message += `\n• ${ambiguousCount} wymaga doprecyzowania (wybierz właściwą opcję)`;
+      }
+      if (notFoundCount > 0) {
+        message += `\n• ${notFoundCount} nie znaleziono w cenniku`;
+      }
+
+      alert(message);
       return;
     }
 
     setSending(true);
     try {
       const matchedItems = orderItems
-        .filter(item => item.matched && item.productId)
+        .filter(item => item.matched === true && item.productId)
         .map(item => {
           const product = allProducts.find(p => p.id === item.productId);
           if (!product) return null;
@@ -598,22 +666,31 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               <p className="text-gray-500 text-center py-8">Brak pozycji w zamówieniu</p>
             ) : (
               orderItems.map((item, index) => (
-                <div key={index} className={`p-4 rounded-lg ${item.matched ? 'bg-gray-50' : 'bg-yellow-50 border-2 border-yellow-300'}`}>
+                <div key={index} className={`p-4 rounded-lg ${
+                  item.matched === 'ambiguous' ? 'bg-orange-50 border-2 border-orange-300' :
+                  item.matched === true ? 'bg-gray-50' :
+                  'bg-yellow-50 border-2 border-yellow-300'
+                }`}>
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-lg">{item.productName}</p>
+                        {item.matched === 'ambiguous' && (
+                          <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded font-medium">
+                            ⚠️ Doprecyzuj ({item.matchCount} opcji)
+                          </span>
+                        )}
                         {!item.matched && (
                           <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
                             Nie znaleziono
                           </span>
                         )}
-                        {item.matched && !item.aiMatched && (
+                        {item.matched === true && !item.aiMatched && (
                           <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">
                             ✓ Dopasowano
                           </span>
                         )}
-                        {item.matched && item.aiMatched && (
+                        {item.matched === true && item.aiMatched && (
                           <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded flex items-center gap-1">
                             <Sparkles className="w-3 h-3" />
                             AI {item.confidence}%
@@ -646,7 +723,24 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                         </div>
                       )}
 
-                      {!item.matched && (
+                      {item.matched === 'ambiguous' && item.suggestions && item.suggestions.length > 0 && (
+                        <div className="mt-3 p-3 bg-white rounded-lg border-2 border-orange-300">
+                          <p className="text-sm font-semibold text-orange-800 mb-2">Znaleziono {item.matchCount} produktów pasujących do '{item.productName}'. Którą chcesz zamówić?</p>
+                          <div className="space-y-1">
+                            {item.suggestions.map((suggestion) => (
+                              <button
+                                key={suggestion.id}
+                                onClick={() => selectSuggestion(index, suggestion)}
+                                className="w-full text-left p-3 text-sm bg-orange-50 hover:bg-orange-100 rounded-lg border-2 border-orange-200 hover:border-orange-400 transition-all"
+                              >
+                                <span className="font-semibold text-orange-900">{suggestion.name}</span>
+                                <span className="text-gray-600 ml-2 text-xs">({suggestion.index})</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {item.matched === false && (
                         <div className="mt-3 p-3 bg-white rounded-lg border border-yellow-200">
                           {item.suggestions && item.suggestions.length > 0 ? (
                             <>
