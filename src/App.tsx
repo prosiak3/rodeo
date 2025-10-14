@@ -37,6 +37,12 @@ function AppContent() {
       const preloadAI = async () => {
         try {
           console.log('[AI Preload] Starting background initialization...');
+
+          if (typeof window === 'undefined') {
+            console.log('[AI Preload] Not in browser environment, skipping');
+            return;
+          }
+
           const { embeddingsManager } = await import('./lib/embeddingsManager');
 
           await embeddingsManager.initialize();
@@ -56,12 +62,13 @@ function AppContent() {
           setAiPreloaded(true);
         } catch (error) {
           console.error('[AI Preload] Failed:', error);
+          setAiPreloaded(false);
         }
       };
 
       setTimeout(() => {
         preloadAI();
-      }, 1000);
+      }, 2000);
     }
   }, [session, user, aiPreloaded]);
 

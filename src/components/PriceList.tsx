@@ -217,6 +217,12 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   console.log('✅ FILTERED RESULT:', filteredProducts.length, 'products');
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const aHasPromo = (a.promo_price && a.promo_price < (a.your_price || a.base_price)) || a.name.includes('10+1');
+    const bHasPromo = (b.promo_price && b.promo_price < (b.your_price || b.base_price)) || b.name.includes('10+1');
+
+    if (aHasPromo && !bHasPromo) return -1;
+    if (!aHasPromo && bHasPromo) return 1;
+
     if (selectedCategory === 'all') {
       const categoryOrder = ['Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
       const categoryCompare = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
@@ -598,6 +604,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
+              const hasDiscountPromo = hasPromo && product.promo_price < (product.your_price || product.base_price);
+              const is10Plus1 = product.name.includes('10+1');
               const isInNotebook = notebookItems.includes(product.id);
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
@@ -605,7 +613,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : (hasDiscountPromo || is10Plus1) ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
                   style={{ touchAction: isDisabled ? 'auto' : 'none' }}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
@@ -632,6 +640,12 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           </span>
                           {isInNotebook && (
                             <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">W NOTATNIKU</span>
+                          )}
+                          {hasDiscountPromo && (
+                            <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold animate-pulse">-15%</span>
+                          )}
+                          {is10Plus1 && (
+                            <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">10+1 GRATIS</span>
                           )}
                         </div>
                         {showDescription && product.description && (
