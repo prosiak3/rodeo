@@ -328,6 +328,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     if (!confirmed) return;
 
     try {
+      // Wait a moment to ensure all pending updates are saved
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const { error: updateError } = await supabase
         .from('orders')
         .update({ status: 'draft' })
