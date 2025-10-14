@@ -24,6 +24,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<string>('');
+  const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadOrderDetails();
@@ -328,8 +329,19 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     if (!confirmed) return;
 
     try {
-      // Wait a moment to ensure all pending updates are saved
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for all pending updates to complete
+      while (pendingUpdates.size > 0) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // Additional safety delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Reload items from database to get the latest values
+      const { data: freshItems } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', orderId);
 
       const { error: updateError } = await supabase
         .from('orders')
@@ -338,9 +350,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
       if (updateError) throw updateError;
 
-      // Prepare details with information about modified items
-      const modifiedItemsDetails = items.map(item => ({
-        product_name: item.products?.name,
+      // Prepare details with information about modified items using fresh data
+      const modifiedItemsDetails = (freshItems || items).map(item => ({
+        product_name: item.products?.name || 'Unknown',
         quantity: item.quantity,
         unit: item.unit
       }));
@@ -351,7 +363,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         performed_by: userId,
         details: {
           from_status: 'notatnik',
-          items_count: items.length,
+          items_count: (freshItems || items).length,
           modified_items: modifiedItemsDetails
         },
       });
@@ -706,7 +718,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                     {canEditItems ? (
                       <>
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             const newQuantity = Math.max(1, item.quantity - 1);
                             const newTotalPrice = newQuantity * item.unit_price;
 
@@ -718,13 +730,19 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               )
                             );
 
-                            supabase
+                            setPendingUpdates(prev => new Set(prev).add(item.id));
+                            await supabase
                               .from('order_items')
                               .update({
                                 quantity: newQuantity,
                                 total_price: newTotalPrice
                               })
                               .eq('id', item.id);
+                            setPendingUpdates(prev => {
+                              const next = new Set(prev);
+                              next.delete(item.id);
+                              return next;
+                            });
                           }}
                           className="w-7 h-7 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition active:scale-95"
                           title="Zmniejsz ilość"
@@ -735,7 +753,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                           type="number"
                           step="1"
                           value={item.quantity}
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const newQuantity = parseFloat(e.target.value);
                             if (!isNaN(newQuantity) && newQuantity > 0) {
                               const newTotalPrice = newQuantity * item.unit_price;
@@ -748,13 +766,19 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                                 )
                               );
 
-                              supabase
+                              setPendingUpdates(prev => new Set(prev).add(item.id));
+                              await supabase
                                 .from('order_items')
                                 .update({
                                   quantity: newQuantity,
                                   total_price: newTotalPrice
                                 })
                                 .eq('id', item.id);
+                              setPendingUpdates(prev => {
+                                const next = new Set(prev);
+                                next.delete(item.id);
+                                return next;
+                              });
                             }
                           }}
                           onKeyDown={(e) => {
@@ -765,7 +789,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                           className="w-16 px-1 py-1 border border-gray-300 rounded text-[15px] font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
                         />
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             const newQuantity = item.quantity + 1;
                             const newTotalPrice = newQuantity * item.unit_price;
 
@@ -777,13 +801,19 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               )
                             );
 
-                            supabase
+                            setPendingUpdates(prev => new Set(prev).add(item.id));
+                            await supabase
                               .from('order_items')
                               .update({
                                 quantity: newQuantity,
                                 total_price: newTotalPrice
                               })
                               .eq('id', item.id);
+                            setPendingUpdates(prev => {
+                              const next = new Set(prev);
+                              next.delete(item.id);
+                              return next;
+                            });
                           }}
                           className="w-7 h-7 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded transition active:scale-95"
                           title="Zwiększ ilość"

@@ -245,6 +245,7 @@ function AppContent() {
         onEdit={() => {
           setEditingOrderId(selectedOrderId);
           setSelectedOrderId(null);
+          setOrderRefreshKey(prev => prev + 1);
         }}
         onOrderSent={() => {
           setSelectedOrderId(null);
@@ -361,6 +362,7 @@ function AppContent() {
           {activeTab === 'orders' && (
             <div className="p-6">
               <OrdersList
+                key={`orders-list-${orderRefreshKey}`}
                 userRole={user.role}
                 onSelectOrder={setSelectedOrderId}
                 initialFilter={ordersListFilter || undefined}
