@@ -5,6 +5,15 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    exclude: ['lucide-react', '@xenova/transformers'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'transformers': ['@xenova/transformers'],
+        },
+      },
+    },
   },
 });

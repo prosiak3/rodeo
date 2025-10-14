@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2 } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { showAlert } from '../lib/alerts';
+import { embeddingsManager } from '../lib/embeddingsManager';
 
 interface ProfileScreenProps {
   user: User;
@@ -198,6 +199,37 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     green: 'Zielony',
     red: 'Czerwony',
     purple: 'Fioletowy',
+  };
+
+  const handleClearAICache = async () => {
+    if (!confirm('Czy na pewno chcesz wyczyścić pamięć podręczną AI? Model zostanie ponownie pobrany przy następnym użyciu.')) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await embeddingsManager.clearCache();
+
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        const messageChannel = new MessageChannel();
+        messageChannel.port1.onmessage = (event) => {
+          if (event.data.success) {
+            showAlert('Pamięć podręczna AI została wyczyszczona', 'success');
+          }
+        };
+        navigator.serviceWorker.controller.postMessage(
+          { type: 'CLEAR_AI_CACHE' },
+          [messageChannel.port2]
+        );
+      } else {
+        showAlert('Pamięć podręczna AI została wyczyszczona', 'success');
+      }
+    } catch (error) {
+      console.error('Error clearing AI cache:', error);
+      showAlert('Błąd podczas czyszczenia pamięci podręcznej', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -628,12 +660,33 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Inteligentne dopasowywanie AI</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Aplikacja używa lokalnego modelu AI do inteligentnego dopasowywania nazw produktów podczas dyktowania zamówień.
+          </p>
+          <button
+            onClick={handleClearAICache}
+            disabled={saving}
+            className="w-full py-3 bg-blue-50 border-2 border-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <Trash2 className="w-5 h-5" />
+            Wyczyść pamięć podręczną AI
+          </button>
+          <p className="text-xs text-gray-500 mt-2">
+            Użyj tej opcji jeśli AI nie działa prawidłowo. Model zostanie ponownie pobrany (~25-50MB).
+          </p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="font-semibold text-lg mb-4">Informacje o aplikacji</h3>
           <div className="space-y-2 text-sm text-gray-600">
             <p>Wersja: 1.0.0 (Prototyp)</p>
             <p>RODEO - System Zamówień Mięsno-Wędliniarskich</p>
             <p className="text-xs text-gray-500 mt-4">
-              Aplikacja umożliwia składanie i zarządzanie zamówieniami za pomocą poleceń głosowych.
+              Aplikacja umożliwia składanie i zarządzanie zamówieniami za pomocą poleceń głosowych z wykorzystaniem lokalnego AI.
             </p>
           </div>
         </div>

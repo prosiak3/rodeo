@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2 } from 'lucide-react';
+import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { embeddingsManager } from '../lib/embeddingsManager';
+import type { SimilarityResult } from '../lib/embeddingsManager';
 
 interface Product {
   id: string;
@@ -17,6 +19,8 @@ interface OrderItem {
   productId?: string;
   matched?: boolean;
   suggestions?: Product[];
+  confidence?: number;
+  aiMatched?: boolean;
 }
 
 interface VoiceOrderScreenProps {
@@ -38,13 +42,34 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   const [shouldContinueListening, setShouldContinueListening] = useState(false);
   const [notification, setNotification] = useState<string>('');
   const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null);
+  const [aiReady, setAiReady] = useState(false);
+  const [aiInitializing, setAiInitializing] = useState(false);
+  const [useAI, setUseAI] = useState(true);
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy. Użyj Chrome lub Edge.');
     }
     loadProducts();
+    initializeAI();
   }, []);
+
+  const initializeAI = async () => {
+    try {
+      setAiInitializing(true);
+      console.log('[AI] Starting initialization...');
+      await embeddingsManager.initialize();
+      setAiReady(true);
+      console.log('[AI] Ready!');
+    } catch (error) {
+      console.error('[AI] Failed to initialize:', error);
+      setUseAI(false);
+      setNotification('⚠️ AI niedostępne - używam klasycznego dopasowania');
+      setTimeout(() => setNotification(''), 5000);
+    } finally {
+      setAiInitializing(false);
+    }
+  };
 
   const loadProducts = async () => {
     try {
@@ -56,11 +81,23 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         console.log('Loaded products:', data.length);
         setAllProducts(data);
         allProductsRef.current = data;
+
+        if (aiReady || embeddingsManager.isReady()) {
+          console.log('[AI] Generating embeddings for products...');
+          await embeddingsManager.generateProductEmbeddings(data);
+          console.log('[AI] Embeddings ready');
+        }
       }
     } catch (error) {
       console.error('Error loading products:', error);
     }
   };
+
+  useEffect(() => {
+    if (aiReady && allProducts.length > 0) {
+      embeddingsManager.generateProductEmbeddings(allProducts).catch(console.error);
+    }
+  }, [aiReady, allProducts]);
 
   const findSimilarProducts = (searchName: string, products: Product[], limit = 3): Product[] => {
     const normalized = searchName.toLowerCase().trim();
@@ -244,23 +281,73 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       if (productName && productName.length > 2) {
         const normalizedName = productName.toLowerCase().trim();
         console.log('Looking for product:', normalizedName, 'in', products.length, 'products');
-        const product = products.find(p => {
+
+        const exactProduct = products.find(p => {
           const pName = p.name.toLowerCase();
-          return pName.includes(normalizedName) || normalizedName.includes(pName);
+          return pName === normalizedName || pName.includes(normalizedName) || normalizedName.includes(pName);
         });
 
-        if (product) {
-          console.log('Found product:', product.name);
+        if (exactProduct) {
+          console.log('Found exact match:', exactProduct.name);
           items.push({
-            productName: product.name,
+            productName: exactProduct.name,
             quantity,
             unit,
-            productIndex: product.index,
-            productId: product.id,
+            productIndex: exactProduct.index,
+            productId: exactProduct.id,
             matched: true,
+            confidence: 100,
+            aiMatched: false,
           });
+        } else if (useAI && aiReady) {
+          console.log('[AI] Using AI to find similar products...');
+          try {
+            const aiResults = await embeddingsManager.findSimilarProducts(productName, products, 5);
+
+            if (aiResults.length > 0 && aiResults[0].confidence >= 85) {
+              console.log('[AI] High confidence match:', aiResults[0].product.name, aiResults[0].confidence);
+              items.push({
+                productName: aiResults[0].product.name,
+                quantity,
+                unit,
+                productIndex: aiResults[0].product.index,
+                productId: aiResults[0].product.id,
+                matched: true,
+                confidence: aiResults[0].confidence,
+                aiMatched: true,
+              });
+            } else if (aiResults.length > 0) {
+              console.log('[AI] Found suggestions:', aiResults.length);
+              items.push({
+                productName,
+                quantity,
+                unit,
+                matched: false,
+                suggestions: aiResults.map(r => r.product),
+                confidence: aiResults[0]?.confidence,
+              });
+            } else {
+              items.push({
+                productName,
+                quantity,
+                unit,
+                matched: false,
+                suggestions: [],
+              });
+            }
+          } catch (error) {
+            console.error('[AI] Error during similarity search:', error);
+            const fallbackSuggestions = findSimilarProducts(productName, products);
+            items.push({
+              productName,
+              quantity,
+              unit,
+              matched: false,
+              suggestions: fallbackSuggestions,
+            });
+          }
         } else {
-          console.log('Product not found, finding suggestions');
+          console.log('Using fallback text matching');
           const suggestions = findSimilarProducts(productName, products);
           if (suggestions.length > 0) {
             items.push({
@@ -464,16 +551,27 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 <div key={index} className={`p-4 rounded-lg ${item.matched ? 'bg-gray-50' : 'bg-yellow-50 border-2 border-yellow-300'}`}>
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-lg">{item.productName}</p>
                         {!item.matched && (
                           <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
                             Nie znaleziono
                           </span>
                         )}
-                        {item.matched && (
+                        {item.matched && !item.aiMatched && (
                           <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">
                             ✓ Dopasowano
+                          </span>
+                        )}
+                        {item.matched && item.aiMatched && (
+                          <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            AI {item.confidence}%
+                          </span>
+                        )}
+                        {item.confidence && !item.matched && (
+                          <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                            {item.confidence}% pewności
                           </span>
                         )}
                       </div>
@@ -570,6 +668,31 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="p-4 space-y-4">
+        {aiInitializing && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div>
+                <p className="font-semibold text-blue-900 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Ładowanie AI...
+                </p>
+                <p className="text-xs text-blue-700">Przygotowuję inteligentne dopasowywanie produktów</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {aiReady && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-sm text-green-800 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              <span className="font-medium">AI gotowe</span>
+              <span className="text-xs">- inteligentne dopasowywanie produktów włączone</span>
+            </p>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex flex-col items-center">
             <div className="relative">
