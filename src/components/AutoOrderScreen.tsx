@@ -356,14 +356,18 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
             <p>Świeżo wygenerowana propozycja</p>
           )}
           <p>
-            Na podstawie {suggestion?.metadata.based_on_orders_count || 0} zamówień
-            {suggestion?.metadata.analysis_period_days && ` z ostatnich ${
-              suggestion.metadata.analysis_period_days === 90 ? '3 miesięcy' :
-              suggestion.metadata.analysis_period_days === 180 ? '6 miesięcy' :
-              suggestion.metadata.analysis_period_days === 270 ? '9 miesięcy' :
-              suggestion.metadata.analysis_period_days === 365 ? '1 roku' :
-              `${suggestion.metadata.analysis_period_days} dni`
-            }`}
+            Przeanalizowano {suggestion?.metadata.based_on_orders_count || 0} {
+              ((suggestion?.metadata.based_on_orders_count || 0) === 1) ? 'zamówienie' :
+              ((suggestion?.metadata.based_on_orders_count || 0) >= 2 && (suggestion?.metadata.based_on_orders_count || 0) <= 4) ? 'zamówienia' :
+              'zamówień'
+            }
+            {suggestion?.metadata.analysis_period_days && ` (okres: ${
+              suggestion.metadata.analysis_period_days === 90 ? 'ostatnie 3 miesiące' :
+              suggestion.metadata.analysis_period_days === 180 ? 'ostatnie 6 miesięcy' :
+              suggestion.metadata.analysis_period_days === 270 ? 'ostatnie 9 miesięcy' :
+              suggestion.metadata.analysis_period_days === 365 ? 'ostatni rok' :
+              `ostatnie ${suggestion.metadata.analysis_period_days} dni`
+            })`}
           </p>
         </div>
       </div>
