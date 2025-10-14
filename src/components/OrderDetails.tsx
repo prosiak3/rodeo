@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp, Minus } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
 import { formatPriceDisplay } from '../lib/priceCalculations';
@@ -688,9 +688,40 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                       <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-gray-600 flex-shrink-0">
+                  <div className="flex items-center gap-2 text-gray-600 flex-shrink-0">
                     {canEditItems ? (
                       <>
+                        <button
+                          onClick={() => {
+                            const newQuantity = Math.max(0.01, item.quantity - (item.quantity >= 1 ? 1 : 0.1));
+                            const newTotalPrice = newQuantity * item.unit_price;
+                            supabase
+                              .from('order_items')
+                              .update({
+                                quantity: newQuantity,
+                                total_price: newTotalPrice
+                              })
+                              .eq('id', item.id)
+                              .then(() => {
+                                supabase.from('order_history').insert({
+                                  order_id: orderId,
+                                  action: 'modified_quantity',
+                                  performed_by: userId,
+                                  details: {
+                                    product_name: item.products?.name,
+                                    old_quantity: item.quantity,
+                                    new_quantity: newQuantity,
+                                    unit: item.unit
+                                  },
+                                });
+                                loadOrderDetails();
+                              });
+                          }}
+                          className="w-7 h-7 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition active:scale-95"
+                          title="Zmniejsz ilość"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
                         <input
                           type="number"
                           step="0.01"
@@ -727,9 +758,40 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               e.currentTarget.blur();
                             }
                           }}
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-[15px] font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
+                          className="w-16 px-1 py-1 border border-gray-300 rounded text-[15px] font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
                         />
-                        <span className="text-[15px] font-medium">{item.unit}</span>
+                        <button
+                          onClick={() => {
+                            const newQuantity = item.quantity + (item.quantity >= 1 ? 1 : 0.1);
+                            const newTotalPrice = newQuantity * item.unit_price;
+                            supabase
+                              .from('order_items')
+                              .update({
+                                quantity: newQuantity,
+                                total_price: newTotalPrice
+                              })
+                              .eq('id', item.id)
+                              .then(() => {
+                                supabase.from('order_history').insert({
+                                  order_id: orderId,
+                                  action: 'modified_quantity',
+                                  performed_by: userId,
+                                  details: {
+                                    product_name: item.products?.name,
+                                    old_quantity: item.quantity,
+                                    new_quantity: newQuantity,
+                                    unit: item.unit
+                                  },
+                                });
+                                loadOrderDetails();
+                              });
+                          }}
+                          className="w-7 h-7 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded transition active:scale-95"
+                          title="Zwiększ ilość"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                        <span className="text-[13px] font-medium">{item.unit}</span>
                       </>
                     ) : (
                       <span className="font-medium text-[15px]">{item.quantity} {item.unit}</span>
