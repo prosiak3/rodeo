@@ -571,6 +571,8 @@ function AppContent() {
                 userId={user.id}
                 onOrderSent={() => {
                   setOrderMode(null);
+                  setOrderRefreshKey(prev => prev + 1);
+                  setOrdersListFilter('draft');
                   setActiveTab('orders');
                 }}
                 onCancel={() => setOrderMode(null)}
@@ -584,6 +586,8 @@ function AppContent() {
                   userId={user.id}
                   onOrderSaved={() => {
                     setOrderMode(null);
+                    setOrderRefreshKey(prev => prev + 1);
+                    setOrdersListFilter('draft');
                     setActiveTab('orders');
                   }}
                   onCancel={() => {
@@ -597,6 +601,8 @@ function AppContent() {
                   userId={user.id}
                   onOrderSent={() => {
                     setOrderMode(null);
+                    setOrderRefreshKey(prev => prev + 1);
+                    setOrdersListFilter('draft');
                     setActiveTab('orders');
                   }}
                   onCancel={() => {
@@ -614,6 +620,8 @@ function AppContent() {
                 onOrderSent={() => {
                   setOrderMode(null);
                   setTemplateOrderId(null);
+                  setOrderRefreshKey(prev => prev + 1);
+                  setOrdersListFilter('draft');
                   setActiveTab('orders');
                 }}
                 onCancel={() => {
@@ -629,6 +637,7 @@ function AppContent() {
         {activeTab === 'orders' && (
           <div className="p-6">
             <OrdersList
+              key={`orders-list-${orderRefreshKey}`}
               storeId={user.store_id}
               userRole={user.role}
               onSelectOrder={setSelectedOrderId}
