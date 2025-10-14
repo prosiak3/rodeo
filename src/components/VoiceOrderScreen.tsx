@@ -329,7 +329,24 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
 
         const allMatches = products.filter(p => {
           const pName = p.name.toLowerCase();
-          return pName === normalizedName || pName.includes(normalizedName) || normalizedName.includes(pName);
+
+          // Exact match
+          if (pName === normalizedName) return true;
+
+          // Normalize Polish word forms (dopełniacz, etc)
+          const normalizedBase = normalizedName.replace(/y$|i$|ę$|ą$/, 'a').replace(/ów$/, '');
+          const pNameBase = pName.replace(/y$|i$|ę$|ą$/, 'a').replace(/ów$/, '');
+
+          // Check if product name starts with the normalized search term
+          if (pName.startsWith(normalizedBase) || pName.startsWith(normalizedName)) return true;
+
+          // Check if search term (min 4 chars) is at the beginning of any word in product name
+          if (normalizedName.length >= 4) {
+            const words = pName.split(' ');
+            return words.some(word => word.startsWith(normalizedBase) || word.startsWith(normalizedName));
+          }
+
+          return false;
         });
 
         if (allMatches.length === 1) {
