@@ -6,9 +6,7 @@ interface Product {
   id: string;
   name: string;
   index: string;
-  base_price: number;
   unit: string;
-  average_weight?: number;
 }
 
 interface OrderItem {
@@ -121,7 +119,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     try {
       const { data } = await supabase
         .from('products')
-        .select('id, name, index, base_price, unit, average_weight')
+        .select('id, name, index, unit')
         .eq('active', true);
       if (data) {
         console.log('Loaded products:', data.length);
@@ -605,24 +603,12 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           const product = allProducts.find(p => p.id === item.productId);
           if (!product) return null;
 
-          let finalQuantity = item.quantity;
-          let finalUnit = item.unit;
-
-          if (item.unit === 'szt' && product.average_weight && product.average_weight > 0) {
-            const estimatedKg = item.quantity * product.average_weight;
-            finalQuantity = Math.ceil(estimatedKg);
-            finalUnit = 'kg';
-          }
-
-          const unitPrice = Number(product.base_price);
-          const totalPrice = Number((finalQuantity * unitPrice).toFixed(2));
-
           return {
             product_id: product.id,
-            quantity: finalQuantity,
-            unit: finalUnit,
-            unit_price: unitPrice,
-            total_price: totalPrice,
+            quantity: item.quantity,
+            unit: item.unit,
+            unit_price: 0,
+            total_price: 0,
             productIndex: product.index,
           };
         })
@@ -634,7 +620,6 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         return;
       }
 
-      const totalAmount = matchedItems.reduce((sum, item) => sum + (item?.total_price || 0), 0);
       const orderNumber = `RO-${Date.now()}`;
 
       const { data: order, error: orderError } = await supabase
@@ -645,9 +630,10 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           created_by: userId,
           status: 'draft',
           requires_confirmation: requiresConfirmation,
-          total_amount: totalAmount,
+          total_amount: 0,
           voice_transcript: JSON.stringify(orderItems),
           notes: notes,
+          source_type: 'voice',
         })
         .select()
         .single();

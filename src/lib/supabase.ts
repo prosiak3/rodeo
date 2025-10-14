@@ -24,6 +24,8 @@ export type OrderStatus =
   | 'rejected'
   | 'archived';
 
+export type OrderSourceType = 'price_list' | 'manual' | 'voice' | 'copy';
+
 export interface Store {
   id: string;
   name: string;
@@ -88,6 +90,7 @@ export interface Order {
   delivery_date?: string;
   created_at: string;
   updated_at: string;
+  source_type?: OrderSourceType;
   creator?: {
     full_name: string;
     email: string;

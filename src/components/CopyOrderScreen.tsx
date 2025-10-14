@@ -8,6 +8,7 @@ interface Order {
   created_at: string;
   total_amount: number;
   status: string;
+  source_type?: string;
 }
 
 interface OrderItem {
@@ -53,9 +54,10 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('id, order_number, created_at, total_amount, status')
+        .select('id, order_number, created_at, total_amount, status, source_type')
         .eq('store_id', storeId)
         .in('status', ['sent', 'in_progress', 'confirmed', 'partially_confirmed'])
+        .in('source_type', ['price_list', 'copy'])
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -147,7 +149,8 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
           status: 'draft',
           requires_confirmation: false,
           total_amount: totalAmount,
-          notes: notes || null
+          notes: notes || null,
+          source_type: 'copy'
         })
         .select()
         .single();
