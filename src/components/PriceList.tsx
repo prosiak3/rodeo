@@ -19,6 +19,7 @@ interface Product {
   promo_price?: number;
   tags?: string[];
   final_price?: number;
+  promo_10_plus_1?: boolean;
 }
 
 type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
@@ -152,7 +153,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       const { data, error } = await supabase
         .from('products')
         .select(`
-          id, code, name, display_category, original_category, unit, base_price, description, index, min_quantity, quantity_step, tags,
+          id, code, name, display_category, original_category, unit, base_price, description, index, min_quantity, quantity_step, tags, promo_10_plus_1,
           special_prices!left (
             your_price,
             promo_price
@@ -217,8 +218,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   console.log('✅ FILTERED RESULT:', filteredProducts.length, 'products');
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const aHasPromo = (a.promo_price && a.promo_price < (a.your_price || a.base_price)) || a.name.includes('10+1');
-    const bHasPromo = (b.promo_price && b.promo_price < (b.your_price || b.base_price)) || b.name.includes('10+1');
+    const aHasPromo = (a.promo_price && a.promo_price < (a.your_price || a.base_price)) || a.promo_10_plus_1;
+    const bHasPromo = (b.promo_price && b.promo_price < (b.your_price || b.base_price)) || b.promo_10_plus_1;
 
     if (aHasPromo && !bHasPromo) return -1;
     if (!aHasPromo && bHasPromo) return 1;
@@ -605,7 +606,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
               const hasDiscountPromo = hasPromo && product.promo_price < (product.your_price || product.base_price);
-              const is10Plus1 = product.name.includes('10+1');
+              const is10Plus1 = product.promo_10_plus_1;
               const isInNotebook = notebookItems.includes(product.id);
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);

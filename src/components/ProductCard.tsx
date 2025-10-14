@@ -13,6 +13,7 @@ interface ProductCardProps {
     quantity_step: number;
     index?: string;
     tags?: string[];
+    promo_10_plus_1?: boolean;
   };
   onSelect?: () => void;
   children?: React.ReactNode;
@@ -23,11 +24,12 @@ interface ProductCardProps {
 export default function ProductCard({ product, onSelect, children, priceLayout = 'horizontal', positionNumber }: ProductCardProps) {
   const hasPromo = product.promo_price && product.promo_price > 0;
   const finalPrice = product.promo_price || product.your_price || product.base_price;
+  const is10Plus1 = product.promo_10_plus_1;
 
   return (
     <div
       onClick={onSelect}
-      className={`bg-white rounded-lg shadow p-3 transition ${hasPromo ? 'bg-yellow-50' : ''} ${
+      className={`bg-white rounded-lg shadow p-3 transition ${hasPromo || is10Plus1 ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${
         onSelect ? 'cursor-pointer hover:shadow-lg' : ''
       }`}
     >
@@ -41,7 +43,12 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
                 </span>
               )}
               <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
+                  {is10Plus1 && (
+                    <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">10+1 GRATIS</span>
+                  )}
+                </div>
                 <span className="text-xs text-gray-500">{product.code}</span>
               </div>
             </div>
