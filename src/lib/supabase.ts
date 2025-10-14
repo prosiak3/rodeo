@@ -24,7 +24,7 @@ export type OrderStatus =
   | 'rejected'
   | 'archived';
 
-export type OrderSourceType = 'price_list' | 'manual' | 'voice' | 'copy';
+export type OrderSourceType = 'price_list' | 'manual' | 'voice' | 'copy' | 'auto';
 
 export interface Store {
   id: string;

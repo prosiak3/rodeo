@@ -8,6 +8,7 @@ import ManualOrderScreen from './components/ManualOrderScreen';
 import CopyOrderScreen from './components/CopyOrderScreen';
 import PriceListOrderScreen from './components/PriceListOrderScreen';
 import PriceListOrderListMode from './components/PriceListOrderListMode';
+import AutoOrderScreen from './components/AutoOrderScreen';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
 import EditDraftOrderScreen from './components/EditDraftOrderScreen';
@@ -26,7 +27,7 @@ function AppContent() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
-  const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
+  const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | 'auto' | null>(null);
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
   const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
   const [ordersListFilter, setOrdersListFilter] = useState<OrderStatus | 'all' | null>(null);
@@ -553,6 +554,25 @@ function AppContent() {
                     </div>
                   </button>
                 )}
+
+                <button
+                  onClick={() => setOrderMode('auto')}
+                  className={`w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg shadow-lg hover:shadow-xl transition text-left ${
+                    (user as any).order_mode_layout === 'grid' ? 'p-4' : 'p-3'
+                  }`}
+                >
+                  <div className={`flex gap-3 ${
+                    (user as any).order_mode_layout === 'grid' ? 'flex-col items-center text-center' : 'items-center'
+                  }`}>
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">✨</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-base">Auto zamówienie</h3>
+                      <p className="text-xs opacity-90">Wygenerowane na podstawie historii</p>
+                    </div>
+                  </div>
+                </button>
               </div>
               </>
             )}
@@ -632,6 +652,20 @@ function AppContent() {
                   setTemplateOrderId(null);
                 }}
                 preselectedOrderId={templateOrderId || undefined}
+              />
+            )}
+
+            {orderMode === 'auto' && (
+              <AutoOrderScreen
+                storeId={user.store_id}
+                userId={user.id}
+                onOrderSent={() => {
+                  setOrderMode(null);
+                  setOrderRefreshKey(prev => prev + 1);
+                  setOrdersListFilter('draft');
+                  setActiveTab('orders');
+                }}
+                onCancel={() => setOrderMode(null)}
               />
             )}
           </>
