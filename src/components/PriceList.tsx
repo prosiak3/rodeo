@@ -217,36 +217,48 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   console.log('✅ FILTERED RESULT:', filteredProducts.length, 'products');
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const aHasPromo = (a.promo_price && a.promo_price < (a.your_price || a.base_price)) || a.promo_10_plus_1;
-    const bHasPromo = (b.promo_price && b.promo_price < (b.your_price || b.base_price)) || b.promo_10_plus_1;
+  const promoProducts = filteredProducts.filter(p =>
+    (p.promo_price && p.promo_price < (p.your_price || p.base_price)) || p.promo_10_plus_1
+  );
 
-    if (aHasPromo && !bHasPromo) return -1;
-    if (!aHasPromo && bHasPromo) return 1;
+  const regularProducts = filteredProducts.filter(p =>
+    !((p.promo_price && p.promo_price < (p.your_price || p.base_price)) || p.promo_10_plus_1)
+  );
 
-    if (selectedCategory === 'all') {
-      const categoryOrder = ['Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
-      const categoryCompare = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
-      if (categoryCompare !== 0) return categoryCompare;
-    }
+  const sortProducts = (products: Product[]) => {
+    return [...products].sort((a, b) => {
+      if (selectedCategory === 'all') {
+        const categoryOrder = ['Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
+        const categoryCompare = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+        if (categoryCompare !== 0) return categoryCompare;
+      }
 
-    switch (sortBy) {
-      case 'name-asc':
-        return a.name.localeCompare(b.name);
-      case 'name-desc':
-        return b.name.localeCompare(a.name);
-      case 'price-asc':
-        return (a.final_price || a.base_price) - (b.final_price || b.base_price);
-      case 'price-desc':
-        return (b.final_price || b.base_price) - (a.final_price || a.base_price);
-      default:
-        return 0;
-    }
-  });
+      switch (sortBy) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'price-asc':
+          return (a.final_price || a.base_price) - (b.final_price || b.base_price);
+        case 'price-desc':
+          return (b.final_price || b.base_price) - (a.final_price || a.base_price);
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const sortedPromoProducts = sortProducts(promoProducts);
+  const sortedRegularProducts = sortProducts(regularProducts);
 
   const groupedProducts: { [key: string]: Product[] } = {};
+
+  if (sortedPromoProducts.length > 0) {
+    groupedProducts['🔥 PROMOCJE'] = sortedPromoProducts;
+  }
+
   if (selectedCategory === 'all') {
-    sortedProducts.forEach(product => {
+    sortedRegularProducts.forEach(product => {
       const category = product.category || 'Inne';
       if (!groupedProducts[category]) {
         groupedProducts[category] = [];
@@ -254,7 +266,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       groupedProducts[category].push(product);
     });
   } else {
-    groupedProducts[selectedCategory] = sortedProducts;
+    if (sortedRegularProducts.length > 0) {
+      groupedProducts[selectedCategory] = sortedRegularProducts;
+    }
   }
 
   const handleTouchStart = (e: React.TouchEvent, productId: string) => {
@@ -596,7 +610,14 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
             <div key={category}>
               {selectedCategory === 'all' && (
-                <div className="px-4 py-2.5 mb-2 rounded-lg shadow-md" style={{ background: colors.gradient }}>
+                <div
+                  className={`px-4 py-2.5 mb-2 rounded-lg shadow-md ${
+                    category === '🔥 PROMOCJE'
+                      ? 'bg-gradient-to-r from-red-500 to-orange-500 animate-pulse'
+                      : ''
+                  }`}
+                  style={category !== '🔥 PROMOCJE' ? { background: colors.gradient } : {}}
+                >
                   <h3 className="text-white font-bold text-base">{category}</h3>
                 </div>
               )}
