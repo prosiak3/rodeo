@@ -470,7 +470,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                 <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-800 truncate">{item.products?.name}</div>
-                    <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)} PLN/{item.unit}</div>
+                    <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)} / 1{item.unit}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button

@@ -291,7 +291,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
               <div>
                 <p className="text-sm text-gray-600">Cena jednostkowa</p>
                 <p className="font-bold text-amber-600 text-xl">
-                  {selectedProduct.base_price.toFixed(2)} PLN/{selectedProduct.unit}
+                  {selectedProduct.base_price.toFixed(2)} / 1{selectedProduct.unit}
                 </p>
               </div>
               {selectedProduct.index && (

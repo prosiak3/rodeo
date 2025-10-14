@@ -281,7 +281,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{item.productName}</p>
                     <p className="text-xs text-gray-600">
-                      {item.unitPrice.toFixed(2)} PLN/{item.unit}
+                      {item.unitPrice.toFixed(2)} / 1{item.unit}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">

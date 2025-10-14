@@ -550,7 +550,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 style={sortBy === 'price-asc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
                 title="Cena rosnąco"
               >
-                <span className="text-xs font-semibold">PLN</span>
                 <ArrowUp className="w-3 h-3" />
               </button>
               <button
@@ -559,7 +558,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 style={sortBy === 'price-desc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
                 title="Cena malejąco"
               >
-                <span className="text-xs font-semibold">PLN</span>
                 <ArrowDown className="w-3 h-3" />
               </button>
             </div>
@@ -660,7 +658,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                               <span className="text-sm font-bold" style={{ color: colors.text }}>
                                 {product.base_price.toFixed(2)}
                               </span>
-                              <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                              <span className="text-xs text-gray-500">1{product.unit}</span>
                             </div>
                           )}
                           {(product.your_price || product.promo_price) && (
@@ -687,7 +685,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                                   </span>
                                 </div>
                               )}
-                              <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                              <span className="text-xs text-gray-500">1{product.unit}</span>
                             </>
                           )}
                         </div>
@@ -698,7 +696,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                               <span className="text-base font-bold" style={{ color: colors.text }}>
                                 {product.base_price.toFixed(2)}
                               </span>
-                              <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                              <span className="text-xs text-gray-500">1{product.unit}</span>
                             </div>
                           )}
                           {(product.your_price || product.promo_price) && (
@@ -725,7 +723,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                                   </span>
                                 </div>
                               )}
-                              <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                              <span className="text-xs text-gray-500">1{product.unit}</span>
                             </>
                           )}
                         </div>

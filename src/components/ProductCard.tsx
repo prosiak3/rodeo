@@ -60,7 +60,7 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
                 <span className="text-base font-bold text-amber-600">
                   {product.base_price.toFixed(2)}
                 </span>
-                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                <span className="text-xs text-gray-500">1{product.unit}</span>
               </div>
             )}
             {(product.your_price || product.promo_price) && (
@@ -87,7 +87,7 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
                     </span>
                   </div>
                 )}
-                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                <span className="text-xs text-gray-500">1{product.unit}</span>
               </>
             )}
           </div>
@@ -98,7 +98,7 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
                 <span className="text-base font-bold text-amber-600">
                   {product.base_price.toFixed(2)}
                 </span>
-                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                <span className="text-xs text-gray-500">1{product.unit}</span>
               </div>
             )}
             {(product.your_price || product.promo_price) && (
@@ -125,7 +125,7 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
                     </span>
                   </div>
                 )}
-                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                <span className="text-xs text-gray-500">1{product.unit}</span>
               </>
             )}
           </div>

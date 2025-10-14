@@ -201,7 +201,7 @@ export default function ProductManager() {
                               <div className="flex items-center gap-3">
                                 <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{product.code}</span>
                                 <span className="text-gray-600">{product.category}</span>
-                                <span className="font-medium">{product.base_price.toFixed(2)} PLN/{product.unit}</span>
+                                <span className="font-medium">{product.base_price.toFixed(2)} / 1{product.unit}</span>
                               </div>
                             </div>
                             <button
@@ -279,7 +279,7 @@ export default function ProductManager() {
                         step="0.01"
                       />
                     ) : (
-                      <span>{product.base_price.toFixed(2)} PLN/{product.unit}</span>
+                      <span>{product.base_price.toFixed(2)} / 1{product.unit}</span>
                     )}
                   </td>
                   <td className="py-3 px-2 text-sm text-right">

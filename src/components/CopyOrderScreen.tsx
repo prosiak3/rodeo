@@ -267,7 +267,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">{item.product_name}</p>
                         <p className="text-sm text-gray-600">
-                          {item.price_per_unit.toFixed(2)} PLN/{item.unit}
+                          {item.price_per_unit.toFixed(2)} / 1{item.unit}
                         </p>
                       </div>
                       <button

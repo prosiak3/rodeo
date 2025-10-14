@@ -235,7 +235,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                   <p className="font-semibold text-gray-800">{product.name}</p>
                   <p className="text-sm text-gray-600">{product.barcode}</p>
                   <p className="text-sm text-amber-600 font-medium">
-                    {(product.price_per_unit || 0).toFixed(2)} PLN/{product.unit}
+                    {(product.price_per_unit || 0).toFixed(2)} / 1{product.unit}
                   </p>
                 </div>
               ))}
@@ -253,7 +253,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                     <div className="flex-1">
                       <p className="font-semibold text-gray-800">{item.product_name}</p>
                       <p className="text-sm text-gray-600">
-                        {(item.price_per_unit || 0).toFixed(2)} PLN/{item.unit}
+                        {(item.price_per_unit || 0).toFixed(2)} / 1{item.unit}
                       </p>
                     </div>
                     <button
