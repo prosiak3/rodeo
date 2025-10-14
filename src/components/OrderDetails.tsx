@@ -335,11 +335,22 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
       if (updateError) throw updateError;
 
+      // Prepare details with information about modified items
+      const modifiedItemsDetails = items.map(item => ({
+        product_name: item.products?.name,
+        quantity: item.quantity,
+        unit: item.unit
+      }));
+
       await supabase.from('order_history').insert({
         order_id: orderId,
         action: 'converted_to_draft',
         performed_by: userId,
-        details: { from_status: 'notatnik' },
+        details: {
+          from_status: 'notatnik',
+          items_count: items.length,
+          modified_items: modifiedItemsDetails
+        },
       });
 
       // Verify the update succeeded
@@ -693,7 +704,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                       <>
                         <button
                           onClick={() => {
-                            const newQuantity = Math.max(0.01, item.quantity - (item.quantity >= 1 ? 1 : 0.1));
+                            const newQuantity = Math.max(1, item.quantity - 1);
                             const newTotalPrice = newQuantity * item.unit_price;
                             supabase
                               .from('order_items')
@@ -703,17 +714,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               })
                               .eq('id', item.id)
                               .then(() => {
-                                supabase.from('order_history').insert({
-                                  order_id: orderId,
-                                  action: 'modified_quantity',
-                                  performed_by: userId,
-                                  details: {
-                                    product_name: item.products?.name,
-                                    old_quantity: item.quantity,
-                                    new_quantity: newQuantity,
-                                    unit: item.unit
-                                  },
-                                });
                                 loadOrderDetails();
                               });
                           }}
@@ -724,7 +724,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         </button>
                         <input
                           type="number"
-                          step="0.01"
+                          step="1"
                           defaultValue={item.quantity}
                           onBlur={(e) => {
                             const newQuantity = parseFloat(e.target.value);
@@ -738,17 +738,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                                 })
                                 .eq('id', item.id)
                                 .then(() => {
-                                  supabase.from('order_history').insert({
-                                    order_id: orderId,
-                                    action: 'modified_quantity',
-                                    performed_by: userId,
-                                    details: {
-                                      product_name: item.products?.name,
-                                      old_quantity: item.quantity,
-                                      new_quantity: newQuantity,
-                                      unit: item.unit
-                                    },
-                                  });
                                   loadOrderDetails();
                                 });
                             }
@@ -762,7 +751,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         />
                         <button
                           onClick={() => {
-                            const newQuantity = item.quantity + (item.quantity >= 1 ? 1 : 0.1);
+                            const newQuantity = item.quantity + 1;
                             const newTotalPrice = newQuantity * item.unit_price;
                             supabase
                               .from('order_items')
@@ -772,17 +761,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               })
                               .eq('id', item.id)
                               .then(() => {
-                                supabase.from('order_history').insert({
-                                  order_id: orderId,
-                                  action: 'modified_quantity',
-                                  performed_by: userId,
-                                  details: {
-                                    product_name: item.products?.name,
-                                    old_quantity: item.quantity,
-                                    new_quantity: newQuantity,
-                                    unit: item.unit
-                                  },
-                                });
                                 loadOrderDetails();
                               });
                           }}
