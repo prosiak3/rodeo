@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
+import { formatPriceDisplay } from '../lib/priceCalculations';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -65,7 +66,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             name,
             code,
             image_url,
-            description
+            description,
+            average_weight,
+            unit
           )
         `)
         .eq('order_id', orderId);
@@ -736,9 +739,19 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               ))}
             </div>
           )}
-          <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center text-sm">
-            <span className="font-semibold text-gray-700">Razem:</span>
-            <span className="font-bold text-lg text-amber-600">{order.total_amount.toFixed(2)} PLN</span>
+          <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-semibold text-gray-700">Razem:</span>
+              <div className="text-right">
+                <span className="font-bold text-lg text-amber-600">{formatPriceDisplay(order.total_amount, items.some(item => item.unit === 'szt' && item.products?.average_weight))} PLN</span>
+                {items.some(item => item.unit === 'szt' && item.products?.average_weight) && (
+                  <p className="text-[10px] text-blue-600 flex items-center gap-1 justify-end mt-0.5">
+                    <Info className="w-3 h-3" />
+                    Orientacyjna cena - dokładna kwota na fakturze
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

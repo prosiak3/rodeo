@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft, LayoutGrid, AlignJustify } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft, LayoutGrid, AlignJustify, Info } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ProductCard from './ProductCard';
+import { calculateItemPrice, formatPriceDisplay, getEstimationTooltip } from '../lib/priceCalculations';
 
 interface Product {
   id: string;
@@ -17,6 +18,7 @@ interface Product {
   your_price?: number;
   promo_price?: number;
   final_price: number;
+  average_weight?: number;
 }
 
 type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
@@ -30,6 +32,8 @@ interface OrderItem {
   unit: string;
   unitPrice: number;
   totalPrice: number;
+  isEstimated: boolean;
+  averageWeight?: number;
 }
 
 interface PriceListOrderScreenProps {
@@ -160,14 +164,15 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
       return;
     }
 
-    const totalPrice = qty * selectedProduct.final_price;
+    const priceCalc = calculateItemPrice(selectedProduct, qty, selectedProduct.final_price);
 
     const existingItemIndex = orderItems.findIndex(item => item.productId === selectedProduct.id);
 
     if (existingItemIndex >= 0) {
       const updated = [...orderItems];
       updated[existingItemIndex].quantity += qty;
-      updated[existingItemIndex].totalPrice = updated[existingItemIndex].quantity * updated[existingItemIndex].unitPrice;
+      const recalc = calculateItemPrice(selectedProduct, updated[existingItemIndex].quantity, updated[existingItemIndex].unitPrice);
+      updated[existingItemIndex].totalPrice = recalc.totalPrice;
       setOrderItems(updated);
     } else {
       setOrderItems([...orderItems, {
@@ -177,7 +182,9 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
         quantity: qty,
         unit: selectedProduct.unit,
         unitPrice: selectedProduct.final_price,
-        totalPrice,
+        totalPrice: priceCalc.totalPrice,
+        isEstimated: priceCalc.isEstimated,
+        averageWeight: selectedProduct.average_weight,
       }]);
     }
 
@@ -191,9 +198,14 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
       return;
     }
     const updated = [...orderItems];
-    updated[index].quantity = newQuantity;
-    updated[index].totalPrice = newQuantity * updated[index].unitPrice;
-    setOrderItems(updated);
+    const item = updated[index];
+    const product = products.find(p => p.id === item.productId);
+    if (product) {
+      const priceCalc = calculateItemPrice(product, newQuantity, item.unitPrice);
+      updated[index].quantity = newQuantity;
+      updated[index].totalPrice = priceCalc.totalPrice;
+      setOrderItems(updated);
+    }
   };
 
   const removeItem = (index: number) => {
@@ -208,7 +220,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
 
     setSending(true);
     try {
-      const totalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+      const orderTotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
       const orderNumber = `RO-${Date.now()}`;
 
       const { data: order, error: orderError } = await supabase
@@ -219,7 +231,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
           created_by: userId,
           status: 'draft',
           requires_confirmation: false,
-          total_amount: totalAmount,
+          total_amount: orderTotal,
           notes: 'Zamówienie utworzone z cennika - tryb ilości',
         })
         .select()
@@ -264,6 +276,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
   };
 
   const totalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const hasEstimatedItems = orderItems.some(item => item.isEstimated);
 
   if (selectedProduct) {
     return (
@@ -422,8 +435,14 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
                 Twoje zamówienie
               </h3>
               <div className="text-right">
-                <p className="text-xs text-gray-500">Wartość</p>
-                <p className="font-bold text-amber-600 text-lg">{totalAmount.toFixed(2)} PLN</p>
+                <p className="text-xs text-gray-500">{hasEstimatedItems ? 'Orientacyjnie' : 'Wartość'}</p>
+                <p className="font-bold text-amber-600 text-lg">{formatPriceDisplay(totalAmount, hasEstimatedItems)} PLN</p>
+                {hasEstimatedItems && (
+                  <p className="text-[10px] text-blue-600 flex items-center gap-1 justify-end">
+                    <Info className="w-3 h-3" />
+                    Dokładna kwota na fakturze
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2 mb-4">
@@ -433,7 +452,13 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
                     <p className="font-medium text-sm truncate">{item.productName}</p>
                     <p className="text-xs text-gray-600 truncate">
                       {item.quantity} {item.unit} × {item.unitPrice.toFixed(2)} PLN
+                      {item.isEstimated && item.averageWeight && (
+                        <span className="text-blue-600 ml-1">(~{item.averageWeight}kg)</span>
+                      )}
                     </p>
+                    {item.isEstimated && (
+                      <p className="text-[10px] text-blue-600 italic">Cena orientacyjna</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <button

@@ -60,6 +60,7 @@ export interface Product {
   created_at: string;
   updated_at: string;
   index?: string;
+  average_weight?: number;
 }
 
 export interface SpecialPrice {
@@ -110,6 +111,7 @@ export interface OrderItem {
   status: 'pending' | 'confirmed' | 'partially_confirmed' | 'rejected';
   created_at: string;
   products?: Product;
+  is_estimated?: boolean;
 }
 
 export interface OrderHistory {
