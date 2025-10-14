@@ -706,16 +706,22 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                           onClick={() => {
                             const newQuantity = Math.max(1, item.quantity - 1);
                             const newTotalPrice = newQuantity * item.unit_price;
+
+                            setItems(prevItems =>
+                              prevItems.map(i =>
+                                i.id === item.id
+                                  ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                  : i
+                              )
+                            );
+
                             supabase
                               .from('order_items')
                               .update({
                                 quantity: newQuantity,
                                 total_price: newTotalPrice
                               })
-                              .eq('id', item.id)
-                              .then(() => {
-                                loadOrderDetails();
-                              });
+                              .eq('id', item.id);
                           }}
                           className="w-7 h-7 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition active:scale-95"
                           title="Zmniejsz ilość"
@@ -725,21 +731,27 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         <input
                           type="number"
                           step="1"
-                          defaultValue={item.quantity}
-                          onBlur={(e) => {
+                          value={item.quantity}
+                          onChange={(e) => {
                             const newQuantity = parseFloat(e.target.value);
-                            if (!isNaN(newQuantity) && newQuantity > 0 && newQuantity !== item.quantity) {
+                            if (!isNaN(newQuantity) && newQuantity > 0) {
                               const newTotalPrice = newQuantity * item.unit_price;
+
+                              setItems(prevItems =>
+                                prevItems.map(i =>
+                                  i.id === item.id
+                                    ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                    : i
+                                )
+                              );
+
                               supabase
                                 .from('order_items')
                                 .update({
                                   quantity: newQuantity,
                                   total_price: newTotalPrice
                                 })
-                                .eq('id', item.id)
-                                .then(() => {
-                                  loadOrderDetails();
-                                });
+                                .eq('id', item.id);
                             }
                           }}
                           onKeyDown={(e) => {
@@ -753,16 +765,22 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                           onClick={() => {
                             const newQuantity = item.quantity + 1;
                             const newTotalPrice = newQuantity * item.unit_price;
+
+                            setItems(prevItems =>
+                              prevItems.map(i =>
+                                i.id === item.id
+                                  ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                  : i
+                              )
+                            );
+
                             supabase
                               .from('order_items')
                               .update({
                                 quantity: newQuantity,
                                 total_price: newTotalPrice
                               })
-                              .eq('id', item.id)
-                              .then(() => {
-                                loadOrderDetails();
-                              });
+                              .eq('id', item.id);
                           }}
                           className="w-7 h-7 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded transition active:scale-95"
                           title="Zwiększ ilość"
