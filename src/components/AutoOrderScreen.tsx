@@ -66,7 +66,8 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
     if (suggestion?.products) {
       const items = new Map<string, number>();
       suggestion.products.forEach(p => {
-        items.set(p.product_id, p.suggested_quantity);
+        // Zaokrąglij wszystkie ilości do pełnych liczb
+        items.set(p.product_id, Math.ceil(p.suggested_quantity));
       });
       setOrderItems(items);
     }
@@ -165,10 +166,12 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
 
   const updateQuantity = (productId: string, newQuantity: number) => {
     const newItems = new Map(orderItems);
-    if (newQuantity <= 0) {
+    // Zaokrąglij do pełnych liczb
+    const roundedQuantity = Math.ceil(newQuantity);
+    if (roundedQuantity <= 0) {
       newItems.delete(productId);
     } else {
-      newItems.set(productId, newQuantity);
+      newItems.set(productId, roundedQuantity);
     }
     setOrderItems(newItems);
   };
@@ -385,61 +388,52 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
                 if (quantity === 0) return null;
 
                 return (
-                  <div key={product.product_id} className={`bg-white rounded-lg p-4 shadow border-l-4 ${getPriorityColor(product.priority)}`}>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900">{product.name}</h4>
+                  <div key={product.product_id} className={`bg-white rounded-lg p-3 shadow-sm border-l-4 ${getPriorityColor(product.priority)}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-gray-900 text-sm truncate">{product.name}</h4>
                           {product.trend === 'increasing' && (
-                            <TrendingUp className="w-4 h-4 text-green-600" />
+                            <TrendingUp className="w-3 h-3 text-green-600 flex-shrink-0" />
                           )}
                           {product.trend === 'decreasing' && (
-                            <TrendingDown className="w-4 h-4 text-red-600" />
+                            <TrendingDown className="w-3 h-3 text-red-600 flex-shrink-0" />
                           )}
                         </div>
-                        <p className="text-xs text-gray-500">
-                          {product.index && `${product.index} • `}
-                          Ostatnio: {product.last_ordered_days_ago} dni temu •
-                          Cykl: co {product.avg_cycle_days} dni
-                        </p>
                       </div>
-                      <span className={`text-xs font-medium px-2 py-1 rounded border ${getPriorityColor(product.priority)}`}>
-                        {getPriorityLabel(product.priority)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3 mt-3">
-                      <div className="flex items-center gap-2 bg-gray-100 rounded-lg">
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="flex items-center gap-1 bg-gray-100 rounded-lg">
+                          <button
+                            onClick={() => updateQuantity(product.product_id, Math.max(1, Math.ceil(quantity) - 1))}
+                            className="p-1.5 hover:bg-gray-200 rounded-l-lg"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <input
+                            type="number"
+                            value={Math.ceil(quantity)}
+                            onChange={(e) => updateQuantity(product.product_id, Math.ceil(parseFloat(e.target.value) || 0))}
+                            className="w-12 text-center text-sm bg-transparent border-none focus:outline-none"
+                            step="1"
+                          />
+                          <span className="text-xs text-gray-600 pr-1">{product.unit}</span>
+                          <button
+                            onClick={() => updateQuantity(product.product_id, Math.ceil(quantity) + 1)}
+                            className="p-1.5 hover:bg-gray-200 rounded-r-lg"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <span className="text-xs text-gray-700 w-16 text-right">
+                          {(Math.ceil(quantity) * product.base_price).toFixed(2)} zł
+                        </span>
                         <button
-                          onClick={() => updateQuantity(product.product_id, quantity - 1)}
-                          className="p-2 hover:bg-gray-200 rounded-l-lg"
+                          onClick={() => removeProduct(product.product_id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
                         >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <input
-                          type="number"
-                          value={quantity}
-                          onChange={(e) => updateQuantity(product.product_id, parseFloat(e.target.value) || 0)}
-                          className="w-20 text-center bg-transparent border-none focus:outline-none"
-                          step="0.1"
-                        />
-                        <span className="text-sm text-gray-600 pr-2">{product.unit}</span>
-                        <button
-                          onClick={() => updateQuantity(product.product_id, quantity + 1)}
-                          className="p-2 hover:bg-gray-200 rounded-r-lg"
-                        >
-                          <Plus className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3" />
                         </button>
                       </div>
-                      <span className="text-sm text-gray-700 flex-1">
-                        {(quantity * product.base_price).toFixed(2)} zł
-                      </span>
-                      <button
-                        onClick={() => removeProduct(product.product_id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 );
