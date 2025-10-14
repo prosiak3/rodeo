@@ -57,7 +57,6 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
         .select('id, order_number, created_at, total_amount, status, source_type')
         .eq('store_id', storeId)
         .in('status', ['sent', 'in_progress', 'confirmed', 'partially_confirmed'])
-        .in('source_type', ['price_list', 'copy'])
         .order('created_at', { ascending: false })
         .limit(50);
 
