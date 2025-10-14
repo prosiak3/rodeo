@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, FileText, ChevronRight, Package } from 'lucide-react';
+import { Copy, FileText, ChevronRight, Package, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Order {
