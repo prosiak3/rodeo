@@ -7,6 +7,8 @@ interface Product {
   name: string;
   index: string;
   base_price: number;
+  unit: string;
+  average_weight?: number;
 }
 
 interface OrderItem {
@@ -20,6 +22,10 @@ interface OrderItem {
   confidence?: number;
   aiMatched?: boolean;
   matchCount?: number;
+  convertedQuantity?: number;
+  convertedUnit?: string;
+  originalQuantity?: number;
+  originalUnit?: string;
 }
 
 interface VoiceOrderScreenProps {
@@ -115,7 +121,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     try {
       const { data } = await supabase
         .from('products')
-        .select('id, name, index, base_price')
+        .select('id, name, index, base_price, unit, average_weight')
         .eq('active', true);
       if (data) {
         console.log('Loaded products:', data.length);
@@ -599,13 +605,22 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           const product = allProducts.find(p => p.id === item.productId);
           if (!product) return null;
 
+          let finalQuantity = item.quantity;
+          let finalUnit = item.unit;
+
+          if (item.unit === 'szt' && product.average_weight && product.average_weight > 0) {
+            const estimatedKg = item.quantity * product.average_weight;
+            finalQuantity = Math.ceil(estimatedKg);
+            finalUnit = 'kg';
+          }
+
           const unitPrice = Number(product.base_price);
-          const totalPrice = Number((item.quantity * unitPrice).toFixed(2));
+          const totalPrice = Number((finalQuantity * unitPrice).toFixed(2));
 
           return {
             product_id: product.id,
-            quantity: item.quantity,
-            unit: item.unit,
+            quantity: finalQuantity,
+            unit: finalUnit,
             unit_price: unitPrice,
             total_price: totalPrice,
             productIndex: product.index,
@@ -675,14 +690,32 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   };
 
   if (stage === 'confirmation') {
+    const itemsWithConversion = orderItems.map(item => {
+      const product = item.productId ? allProducts.find(p => p.id === item.productId) : null;
+
+      if (item.unit === 'szt' && product?.average_weight && product.average_weight > 0) {
+        const estimatedKg = item.quantity * product.average_weight;
+        const convertedKg = Math.ceil(estimatedKg);
+        return {
+          ...item,
+          convertedQuantity: convertedKg,
+          convertedUnit: 'kg',
+          originalQuantity: item.quantity,
+          originalUnit: item.unit
+        };
+      }
+
+      return item;
+    });
+
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         <div className="p-6">
           <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
-            {orderItems.length === 0 ? (
+            {itemsWithConversion.length === 0 ? (
               <p className="text-gray-500 text-center py-8">Brak pozycji w zamówieniu</p>
             ) : (
-              orderItems.map((item, index) => (
+              itemsWithConversion.map((item, index) => (
                 <div key={index} className={`p-4 rounded-lg ${
                   item.matched === 'ambiguous' ? 'bg-orange-50 border-2 border-orange-300' :
                   item.matched === true ? 'bg-gray-50' :
@@ -719,9 +752,20 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-600">
-                        {item.quantity} {item.unit}
-                      </p>
+                      <div className="text-gray-600">
+                        {item.convertedQuantity && item.convertedUnit ? (
+                          <div>
+                            <p className="font-semibold text-amber-700">
+                              {item.convertedQuantity} {item.convertedUnit}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              (z {item.originalQuantity} {item.originalUnit})
+                            </p>
+                          </div>
+                        ) : (
+                          <p>{item.quantity} {item.unit}</p>
+                        )}
+                      </div>
                       {item.productIndex && (
                         <div className="mt-2 flex items-center gap-2">
                           <svg className="w-28 h-12" viewBox="0 0 140 50">
