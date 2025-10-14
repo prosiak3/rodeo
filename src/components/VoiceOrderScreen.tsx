@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { embeddingsManager } from '../lib/embeddingsManager';
-import type { SimilarityResult } from '../lib/embeddingsManager';
 
 interface Product {
   id: string;
@@ -59,7 +57,10 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     try {
       setAiInitializing(true);
       console.log('[AI] Starting initialization...');
+
+      const { embeddingsManager } = await import('../lib/embeddingsManager');
       await embeddingsManager.initialize();
+
       setAiReady(true);
       console.log('[AI] Ready!');
     } catch (error) {
@@ -91,7 +92,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   useEffect(() => {
     if (aiReady && allProducts.length > 0) {
       console.log('[AI] Generating embeddings for products...');
-      embeddingsManager.generateProductEmbeddings(allProducts).catch(console.error);
+      import('../lib/embeddingsManager').then(({ embeddingsManager }) => {
+        embeddingsManager.generateProductEmbeddings(allProducts).catch(console.error);
+      });
     }
   }, [aiReady, allProducts]);
 
@@ -302,6 +305,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         } else if (useAI && aiReady) {
           console.log('[AI] Using AI to find similar products...');
           try {
+            const { embeddingsManager } = await import('../lib/embeddingsManager');
             const aiResults = await embeddingsManager.findSimilarProducts(productName, products, 5);
 
             if (aiResults.length > 0 && aiResults[0].confidence >= 85) {

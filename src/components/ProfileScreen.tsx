@@ -3,7 +3,6 @@ import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Use
 import { User, supabase } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { showAlert } from '../lib/alerts';
-import { embeddingsManager } from '../lib/embeddingsManager';
 
 interface ProfileScreenProps {
   user: User;
@@ -208,6 +207,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
     setSaving(true);
     try {
+      const { embeddingsManager } = await import('../lib/embeddingsManager');
       await embeddingsManager.clearCache();
 
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
