@@ -53,7 +53,7 @@ BEGIN
       AND o.sent_at >= NOW() - INTERVAL '180 days'
   LOOP
     -- Get all order dates and quantities for this product (last 180 days)
-    SELECT 
+    SELECT
       array_agg(o.sent_at ORDER BY o.sent_at),
       array_agg(oi.quantity ORDER BY o.sent_at)
     INTO v_order_dates, v_quantities
@@ -63,8 +63,7 @@ BEGIN
       AND oi.product_id = v_product.product_id
       AND o.status IN ('sent', 'confirmed', 'partially_confirmed')
       AND o.sent_at IS NOT NULL
-      AND o.sent_at >= NOW() - INTERVAL '180 days'
-    ORDER BY o.sent_at;
+      AND o.sent_at >= NOW() - INTERVAL '180 days';
 
     v_total_count := array_length(v_order_dates, 1);
     
