@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Package, Users, ShoppingBag, DollarSign, Settings, UserCog } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Package, Users, ShoppingBag, DollarSign, Settings, UserCog, Brain } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresManager from './StoresManager';
@@ -7,6 +7,8 @@ import PriceList from './PriceList';
 import ProductManager from './ProductManager';
 import SystemSettings from './SystemSettings';
 import UsersManager from './UsersManager';
+import AILearningPanel from './AILearningPanel';
+import { supabase } from '../lib/supabase';
 
 interface AdminPanelProps {
   userId: string;
@@ -15,7 +17,23 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'users' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'users' | 'ai' | 'settings'>('orders');
+  const [storeId, setStoreId] = useState<string>('');
+
+  useEffect(() => {
+    const loadStoreId = async () => {
+      const { data } = await supabase
+        .from('users')
+        .select('store_id')
+        .eq('id', userId)
+        .single();
+
+      if (data?.store_id) {
+        setStoreId(data.store_id);
+      }
+    };
+    loadStoreId();
+  }, [userId]);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -86,6 +104,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Użytkownicy
           </button>
           <button
+            onClick={() => setActiveTab('ai')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'ai'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Brain className="w-5 h-5" />
+            AI
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'settings'
@@ -111,6 +140,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'pricelists' && <PriceListManager />}
 
         {activeTab === 'users' && <UsersManager />}
+
+        {activeTab === 'ai' && storeId && <AILearningPanel storeId={storeId} />}
 
         {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>
