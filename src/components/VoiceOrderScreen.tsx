@@ -331,6 +331,49 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         const normalizedName = productName.toLowerCase().trim();
         console.log('Looking for product:', normalizedName, 'in', products.length, 'products');
 
+        // First, check if we have learned this phrase before
+        let learnedMatch = null;
+        try {
+          const { data: learned, error } = await supabase
+            .rpc('get_learned_product_match', {
+              phrase: normalizedName,
+              p_store_id: storeId
+            });
+
+          if (!error && learned && learned.length > 0) {
+            const topLearned = learned[0];
+            console.log(`[Learning] Found learned match: "${normalizedName}" -> "${topLearned.product_name}" (${topLearned.confidence}% confidence, ${topLearned.selection_count} times)`);
+
+            // If confidence is high (60%+), use the learned match
+            if (topLearned.confidence >= 60) {
+              learnedMatch = {
+                id: topLearned.product_id,
+                name: topLearned.product_name,
+                index: topLearned.product_index,
+                confidence: topLearned.confidence
+              };
+              console.log(`[Learning] Using learned match with ${topLearned.confidence}% confidence`);
+            }
+          }
+        } catch (error) {
+          console.error('[Learning] Error fetching learned match:', error);
+        }
+
+        // If we have a high-confidence learned match, use it directly
+        if (learnedMatch && learnedMatch.confidence >= 80) {
+          items.push({
+            productName: learnedMatch.name,
+            quantity,
+            unit,
+            productIndex: learnedMatch.index,
+            productId: learnedMatch.id,
+            matched: true,
+            confidence: learnedMatch.confidence,
+            aiMatched: false,
+          });
+          continue; // Skip regular matching for this item
+        }
+
         const allMatches = products.filter(p => {
           const pName = p.name.toLowerCase();
 
@@ -367,12 +410,23 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           });
         } else if (allMatches.length > 1) {
           console.log('Found multiple matches:', allMatches.length, allMatches.map(p => p.name));
+
+          // If we have a learned match with moderate confidence (60-80%), prioritize it in suggestions
+          let suggestions = allMatches;
+          if (learnedMatch) {
+            const learnedProduct = allMatches.find(p => p.id === learnedMatch.id);
+            if (learnedProduct) {
+              console.log(`[Learning] Prioritizing learned match in suggestions`);
+              suggestions = [learnedProduct, ...allMatches.filter(p => p.id !== learnedMatch.id)];
+            }
+          }
+
           items.push({
             productName,
             quantity,
             unit,
             matched: 'ambiguous',
-            suggestions: allMatches,
+            suggestions: suggestions,
             confidence: 100,
             aiMatched: false,
             matchCount: allMatches.length,
@@ -429,26 +483,52 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               }
             } else if (aiResults.length > 0) {
               console.log('[AI] Found suggestions:', aiResults.length);
+
+              // Merge learned match with AI suggestions if available
+              let suggestions = aiResults.map(r => r.product);
+              if (learnedMatch) {
+                const learnedProduct = products.find(p => p.id === learnedMatch.id);
+                if (learnedProduct && !suggestions.find(s => s.id === learnedMatch.id)) {
+                  console.log(`[Learning] Adding learned match to AI suggestions`);
+                  suggestions = [learnedProduct, ...suggestions];
+                } else if (learnedProduct) {
+                  console.log(`[Learning] Prioritizing learned match in AI suggestions`);
+                  suggestions = [learnedProduct, ...suggestions.filter(s => s.id !== learnedMatch.id)];
+                }
+              }
+
               items.push({
                 productName,
                 quantity,
                 unit,
                 matched: false,
-                suggestions: aiResults.map(r => r.product),
+                suggestions: suggestions,
                 confidence: aiResults[0]?.confidence,
               });
             } else {
+              // No AI results, but maybe we have a learned match
+              const suggestions = learnedMatch ? [products.find(p => p.id === learnedMatch.id)!].filter(Boolean) : [];
               items.push({
                 productName,
                 quantity,
                 unit,
                 matched: false,
-                suggestions: [],
+                suggestions: suggestions,
               });
             }
           } catch (error) {
             console.error('[AI] Error during similarity search:', error);
-            const fallbackSuggestions = findSimilarProducts(productName, products);
+            let fallbackSuggestions = findSimilarProducts(productName, products);
+
+            // Add learned match to fallback suggestions if available
+            if (learnedMatch) {
+              const learnedProduct = products.find(p => p.id === learnedMatch.id);
+              if (learnedProduct && !fallbackSuggestions.find(s => s.id === learnedMatch.id)) {
+                console.log(`[Learning] Adding learned match to fallback suggestions`);
+                fallbackSuggestions = [learnedProduct, ...fallbackSuggestions];
+              }
+            }
+
             items.push({
               productName,
               quantity,
@@ -460,7 +540,20 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         } else {
           console.log('[Fallback] Using text matching for:', productName);
           console.log('[Fallback] useAI:', useAI, 'aiReady:', aiReady);
-          const suggestions = findSimilarProducts(productName, products);
+          let suggestions = findSimilarProducts(productName, products);
+
+          // Add learned match to suggestions if available
+          if (learnedMatch) {
+            const learnedProduct = products.find(p => p.id === learnedMatch.id);
+            if (learnedProduct && !suggestions.find(s => s.id === learnedMatch.id)) {
+              console.log(`[Learning] Adding learned match to fallback suggestions`);
+              suggestions = [learnedProduct, ...suggestions];
+            } else if (learnedProduct) {
+              console.log(`[Learning] Prioritizing learned match in fallback suggestions`);
+              suggestions = [learnedProduct, ...suggestions.filter(s => s.id !== learnedMatch.id)];
+            }
+          }
+
           console.log('[Fallback] Found', suggestions.length, 'suggestions');
           if (suggestions.length > 0) {
             items.push({
@@ -559,7 +652,24 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     setOrderItems(updated);
   };
 
-  const selectSuggestion = (itemIndex: number, product: Product) => {
+  const selectSuggestion = async (itemIndex: number, product: Product) => {
+    const originalItem = orderItems[itemIndex];
+    const spokenPhrase = originalItem.productName;
+
+    // Record the learning correction
+    try {
+      await supabase.from('voice_learning_corrections').insert({
+        user_id: userId,
+        store_id: storeId,
+        spoken_phrase: spokenPhrase,
+        selected_product_id: product.id,
+      });
+      console.log(`[Learning] Recorded: "${spokenPhrase}" -> "${product.name}"`);
+    } catch (error) {
+      console.error('[Learning] Failed to record correction:', error);
+      // Don't block the user if learning fails
+    }
+
     const updated = [...orderItems];
     updated[itemIndex] = {
       ...updated[itemIndex],
