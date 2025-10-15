@@ -20,6 +20,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   const [creatorId, setCreatorId] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [sourceType, setSourceType] = useState<string | null>(null);
   const productsRef = useRef<Product[]>([]);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
         .select(`
           order_number,
           created_by,
+          source_type,
           creator:created_by (
             allow_collaborative_editing
           )
@@ -44,6 +46,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
       if (orderError) throw orderError;
       setOrderNumber(orderData.order_number);
       setCreatorId(orderData.created_by);
+      setSourceType(orderData.source_type);
 
       // Check if user can edit
       const isCreator = orderData.created_by === userId;
@@ -470,7 +473,9 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                 <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-800 truncate">{item.products?.name}</div>
-                    <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)} / 1{item.unit}</div>
+                    {sourceType !== 'voice' && (
+                      <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)} / 1{item.unit}</div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -500,16 +505,20 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="text-right min-w-[80px]">
-                    <div className="font-bold text-amber-600">{item.total_price.toFixed(2)} PLN</div>
-                  </div>
+                  {sourceType !== 'voice' && (
+                    <div className="text-right min-w-[80px]">
+                      <div className="font-bold text-amber-600">{item.total_price.toFixed(2)} PLN</div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-              <span className="font-semibold text-lg">Razem:</span>
-              <span className="font-bold text-2xl text-amber-600">{calculateTotal().toFixed(2)} PLN</span>
-            </div>
+            {sourceType !== 'voice' && (
+              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+                <span className="font-semibold text-lg">Razem:</span>
+                <span className="font-bold text-2xl text-amber-600">{calculateTotal().toFixed(2)} PLN</span>
+              </div>
+            )}
           </div>
         )}
 
