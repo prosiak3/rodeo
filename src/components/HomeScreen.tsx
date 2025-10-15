@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Tag } from 'lucide-react';
+import { Tag, Mic } from 'lucide-react';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
@@ -88,8 +88,9 @@ export default function HomeScreen({ onNavigate, userRole }: HomeScreenProps) {
           <div className="space-y-3">
             <button
               onClick={() => onNavigate?.('new-order')}
-              className="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer"
+              className="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer flex items-center justify-center gap-2"
             >
+              <Mic className="w-5 h-5" />
               Zamówienie głosowe
             </button>
             <button
