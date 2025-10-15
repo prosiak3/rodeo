@@ -24,6 +24,9 @@ interface OrderItem {
   convertedUnit?: string;
   originalQuantity?: number;
   originalUnit?: string;
+  phraseMapped?: boolean;
+  originalPhrase?: string;
+  mappedPhrase?: string;
 }
 
 interface VoiceOrderScreenProps {
@@ -328,10 +331,30 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       }
 
       if (productName && productName.length > 2) {
-        const normalizedName = productName.toLowerCase().trim();
+        let normalizedName = productName.toLowerCase().trim();
+        let originalPhrase = normalizedName;
+        let phraseMapped = false;
+
         console.log('Looking for product:', normalizedName, 'in', products.length, 'products');
 
-        // First, check if we have learned this phrase before
+        // First, try to apply phrase mapping (synonym/alternative name replacement)
+        try {
+          const { data: mappedPhrase, error } = await supabase
+            .rpc('apply_phrase_mapping', {
+              phrase: normalizedName,
+              p_store_id: storeId
+            });
+
+          if (!error && mappedPhrase && mappedPhrase !== normalizedName) {
+            console.log(`[Mapping] Applied phrase mapping: "${normalizedName}" -> "${mappedPhrase}"`);
+            normalizedName = mappedPhrase.toLowerCase().trim();
+            phraseMapped = true;
+          }
+        } catch (error) {
+          console.error('[Mapping] Error applying phrase mapping:', error);
+        }
+
+        // Second, check if we have learned this phrase before
         let learnedMatch = null;
         try {
           const { data: learned, error } = await supabase
@@ -370,6 +393,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             matched: true,
             confidence: learnedMatch.confidence,
             aiMatched: false,
+            phraseMapped,
+            originalPhrase: phraseMapped ? originalPhrase : undefined,
+            mappedPhrase: phraseMapped ? normalizedName : undefined,
           });
           continue; // Skip regular matching for this item
         }
@@ -407,6 +433,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             matched: true,
             confidence: 100,
             aiMatched: false,
+            phraseMapped,
+            originalPhrase: phraseMapped ? originalPhrase : undefined,
+            mappedPhrase: phraseMapped ? normalizedName : undefined,
           });
         } else if (allMatches.length > 1) {
           console.log('Found multiple matches:', allMatches.length, allMatches.map(p => p.name));
@@ -430,6 +459,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             confidence: 100,
             aiMatched: false,
             matchCount: allMatches.length,
+            phraseMapped,
+            originalPhrase: phraseMapped ? originalPhrase : undefined,
+            mappedPhrase: phraseMapped ? normalizedName : undefined,
           });
         } else if (useAI && aiReady) {
           console.log('[AI] Using AI to find similar products for:', productName);
@@ -451,6 +483,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 matched: true,
                 confidence: aiResults[0].confidence,
                 aiMatched: true,
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? normalizedName : undefined,
               });
             } else if (aiResults.length > 1 && aiResults[0].confidence >= 85) {
               const topResults = aiResults.slice(0, Math.min(5, aiResults.length));
@@ -467,6 +502,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                   confidence: topResults[0].confidence,
                   aiMatched: true,
                   matchCount: topResults.length,
+                  phraseMapped,
+                  originalPhrase: phraseMapped ? originalPhrase : undefined,
+                  mappedPhrase: phraseMapped ? normalizedName : undefined,
                 });
               } else {
                 console.log('[AI] High confidence match with gap:', aiResults[0].product.name, aiResults[0].confidence);
@@ -479,6 +517,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                   matched: true,
                   confidence: aiResults[0].confidence,
                   aiMatched: true,
+                  phraseMapped,
+                  originalPhrase: phraseMapped ? originalPhrase : undefined,
+                  mappedPhrase: phraseMapped ? normalizedName : undefined,
                 });
               }
             } else if (aiResults.length > 0) {
@@ -504,6 +545,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 matched: false,
                 suggestions: suggestions,
                 confidence: aiResults[0]?.confidence,
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? normalizedName : undefined,
               });
             } else {
               // No AI results, but maybe we have a learned match
@@ -514,6 +558,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 unit,
                 matched: false,
                 suggestions: suggestions,
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? normalizedName : undefined,
               });
             }
           } catch (error) {
@@ -535,6 +582,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               unit,
               matched: false,
               suggestions: fallbackSuggestions,
+              phraseMapped,
+              originalPhrase: phraseMapped ? originalPhrase : undefined,
+              mappedPhrase: phraseMapped ? normalizedName : undefined,
             });
           }
         } else {
@@ -562,6 +612,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               unit,
               matched: false,
               suggestions,
+              phraseMapped,
+              originalPhrase: phraseMapped ? originalPhrase : undefined,
+              mappedPhrase: phraseMapped ? normalizedName : undefined,
             });
           } else {
             items.push({
@@ -570,6 +623,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               unit,
               matched: false,
               suggestions: [],
+              phraseMapped,
+              originalPhrase: phraseMapped ? originalPhrase : undefined,
+              mappedPhrase: phraseMapped ? normalizedName : undefined,
             });
           }
         }
@@ -829,6 +885,11 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-lg">{item.productName}</p>
+                        {item.phraseMapped && item.originalPhrase && (
+                          <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded flex items-center gap-1 font-medium">
+                            🔄 "{item.originalPhrase}" → "{item.mappedPhrase}"
+                          </span>
+                        )}
                         {item.matched === 'ambiguous' && (
                           <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded font-medium">
                             ⚠️ Doprecyzuj ({item.matchCount} opcji)
