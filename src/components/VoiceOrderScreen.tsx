@@ -1003,7 +1003,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                       {item.matched === 'ambiguous' && item.suggestions && item.suggestions.length > 0 && (
                         <div className="mt-3 p-3 bg-white rounded-lg border-2 border-orange-300">
                           <p className="text-sm font-semibold text-orange-800 mb-2">Znaleziono {item.matchCount} produktów pasujących do '{item.productName}'. Którą chcesz zamówić?</p>
-                          <div className="space-y-1">
+                          <div className="space-y-1 mb-3">
                             {item.suggestions.map((suggestion) => (
                               <button
                                 key={suggestion.id}
@@ -1015,6 +1015,13 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                               </button>
                             ))}
                           </div>
+                          <button
+                            onClick={() => browseAllProducts(index)}
+                            className="w-full py-2 px-3 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Search className="w-4 h-4" />
+                            Żadna z powyższych - przeglądaj wszystkie
+                          </button>
                         </div>
                       )}
                       {item.matched === false && (
