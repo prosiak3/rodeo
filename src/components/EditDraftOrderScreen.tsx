@@ -480,7 +480,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 bg-gray-200 rounded-lg font-bold hover:bg-gray-300 transition"
+                      className="w-8 h-8 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition"
                     >
                       -
                     </button>
@@ -494,7 +494,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                     />
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 bg-gray-200 rounded-lg font-bold hover:bg-gray-300 transition"
+                      className="w-8 h-8 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition"
                     >
                       +
                     </button>
@@ -558,10 +558,12 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                   <div className="text-sm text-gray-600">{product.code}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <div className="font-semibold text-amber-600">{product.base_price.toFixed(2)} PLN</div>
-                    <div className="text-xs text-gray-500">za {product.unit}</div>
-                  </div>
+                  {sourceType !== 'voice' && (
+                    <div className="text-right">
+                      <div className="font-semibold text-amber-600">{product.base_price.toFixed(2)} PLN</div>
+                      <div className="text-xs text-gray-500">za {product.unit}</div>
+                    </div>
+                  )}
                   <Plus className="w-5 h-5 text-amber-600 group-hover:scale-110 transition-transform" />
                 </div>
               </button>
