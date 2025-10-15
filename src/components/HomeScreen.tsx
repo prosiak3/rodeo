@@ -90,7 +90,7 @@ export default function HomeScreen({ onNavigate, userRole }: HomeScreenProps) {
               onClick={() => onNavigate?.('new-order')}
               className="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer"
             >
-              Nowe zamówienie
+              Zamówienie głosowe
             </button>
             <button
               onClick={() => onNavigate?.('orders')}
