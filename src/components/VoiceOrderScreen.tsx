@@ -852,7 +852,6 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             unit: item.unit,
             unit_price: 0,
             total_price: 0,
-            productIndex: product.index,
           };
         })
         .filter(Boolean);
