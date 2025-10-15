@@ -752,23 +752,6 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                           <p>{item.quantity} {item.unit}</p>
                         )}
                       </div>
-                      {item.productIndex && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <svg className="w-28 h-12" viewBox="0 0 140 50">
-                            {item.productIndex.split('').map((digit, i) => (
-                              <rect
-                                key={i}
-                                x={i * 10.5}
-                                y="8"
-                                width={i % 2 === 0 ? "3.5" : "5"}
-                                height="30"
-                                fill="#000"
-                              />
-                            ))}
-                          </svg>
-                          <span className="font-mono text-xs text-gray-600">{item.productIndex}</span>
-                        </div>
-                      )}
 
                       {item.matched === 'ambiguous' && item.suggestions && item.suggestions.length > 0 && (
                         <div className="mt-3 p-3 bg-white rounded-lg border-2 border-orange-300">
@@ -969,23 +952,6 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                       <p className="text-xs text-gray-600">
                         {item.quantity} {item.unit}
                       </p>
-                      {item.productIndex && (
-                        <div className="mt-1 flex items-center gap-1">
-                          <svg className="w-16 h-6" viewBox="0 0 80 25">
-                            {item.productIndex.split('').map((digit, i) => (
-                              <rect
-                                key={i}
-                                x={i * 6}
-                                y="3"
-                                width={i % 2 === 0 ? "2" : "3"}
-                                height="18"
-                                fill="#000"
-                              />
-                            ))}
-                          </svg>
-                          <span className="font-mono text-[10px] text-gray-500">{item.productIndex}</span>
-                        </div>
-                      )}
                     </div>
                     <div className="flex items-center gap-1">
                       <button
