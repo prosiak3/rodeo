@@ -582,17 +582,25 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     if (unmatchedItems.length > 0) {
       const ambiguousCount = unmatchedItems.filter(item => item.matched === 'ambiguous').length;
       const notFoundCount = unmatchedItems.filter(item => !item.matched).length;
+      const matchedCount = orderItems.length - unmatchedItems.length;
 
-      let message = 'Nie wszystkie produkty zostały dopasowane:\n';
+      if (matchedCount === 0) {
+        alert('Nie dopasowano żadnego produktu. Wybierz produkty z listy sugestii lub usuń niedopasowane pozycje.');
+        return;
+      }
+
+      let message = `Niektóre produkty nie zostały dopasowane i zostaną pominięte:\n`;
       if (ambiguousCount > 0) {
-        message += `\n• ${ambiguousCount} wymaga doprecyzowania (wybierz właściwą opcję)`;
+        message += `\n• ${ambiguousCount} wymaga doprecyzowania`;
       }
       if (notFoundCount > 0) {
         message += `\n• ${notFoundCount} nie znaleziono w cenniku`;
       }
+      message += `\n\nZapisać szkic z ${matchedCount} dopasowanymi produktami?`;
 
-      alert(message);
-      return;
+      if (!confirm(message)) {
+        return;
+      }
     }
 
     setSending(true);
