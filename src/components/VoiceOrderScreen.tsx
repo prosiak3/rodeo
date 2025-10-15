@@ -54,6 +54,8 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   const [showProductBrowser, setShowProductBrowser] = useState(false);
   const [browsingItemIndex, setBrowsingItemIndex] = useState<number | null>(null);
   const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [searchingItemIndex, setSearchingItemIndex] = useState<number | null>(null);
+  const [inlineSearchQuery, setInlineSearchQuery] = useState('');
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -739,9 +741,38 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   };
 
   const browseAllProducts = (itemIndex: number) => {
-    setBrowsingItemIndex(itemIndex);
-    setProductSearchQuery('');
-    setShowProductBrowser(true);
+    setSearchingItemIndex(itemIndex);
+    setInlineSearchQuery('');
+  };
+
+  const selectProductFromInlineSearch = async (itemIndex: number, product: Product) => {
+    const originalItem = orderItems[itemIndex];
+    const spokenPhrase = originalItem.productName;
+
+    // Record the learning correction
+    try {
+      await supabase.from('voice_learning_corrections').insert({
+        user_id: userId,
+        store_id: storeId,
+        spoken_phrase: spokenPhrase,
+        selected_product_id: product.id,
+      });
+      console.log(`[Learning] Recorded from inline search: "${spokenPhrase}" -> "${product.name}"`);
+    } catch (error) {
+      console.error('[Learning] Failed to record correction:', error);
+    }
+
+    const updated = [...orderItems];
+    updated[itemIndex] = {
+      ...updated[itemIndex],
+      productName: product.name,
+      productId: product.id,
+      matched: true,
+      suggestions: [],
+    };
+    setOrderItems(updated);
+    setSearchingItemIndex(null);
+    setInlineSearchQuery('');
   };
 
   const selectProductFromBrowser = async (product: Product) => {
@@ -1000,7 +1031,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                         )}
                       </div>
 
-                      {item.matched === 'ambiguous' && item.suggestions && item.suggestions.length > 0 && (
+                      {item.matched === 'ambiguous' && item.suggestions && item.suggestions.length > 0 && searchingItemIndex !== index && (
                         <div className="mt-3 p-3 bg-white rounded-lg border-2 border-orange-300">
                           <p className="text-sm font-semibold text-orange-800 mb-2">Znaleziono {item.matchCount} produktów pasujących do '{item.productName}'. Którą chcesz zamówić?</p>
                           <div className="space-y-1 mb-3">
@@ -1020,11 +1051,66 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                             className="w-full py-2 px-3 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                           >
                             <Search className="w-4 h-4" />
-                            Żadna z powyższych - przeglądaj wszystkie
+                            Żadna z powyższych - szukaj ręcznie
                           </button>
                         </div>
                       )}
-                      {item.matched === false && (
+                      {searchingItemIndex === index && (
+                        <div className="mt-3 p-3 bg-blue-50 rounded-lg border-2 border-blue-300">
+                          <div className="mb-3">
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                              <input
+                                type="text"
+                                placeholder="Wpisz nazwę lub indeks produktu..."
+                                value={inlineSearchQuery}
+                                onChange={(e) => setInlineSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                autoFocus
+                              />
+                            </div>
+                          </div>
+                          {inlineSearchQuery.length >= 2 && (
+                            <div className="max-h-60 overflow-y-auto space-y-1">
+                              {allProducts
+                                .filter(p =>
+                                  p.name.toLowerCase().includes(inlineSearchQuery.toLowerCase()) ||
+                                  p.index.toLowerCase().includes(inlineSearchQuery.toLowerCase())
+                                )
+                                .slice(0, 10)
+                                .map((product) => (
+                                  <button
+                                    key={product.id}
+                                    onClick={() => selectProductFromInlineSearch(index, product)}
+                                    className="w-full text-left p-2 text-sm bg-white hover:bg-blue-100 rounded border border-blue-200 hover:border-blue-400 transition"
+                                  >
+                                    <span className="font-medium text-blue-700">{product.name}</span>
+                                    <span className="text-gray-500 ml-2 text-xs">({product.index})</span>
+                                  </button>
+                                ))}
+                              {allProducts.filter(p =>
+                                p.name.toLowerCase().includes(inlineSearchQuery.toLowerCase()) ||
+                                p.index.toLowerCase().includes(inlineSearchQuery.toLowerCase())
+                              ).length === 0 && (
+                                <p className="text-sm text-gray-500 py-2 text-center">Brak wyników</p>
+                              )}
+                            </div>
+                          )}
+                          {inlineSearchQuery.length < 2 && (
+                            <p className="text-xs text-gray-600 text-center py-2">Wpisz minimum 2 znaki aby wyszukać</p>
+                          )}
+                          <button
+                            onClick={() => {
+                              setSearchingItemIndex(null);
+                              setInlineSearchQuery('');
+                            }}
+                            className="w-full mt-3 py-2 px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Anuluj
+                          </button>
+                        </div>
+                      )}
+                      {item.matched === false && searchingItemIndex !== index && (
                         <div className="mt-3 p-3 bg-white rounded-lg border border-yellow-200">
                           {item.suggestions && item.suggestions.length > 0 ? (
                             <>
@@ -1046,19 +1132,19 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                                 className="w-full py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                               >
                                 <Search className="w-4 h-4" />
-                                Żadna z powyższych - przeglądaj wszystkie
+                                Żadna z powyższych - szukaj ręcznie
                               </button>
                             </>
                           ) : (
                             <div className="text-sm">
                               <p className="font-medium mb-2 text-amber-700">⚠️ Nie znaleziono pasującego produktu</p>
-                              <p className="text-xs text-gray-600 mb-3">Wybierz właściwy produkt z pełnego cennika:</p>
+                              <p className="text-xs text-gray-600 mb-3">Wyszukaj produkt wpisując jego nazwę lub indeks:</p>
                               <button
                                 onClick={() => browseAllProducts(index)}
                                 className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                               >
                                 <Search className="w-4 h-4" />
-                                Przeglądaj wszystkie produkty
+                                Szukaj produktu
                               </button>
                             </div>
                           )}
