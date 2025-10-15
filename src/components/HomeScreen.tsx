@@ -3,10 +3,11 @@ import { Tag, Mic } from 'lucide-react';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
+  onVoiceOrder?: () => void;
   userRole?: string;
 }
 
-export default function HomeScreen({ onNavigate, userRole }: HomeScreenProps) {
+export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
   const [showPromoAlert, setShowPromoAlert] = useState(false);
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export default function HomeScreen({ onNavigate, userRole }: HomeScreenProps) {
           <h3 className="font-semibold text-lg mb-4">Szybkie akcje</h3>
           <div className="space-y-3">
             <button
-              onClick={() => onNavigate?.('new-order')}
+              onClick={() => onVoiceOrder?.()}
               className="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer flex items-center justify-center gap-2"
             >
               <Mic className="w-5 h-5" />

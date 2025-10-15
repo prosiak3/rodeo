@@ -360,7 +360,16 @@ function AppContent() {
           showProfile={activeTab !== 'profile'}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
-          {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
+          {activeTab === 'home' && (
+            <HomeScreen
+              onNavigate={setActiveTab}
+              onVoiceOrder={() => {
+                setActiveTab('new-order');
+                setOrderMode('voice');
+              }}
+              userRole={user.role}
+            />
+          )}
           {activeTab === 'orders' && (
             <div className="p-6">
               <OrdersList
@@ -428,7 +437,16 @@ function AppContent() {
         showProfile={activeTab !== 'profile'}
       />
       <div className="flex-1 overflow-y-auto pt-20 pb-16">
-        {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
+        {activeTab === 'home' && (
+          <HomeScreen
+            onNavigate={setActiveTab}
+            onVoiceOrder={() => {
+              setActiveTab('new-order');
+              setOrderMode('voice');
+            }}
+            userRole={user.role}
+          />
+        )}
 
         {activeTab === 'admin' && user.role === 'admin' && (
           <AdminPanel
