@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Plus, Trash2, Save, Search, Mic, MicOff } from 'lucide-react';
 import { supabase, Product, OrderItem } from '../lib/supabase';
+import BottomNav from './BottomNav';
 
 interface EditDraftOrderScreenProps {
   orderId: string;
@@ -421,7 +422,8 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="fixed inset-0 flex flex-col bg-gray-50">
+      <div className="flex-1 overflow-y-auto pb-16">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
         <div className="flex items-center gap-3 mb-2">
           <button
@@ -571,6 +573,8 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
           </div>
         </div>
       </div>
+      </div>
+      <BottomNav activeTab="orders" onTabChange={() => {}} />
     </div>
   );
 }

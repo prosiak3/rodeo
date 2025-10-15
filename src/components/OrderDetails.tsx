@@ -3,6 +3,7 @@ import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Tras
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
 import { formatPriceDisplay } from '../lib/priceCalculations';
+import BottomNav from './BottomNav';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -509,7 +510,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   return (
     <>
       <ConfirmComponent />
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="fixed inset-0 flex flex-col bg-gray-50">
+      <div className="flex-1 overflow-y-auto pb-16">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
         <div className="flex items-center gap-3 mb-3">
           <button
@@ -1018,6 +1020,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           </div>
         )}
       </div>
+      </div>
+      <BottomNav activeTab="orders" onTabChange={() => {}} userRole={userRole} />
     </div>
     </>
   );
