@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles } from 'lucide-react';
+import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Product {
@@ -51,6 +51,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   const [aiReady, setAiReady] = useState(false);
   const [aiInitializing, setAiInitializing] = useState(false);
   const [useAI, setUseAI] = useState(true);
+  const [showProductBrowser, setShowProductBrowser] = useState(false);
+  const [browsingItemIndex, setBrowsingItemIndex] = useState<number | null>(null);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -735,6 +738,45 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     setOrderItems(updated);
   };
 
+  const browseAllProducts = (itemIndex: number) => {
+    setBrowsingItemIndex(itemIndex);
+    setProductSearchQuery('');
+    setShowProductBrowser(true);
+  };
+
+  const selectProductFromBrowser = async (product: Product) => {
+    if (browsingItemIndex === null) return;
+
+    const originalItem = orderItems[browsingItemIndex];
+    const spokenPhrase = originalItem.productName;
+
+    // Record the learning correction
+    try {
+      await supabase.from('voice_learning_corrections').insert({
+        user_id: userId,
+        store_id: storeId,
+        spoken_phrase: spokenPhrase,
+        selected_product_id: product.id,
+      });
+      console.log(`[Learning] Recorded from browser: "${spokenPhrase}" -> "${product.name}"`);
+    } catch (error) {
+      console.error('[Learning] Failed to record correction:', error);
+    }
+
+    const updated = [...orderItems];
+    updated[browsingItemIndex] = {
+      ...updated[browsingItemIndex],
+      productName: product.name,
+      productId: product.id,
+      productIndex: product.index,
+      matched: true,
+      suggestions: [],
+    };
+    setOrderItems(updated);
+    setShowProductBrowser(false);
+    setBrowsingItemIndex(null);
+  };
+
   const selectSuggestion = async (itemIndex: number, product: Product) => {
     const originalItem = orderItems[itemIndex];
     const spokenPhrase = originalItem.productName;
@@ -981,7 +1023,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                           {item.suggestions && item.suggestions.length > 0 ? (
                             <>
                               <p className="text-sm font-medium text-gray-700 mb-2">Czy chodziło o:</p>
-                              <div className="space-y-1">
+                              <div className="space-y-1 mb-3">
                                 {item.suggestions.map((suggestion) => (
                                   <button
                                     key={suggestion.id}
@@ -993,11 +1035,25 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                                   </button>
                                 ))}
                               </div>
+                              <button
+                                onClick={() => browseAllProducts(index)}
+                                className="w-full py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Search className="w-4 h-4" />
+                                Żadna z powyższych - przeglądaj wszystkie
+                              </button>
                             </>
                           ) : (
-                            <div className="text-sm text-red-600">
-                              <p className="font-medium mb-1">⚠️ Produkt nie istnieje w cenniku</p>
-                              <p className="text-xs text-gray-600">Proszę podyktować ponownie używając prawidłowej nazwy lub usuń tę pozycję</p>
+                            <div className="text-sm">
+                              <p className="font-medium mb-2 text-amber-700">⚠️ Nie znaleziono pasującego produktu</p>
+                              <p className="text-xs text-gray-600 mb-3">Wybierz właściwy produkt z pełnego cennika:</p>
+                              <button
+                                onClick={() => browseAllProducts(index)}
+                                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Search className="w-4 h-4" />
+                                Przeglądaj wszystkie produkty
+                              </button>
                             </div>
                           )}
                         </div>
@@ -1201,6 +1257,70 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           </>
         )}
       </div>
+
+      {/* Product Browser Modal */}
+      {showProductBrowser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Wybierz produkt z cennika</h2>
+                <button
+                  onClick={() => setShowProductBrowser(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <X className="w-6 h-6 text-gray-600" />
+                </button>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Szukaj produktu..."
+                  value={productSearchQuery}
+                  onChange={(e) => setProductSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {allProducts
+                  .filter(p =>
+                    productSearchQuery === '' ||
+                    p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                    p.index.toLowerCase().includes(productSearchQuery.toLowerCase())
+                  )
+                  .map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => selectProductFromBrowser(product)}
+                      className="text-left p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border-2 border-gray-200 hover:border-blue-400 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800">{product.name}</p>
+                          <p className="text-xs text-gray-500 mt-1">Indeks: {product.index}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+              {allProducts.filter(p =>
+                productSearchQuery === '' ||
+                p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                p.index.toLowerCase().includes(productSearchQuery.toLowerCase())
+              ).length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <Search className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Nie znaleziono produktów</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
