@@ -34,7 +34,81 @@ Lokalizacja: `src/hooks/useUserTracking.tsx`
 
 **Dostępne metody:**
 ```typescript
-const { trackClick, trackFormSubmit, trackOrderAction, trackEvent } = useUserTracking(userId, currentScreen);
+const {
+  trackClick,             // Śledzenie kliknięć w przyciski/elementy
+  trackFormSubmit,        // Śledzenie wysyłania formularzy
+  trackOrderAction,       // Śledzenie akcji zamówień
+  trackProductAction,     // Śledzenie akcji produktów (nowe!)
+  trackListModification,  // Śledzenie modyfikacji list/zamówień (nowe!)
+  trackSearch,            // Śledzenie wyszukiwania (nowe!)
+  trackEvent              // Uniwersalne śledzenie zdarzeń
+} = useUserTracking(userId, currentScreen);
+```
+
+**Nowe metody do śledzenia produktów i list:**
+
+```typescript
+// Śledzenie akcji na produktach
+trackProductAction(
+  'add_to_list' | 'remove_from_list' | 'update_quantity' | 'view_details',
+  productId: string,
+  productName: string,
+  data?: Record<string, any>
+);
+
+// Śledzenie modyfikacji list (zamówień, notatników)
+trackListModification(
+  listType: 'order' | 'notebook' | 'draft',
+  action: 'add_item' | 'remove_item' | 'update_item' | 'clear_list',
+  itemDetails: {
+    productId: string;
+    productName: string;
+    quantity?: number;
+    previousQuantity?: number;  // Dla update_item
+  }
+);
+
+// Śledzenie wyszukiwania
+trackSearch(
+  searchTerm: string,
+  resultsCount: number,
+  filters?: Record<string, any>
+);
+```
+
+**Zaimplementowane komponenty z trackingiem:**
+- ✅ **ProductCard** - Śledzenie kliknięć w produkty (view_details)
+- ✅ **EditDraftOrderScreen** - Pełne śledzenie dodawania/usuwania/modyfikacji produktów + wyszukiwanie
+- ✅ **PriceList** - Śledzenie dodawania do notatnika + wyszukiwanie z filtrem kategorii
+- ✅ Automatyczne nawigacja między ekranami (wszystkie komponenty)
+
+**Przykłady użycia:**
+
+```typescript
+// W EditDraftOrderScreen
+trackListModification('draft', 'add_item', {
+  productId: product.id,
+  productName: product.name,
+  quantity: 1,
+});
+
+// W PriceList przy dodawaniu do notatnika
+trackListModification('notebook', 'add_item', {
+  productId: product.id,
+  productName: product.name,
+  quantity: 0,
+});
+
+// Przy aktualizacji ilości
+trackListModification('draft', 'update_item', {
+  productId: item.product_id,
+  productName: item.products?.name || 'Unknown',
+  quantity: newQuantity,
+  previousQuantity: item.quantity,
+});
+
+// Przy wyszukiwaniu
+trackSearch('kurczak', 15, { category: 'Drób' });
 ```
 
 ### 3. Algorytm Grupowania Ścieżek

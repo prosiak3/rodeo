@@ -235,10 +235,83 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
     });
   }, [currentScreen, trackEvent]);
 
+  // Track product actions (add, remove, update quantity)
+  const trackProductAction = useCallback((
+    action: 'add_to_list' | 'remove_from_list' | 'update_quantity' | 'view_details',
+    productId: string,
+    productName: string,
+    data?: Record<string, any>
+  ) => {
+    trackEvent({
+      eventType: action,
+      eventCategory: 'product',
+      screenName: currentScreen,
+      previousScreen: previousScreenRef.current,
+      eventData: {
+        action,
+        product_id: productId,
+        product_name: productName,
+        timestamp: new Date().toISOString(),
+        ...data,
+      },
+    });
+  }, [currentScreen, trackEvent]);
+
+  // Track cart/list modifications
+  const trackListModification = useCallback((
+    listType: 'order' | 'notebook' | 'draft',
+    action: 'add_item' | 'remove_item' | 'update_item' | 'clear_list',
+    itemDetails: {
+      productId: string;
+      productName: string;
+      quantity?: number;
+      previousQuantity?: number;
+    }
+  ) => {
+    trackEvent({
+      eventType: action,
+      eventCategory: 'list_modification',
+      screenName: currentScreen,
+      previousScreen: previousScreenRef.current,
+      eventData: {
+        list_type: listType,
+        action,
+        product_id: itemDetails.productId,
+        product_name: itemDetails.productName,
+        quantity: itemDetails.quantity,
+        previous_quantity: itemDetails.previousQuantity,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }, [currentScreen, trackEvent]);
+
+  // Track search and filter actions
+  const trackSearch = useCallback((
+    searchTerm: string,
+    resultsCount: number,
+    filters?: Record<string, any>
+  ) => {
+    trackEvent({
+      eventType: 'search',
+      eventCategory: 'interaction',
+      screenName: currentScreen,
+      previousScreen: previousScreenRef.current,
+      eventData: {
+        search_term: searchTerm,
+        results_count: resultsCount,
+        filters,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }, [currentScreen, trackEvent]);
+
   return {
     trackClick,
     trackFormSubmit,
     trackOrderAction,
+    trackProductAction,
+    trackListModification,
+    trackSearch,
     trackEvent,
   };
 }

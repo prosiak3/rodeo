@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useUserTracking } from '../hooks/useUserTracking';
 
 interface ProductCardProps {
   product: {
@@ -21,9 +22,12 @@ interface ProductCardProps {
   children?: React.ReactNode;
   priceLayout?: 'horizontal' | 'vertical';
   positionNumber?: number;
+  userId?: string | null;
+  currentScreen?: string;
 }
 
-export default function ProductCard({ product, onSelect, children, priceLayout = 'horizontal', positionNumber }: ProductCardProps) {
+export default function ProductCard({ product, onSelect, children, priceLayout = 'horizontal', positionNumber, userId, currentScreen }: ProductCardProps) {
+  const { trackProductAction } = useUserTracking(userId || null, currentScreen || 'product-card');
   const hasPromo = product.promo_price && product.promo_price > 0;
   const finalPrice = product.promo_price || product.your_price || product.base_price;
   const is10Plus1 = product.promo_10_plus_1;
@@ -45,6 +49,11 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
 
     // Jeśli przesunięcie jest małe (<10px) i czas jest krótki (<300ms), to kliknięcie
     if (deltaY < 10 && deltaTime < 300) {
+      trackProductAction('view_details', product.id, product.name, {
+        position: positionNumber,
+        has_promo: hasPromo,
+        price: finalPrice,
+      });
       onSelect();
     }
 
@@ -54,6 +63,11 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
   const handleClick = (e: React.MouseEvent) => {
     // Kliknięcie myszą (desktop)
     if (onSelect) {
+      trackProductAction('view_details', product.id, product.name, {
+        position: positionNumber,
+        has_promo: hasPromo,
+        price: finalPrice,
+      });
       onSelect();
     }
   };

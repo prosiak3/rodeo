@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Plus, Trash2, Save, Search, Mic, MicOff } from 'lucide-react';
 import { supabase, Product, OrderItem } from '../lib/supabase';
+import { useUserTracking } from '../hooks/useUserTracking';
 import BottomNav from './BottomNav';
 
 interface EditDraftOrderScreenProps {
@@ -11,6 +12,7 @@ interface EditDraftOrderScreenProps {
 }
 
 export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel }: EditDraftOrderScreenProps) {
+  const { trackListModification, trackSearch } = useUserTracking(userId, 'edit-draft');
   const [products, setProducts] = useState<Product[]>([]);
   const [orderItems, setOrderItems] = useState<(OrderItem & { products?: Product })[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,8 +121,19 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   const addProduct = (product: Product) => {
     const existingItem = orderItems.find(item => item.product_id === product.id);
     if (existingItem) {
+      trackListModification('draft', 'update_item', {
+        productId: product.id,
+        productName: product.name,
+        quantity: existingItem.quantity + 1,
+        previousQuantity: existingItem.quantity,
+      });
       updateQuantity(existingItem.id, existingItem.quantity + 1);
     } else {
+      trackListModification('draft', 'add_item', {
+        productId: product.id,
+        productName: product.name,
+        quantity: 1,
+      });
       const newItem: any = {
         id: `temp-${Date.now()}`,
         order_id: orderId,
@@ -143,6 +156,12 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
     }
     setOrderItems(orderItems.map(item => {
       if (item.id === itemId) {
+        trackListModification('draft', 'update_item', {
+          productId: item.product_id,
+          productName: item.products?.name || 'Unknown',
+          quantity: newQuantity,
+          previousQuantity: item.quantity,
+        });
         const totalPrice = item.unit_price * newQuantity;
         return { ...item, quantity: newQuantity, total_price: totalPrice };
       }
@@ -151,6 +170,14 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   };
 
   const removeItem = (itemId: string) => {
+    const item = orderItems.find(i => i.id === itemId);
+    if (item) {
+      trackListModification('draft', 'remove_item', {
+        productId: item.product_id,
+        productName: item.products?.name || 'Unknown',
+        quantity: item.quantity,
+      });
+    }
     setOrderItems(orderItems.filter(item => item.id !== itemId));
   };
 
@@ -426,6 +453,16 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
     product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (product.index && product.index.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Track search when search term changes
+  useEffect(() => {
+    if (searchTerm.length >= 2) {
+      const timer = setTimeout(() => {
+        trackSearch(searchTerm, filteredProducts.length);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, filteredProducts.length, trackSearch]);
 
   if (loading) {
     return (

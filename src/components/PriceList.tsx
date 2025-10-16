@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown, ArrowLeft, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useUserTracking } from '../hooks/useUserTracking';
 
 interface Product {
   id: string;
@@ -33,6 +35,8 @@ interface PriceListProps {
 
 export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListProps = {}) {
   const { colors } = useTheme();
+  const { user } = useAuth();
+  const { trackSearch, trackListModification } = useUserTracking(user?.id || null, 'prices');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -220,6 +224,16 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   });
 
   console.log('✅ FILTERED RESULT:', filteredProducts.length, 'products');
+
+  // Track search when search term changes
+  useEffect(() => {
+    if (search.length >= 2) {
+      const timer = setTimeout(() => {
+        trackSearch(search, filteredProducts.length, { category: selectedCategory });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [search, filteredProducts.length, selectedCategory, trackSearch]);
 
   const promoProducts = filteredProducts.filter(p =>
     (p.promo_price && p.promo_price < (p.your_price || p.base_price)) || p.promo_10_plus_1
@@ -513,6 +527,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         });
 
       if (itemError) throw itemError;
+
+      // Track adding to notebook
+      trackListModification('notebook', 'add_item', {
+        productId: product.id,
+        productName: product.name,
+        quantity: 0,
+      });
 
       console.log('✅ Successfully added to order, reloading notebook items');
       await loadNotebookItems(orderId);
