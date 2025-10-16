@@ -17,17 +17,20 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
       style={{ background: colors.gradient }}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1">
+        <div className="flex-1"></div>
+        <div className="flex items-center justify-center">
           <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-16 object-contain" />
         </div>
-        {showProfile && onProfileClick && (
-          <button
-            onClick={onProfileClick}
-            className="w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition"
-          >
-            <User className="w-5 h-5" />
-          </button>
-        )}
+        <div className="flex-1 flex justify-end">
+          {showProfile && onProfileClick && (
+            <button
+              onClick={onProfileClick}
+              className="w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition"
+            >
+              <User className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
