@@ -1,17 +1,42 @@
+/**
+ * Authentication Context Provider
+ *
+ * Manages user authentication state using Supabase Auth.
+ * Provides session management, user profile loading, and auth methods.
+ *
+ * @module contexts/AuthContext
+ */
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, User } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
+/**
+ * Authentication context interface
+ */
 interface AuthContextType {
+  /** Current Supabase session with JWT token */
   session: Session | null;
+  /** Current user profile from database */
   user: User | null;
+  /** Loading state during initialization */
   loading: boolean;
+  /** Sign in with email and password */
   signIn: (email: string, password: string) => Promise<void>;
+  /** Sign out current user */
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Authentication Provider Component
+ *
+ * Wraps the application to provide auth state throughout component tree.
+ * Automatically loads user profile and subscribes to auth state changes.
+ *
+ * @param children - React children to wrap
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);

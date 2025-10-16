@@ -1,8 +1,27 @@
+/**
+ * AI Embeddings Manager for Intelligent Product Matching
+ *
+ * This module provides semantic search capabilities using the all-MiniLM-L6-v2 model
+ * from Hugging Face. It enables fuzzy matching of product names in voice orders by
+ * converting text to 384-dimensional embeddings and comparing them using cosine similarity.
+ *
+ * Features:
+ * - Offline-first: Model runs entirely in browser via WebAssembly
+ * - Persistent cache: Embeddings stored in IndexedDB
+ * - Fast inference: ~10ms per embedding generation
+ * - Typo tolerant: Handles speech recognition errors
+ *
+ * @module lib/embeddingsManager
+ */
+
 import { pipeline, env } from '@xenova/transformers';
 
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
+/**
+ * Minimal product interface for embedding generation
+ */
 interface Product {
   id: string;
   name: string;
@@ -10,6 +29,9 @@ interface Product {
   base_price: number;
 }
 
+/**
+ * Cached product embedding with metadata
+ */
 interface ProductEmbedding {
   productId: string;
   embedding: number[];
@@ -17,12 +39,25 @@ interface ProductEmbedding {
   index: string;
 }
 
+/**
+ * Product similarity search result
+ */
 interface SimilarityResult {
   product: Product;
   similarity: number;
   confidence: number;
 }
 
+/**
+ * Singleton manager for AI embeddings and semantic search.
+ *
+ * Usage:
+ * ```typescript
+ * await embeddingsManager.initialize();
+ * await embeddingsManager.generateProductEmbeddings(products);
+ * const results = await embeddingsManager.findSimilarProducts('schab', products, 5);
+ * ```
+ */
 class EmbeddingsManager {
   private pipeline: any = null;
   private embeddingsCache: Map<string, ProductEmbedding> = new Map();
@@ -32,6 +67,15 @@ class EmbeddingsManager {
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
 
+  /**
+   * Initialize the AI model and prepare for embedding generation.
+   * This method is idempotent - calling multiple times is safe.
+   *
+   * Downloads ~25MB model on first run (cached by Service Worker).
+   * Subsequent calls return immediately if already initialized.
+   *
+   * @throws {Error} If model fails to load or not in browser environment
+   */
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
     if (this.initializationPromise) return this.initializationPromise;
@@ -93,6 +137,13 @@ class EmbeddingsManager {
     });
   }
 
+  /**
+   * Generate a 384-dimensional embedding vector for input text.
+   *
+   * @param text - Input text to convert to embedding
+   * @returns Promise resolving to embedding array (384 numbers)
+   * @throws {Error} If model not initialized or generation fails
+   */
   async generateEmbedding(text: string): Promise<number[]> {
     if (!this.isInitialized) {
       await this.initialize();
@@ -111,6 +162,13 @@ class EmbeddingsManager {
     }
   }
 
+  /**
+   * Generate and cache embeddings for all products.
+   * Skips products that already have cached embeddings (unless name changed).
+   *
+   * @param products - Array of products to process
+   * @throws {Error} If model not initialized
+   */
   async generateProductEmbeddings(products: Product[]): Promise<void> {
     if (!this.isInitialized) {
       await this.initialize();
@@ -170,6 +228,15 @@ class EmbeddingsManager {
     });
   }
 
+  /**
+   * Calculate cosine similarity between two embedding vectors.
+   * Returns value between -1 and 1, where 1 = identical, 0 = orthogonal.
+   *
+   * @param a - First embedding vector
+   * @param b - Second embedding vector
+   * @returns Similarity score (0 to 1 in practice)
+   * @throws {Error} If vectors have different lengths
+   */
   cosineSimilarity(a: number[], b: number[]): number {
     if (a.length !== b.length) {
       throw new Error('Vectors must have the same length');
@@ -195,6 +262,15 @@ class EmbeddingsManager {
     return dotProduct / (normA * normB);
   }
 
+  /**
+   * Find products most similar to search text using semantic search.
+   * Filters results to >30% similarity (0.3 threshold).
+   *
+   * @param searchText - User's search query (e.g., "schab")
+   * @param products - Array of products to search through
+   * @param limit - Maximum number of results to return (default: 5)
+   * @returns Array of products sorted by similarity (highest first)
+   */
   async findSimilarProducts(
     searchText: string,
     products: Product[],
@@ -233,6 +309,10 @@ class EmbeddingsManager {
     return results.slice(0, limit);
   }
 
+  /**
+   * Clear all cached embeddings from memory and IndexedDB.
+   * Use when products have been updated or for troubleshooting.
+   */
   async clearCache(): Promise<void> {
     this.embeddingsCache.clear();
 
@@ -251,6 +331,11 @@ class EmbeddingsManager {
     });
   }
 
+  /**
+   * Check if AI model is initialized and ready to use.
+   *
+   * @returns true if initialized, false otherwise
+   */
   isReady(): boolean {
     return this.isInitialized;
   }
