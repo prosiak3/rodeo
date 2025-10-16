@@ -18,7 +18,7 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
-          <img src="/ChatGPT Image 16 paź 2025, 12_39_51 copy.png" alt="RODEO Logo" className="h-16 object-contain" />
+          <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-16 object-contain" />
         </div>
         {showProfile && onProfileClick && (
           <button
