@@ -104,14 +104,14 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (isDragging && touchStart !== null && swipedProduct !== null) {
-        e.stopPropagation();
+        e.preventDefault();
         setTouchCurrent(e.clientX);
       }
     };
 
     const handleGlobalMouseUp = (e: MouseEvent) => {
       if (isDragging) {
-        e.stopPropagation();
+        e.preventDefault();
         setIsDragging(false);
         setTouchStart(null);
         setTouchCurrent(null);
@@ -120,13 +120,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     };
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleGlobalMouseMove, { capture: true });
-      document.addEventListener('mouseup', handleGlobalMouseUp, { capture: true });
+      document.addEventListener('mousemove', handleGlobalMouseMove, { passive: false });
+      document.addEventListener('mouseup', handleGlobalMouseUp, { passive: false });
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleGlobalMouseMove, { capture: true });
-      document.removeEventListener('mouseup', handleGlobalMouseUp, { capture: true });
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
   }, [isDragging, touchStart, swipedProduct]);
 
@@ -297,22 +297,26 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     const deltaX = Math.abs(touch.clientX - touchStart);
     const deltaY = Math.abs(touch.clientY - touchStartY);
 
-    // Determine swipe direction on first significant movement
-    if (!isHorizontalSwipe && (deltaX > 10 || deltaY > 10)) {
-      if (deltaX > deltaY) {
+    // Determine swipe direction on first significant movement (increased threshold to 20px)
+    if (!isHorizontalSwipe && (deltaX > 20 || deltaY > 20)) {
+      if (deltaX > deltaY * 1.5) {
+        // Horizontal swipe detected - deltaX must be 1.5x bigger than deltaY
         setIsHorizontalSwipe(true);
+        e.preventDefault(); // Only prevent when we confirm horizontal swipe
       } else {
-        // It's a vertical scroll, reset swipe state
+        // It's a vertical scroll, reset swipe state immediately
         setTouchStart(null);
         setTouchCurrent(null);
         setTouchStartY(null);
         setSwipedProduct(null);
+        setIsHorizontalSwipe(false);
         return;
       }
     }
 
-    // Track movement for horizontal swipe but DON'T prevent default
+    // Track movement for horizontal swipe and prevent default to avoid scroll
     if (isHorizontalSwipe) {
+      e.preventDefault();
       console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
       setTouchCurrent(touch.clientX);
     }
@@ -391,8 +395,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       setSwipedProduct(null);
     };
 
-    document.addEventListener('mousemove', handleDocumentMouseMove);
-    document.addEventListener('mouseup', handleDocumentMouseUp);
+    document.addEventListener('mousemove', handleDocumentMouseMove, { passive: false });
+    document.addEventListener('mouseup', handleDocumentMouseUp, { passive: false });
 
     return () => {
       document.removeEventListener('mousemove', handleDocumentMouseMove);
@@ -534,9 +538,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" style={{ touchAction: 'pan-y' }}>
       {notebookOrderId && onBackToOrder && (
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-30 mb-3">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-30 mb-3" style={{ touchAction: 'auto' }}>
           <button
             onClick={onBackToOrder}
             className="w-full flex items-center justify-center gap-2 text-white font-medium hover:opacity-90 transition"
@@ -546,7 +550,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           </button>
         </div>
       )}
-      <div className={`bg-white rounded-lg shadow p-3 sticky z-20 ${notebookOrderId ? 'top-[60px]' : 'top-0'}`}>
+      <div className={`bg-white rounded-lg shadow p-3 sticky z-20 ${notebookOrderId ? 'top-[60px]' : 'top-0'}`} style={{ touchAction: 'auto' }}>
         <div className="flex items-center gap-2 mb-2">
           <Search className="w-4 h-4 text-gray-400" />
           <input
@@ -672,7 +676,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasAnyPromo ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-400' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                  className={`relative ${isInNotebook ? 'bg-green-50' : hasAnyPromo ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-400' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                  style={{ overflow: swipeOffset > 0 ? 'hidden' : 'visible', touchAction: isDisabled ? 'auto' : 'pan-y' }}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
                   onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
