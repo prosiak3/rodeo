@@ -19,7 +19,7 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
       <div className="flex items-center justify-between">
         <div className="flex-1"></div>
         <div className="flex items-center justify-center">
-          <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-12 object-contain" />
+          <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-16 object-contain" />
         </div>
         <div className="flex-1 flex justify-end">
           {showProfile && onProfileClick && (

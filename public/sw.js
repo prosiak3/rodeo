@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'rodeo-v2';
+const CACHE_VERSION = 'rodeo-v3';
 
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing version:', CACHE_VERSION);
@@ -20,10 +20,16 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  if (url.pathname.includes('%') || url.pathname.includes('ChatGPT')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (response.ok && (event.request.url.includes('/assets/') || event.request.url.endsWith('.png'))) {
+        if (response.ok && (event.request.url.includes('/assets/transformers') || event.request.url.endsWith('rodeo.png') || event.request.url.endsWith('erasebg-transformed.png'))) {
           const responseToCache = response.clone();
           caches.open(CACHE_VERSION).then((cache) => {
             cache.put(event.request, responseToCache);
@@ -31,14 +37,12 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch((error) => {
+      .catch(() => {
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
-            console.log('[SW] Serving from cache:', event.request.url);
             return cachedResponse;
           }
-          console.warn('[SW] Fetch failed and no cache available:', event.request.url);
-          throw error;
+          return new Response('', { status: 404 });
         });
       })
   );
