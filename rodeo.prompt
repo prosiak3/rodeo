@@ -2,7 +2,34 @@
 
 ## Opis Aplikacji
 
-RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Umożliwia ekspedientom sklepów składanie zamówień różnymi metodami, handlowcom i pracownikom hurtowni ich przetwarzanie, kierowcom realizację dostaw, a administratorom kompleksowe zarządzanie systemem.
+RODEO to zaawansowana aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. System oferuje innowacyjne funkcje takie jak zamówienia głosowe z AI (offline embeddings), automatyczne sugestie zamówień, zaawansowaną analitykę zachowań użytkowników oraz kompleksowy system śledzenia kampanii marketingowych.
+
+Umożliwia ekspedientom sklepów składanie zamówień różnymi metodami, handlowcom i pracownikom hurtowni ich przetwarzanie, kierowcom realizację dostaw, analitykom monitorowanie metryk biznesowych, a administratorom kompleksowe zarządzanie systemem.
+
+## 📚 Dokumentacja Techniczna
+
+Projekt posiada kompleksową dokumentację techniczną w katalogu `/docs`:
+
+### Główna Dokumentacja
+- **docs/ARCHITECTURE.md** - Pełna architektura systemu, stos technologiczny, wzorce projektowe
+- **docs/DATABASE_SCHEMA.md** - Schemat wszystkich 22+ tabel z RLS policies, relacjami, indeksami
+- **docs/DEVELOPMENT_GUIDE.md** - Przewodnik dla developerów, standardy kodowania, common tasks
+- **docs/DOCUMENTATION_MAINTENANCE.md** - Jak utrzymywać dokumentację aktualną
+- **docs/README.md** - Indeks całej dokumentacji z szybkim dostępem
+
+### Dodatkowa Dokumentacja
+- **AI_DOKUMENTACJA.md** - System AI z embeddingami (all-MiniLM-L6-v2), offline voice recognition
+- **ANALYTICS_SYSTEM.md** - User tracking, path clustering, kampanie marketingowe
+- **DEPLOYMENT.md** - Deployment na Vercel, Netlify, Railway, Render
+- **CAMPAIGN_TRACKING_EXAMPLES.md** - Przykłady implementacji trackingu promocji
+
+### JSDoc w Kodzie
+Wszystkie kluczowe moduły posiadają szczegółową dokumentację JSDoc:
+- `src/lib/supabase.ts` - Typy i interfejsy (User, Order, Product, etc.)
+- `src/lib/embeddingsManager.ts` - AI system do semantic search
+- `src/contexts/AuthContext.tsx` - Provider autentykacji
+
+**Zasada:** Przy każdej zmianie kodu aktualizuj odpowiednią dokumentację!
 
 ## Funkcjonalności
 
@@ -627,40 +654,269 @@ Główny komponent cennika z następującymi funkcjami:
 
 Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do automatyzacji procesu zamawiania towarów i zarządzania dostawami.
 
+## Panel Analityczny dla Analityków (analyst)
+
+### Dostęp
+Rola użytkownika: `analyst`
+Email testowy: `analyse@sklep.pl`
+
+### Zakładki w Panelu
+
+#### 1. Przegląd Ogólny (Overview)
+Dashboard z metrykami KPI i analizą zachowań użytkowników:
+- Liczba użytkowników (total, aktywni dziś, aktywni w tygodniu)
+- Liczba sesji w wybranym okresie
+- Średni czas trwania sesji
+- Liczba zdarzeń (events)
+- Top wydarzenia (najczęstsze akcje użytkowników)
+- Grupy ścieżek użytkowników (path clusters)
+- Najczęstsze ścieżki nawigacyjne z metrykami
+- Ostatnie sesje użytkowników z możliwością "replay"
+
+#### 2. Kampanie Marketingowe (Campaigns)
+Śledzenie efektywności kampanii promocyjnych:
+- Lista wszystkich kampanii
+- Metryki dla każdej kampanii:
+  - Wyświetlenia (views)
+  - Kliknięcia (clicks)
+  - Odrzucenia (dismisses)
+  - Konwersje (conversions)
+  - CTR (Click-Through Rate)
+  - Conversion Rate
+  - Całkowity przychód
+  - Średni czas do konwersji
+- Szczegółowa lista interakcji użytkowników
+
+#### 3. **ANALIZA ZAMÓWIEŃ (Orders Analytics)** - NOWA SEKCJA
+
+##### 3.1 Najczęściej Zamawianeodukty
+**Ranking produktów według:**
+- Łączna liczba zamówień produktu (wszystkie zamówienia)
+- Łączna ilość zamówiona (w kg/szt)
+- Częstotliwość zamawiania (ile sklepów zamawia regularnie)
+- Produkty TOP 10, TOP 20, TOP 50
+
+**Wyświetlane dane:**
+```
+1. Schab wieprzowy
+   - Zamówiono: 1,245 razy
+   - Łączna ilość: 8,750 kg
+   - Sklepy zamawiające: 45 (75% wszystkich)
+   - Średnia ilość na zamówienie: 7.0 kg
+   - Ostatnie 30 dni: 340 zamówień
+```
+
+##### 3.2 Analiza Zamówień według Kategorii
+**Rozkład zamówień po kategoriach:**
+- Mięso (schab, karkówka, żeberka) - liczba i wartość
+- Wędliny (kiełbasy, szynki, salami) - liczba i wartość
+- Drób (kurczak, indyk) - liczba i wartość
+- Inne kategorie
+
+**Metryki:**
+- Udział procentowy w całości zamówień
+- Średnia wartość zamówienia w kategorii
+- Trendy wzrostowe/spadkowe
+
+##### 3.3 Analiza Sklepów
+**Ranking sklepów według:**
+- Liczba złożonych zamówień (ostatni miesiąc/kwartał/rok)
+- Łączna wartość zamówień (obroty)
+- Średnia wartość zamówienia
+- Częstotliwość zamawiania
+- Najczęściej zamawiane produkty w danym sklepie
+
+**Wyświetlane dane:**
+```
+Sklep Mięsny "U Jana" (SHOP001)
+- Zamówień ogółem: 234
+- Wartość zamówień: 125,450 PLN
+- Średnia wartość: 536 PLN/zamówienie
+- Częstotliwość: 2.3 zamówienia/tydzień
+- Top 3 produkty:
+  1. Schab wieprzowy (45 zamówień, 315 kg)
+  2. Kiełbasa krakowska (38 zamówień, 190 kg)
+  3. Kurczak cały (34 zamówienia, 272 kg)
+```
+
+##### 3.4 Analiza Obrotów (Potential Turnover)
+**Metryki finansowe:**
+- Łączne obroty w wybranym okresie
+- Obroty według kategorii produktów
+- Obroty według sklepów
+- Obroty według źródła zamówienia (voice, manual, auto, etc.)
+- Średnia wartość zamówienia (AOV - Average Order Value)
+- Wzrost/spadek obrotów miesiąc do miesiąca
+
+**Potencjalne obroty:**
+- Sklepy nieaktywne (nie złożyły zamówienia od X dni)
+- Potencjał wzrostu (sklepy z małą częstotliwością)
+- Produkty niedostatecznie promowane
+- Sezonowość zamówień
+
+**Wyświetlane dane:**
+```
+Obroty - Ostatni Miesiąc
+- Łączne: 543,200 PLN
+- Mięso: 245,800 PLN (45%)
+- Wędliny: 198,400 PLN (37%)
+- Drób: 99,000 PLN (18%)
+
+Wzrost m/m: +12.3%
+
+Potencjalne dodatkowe obroty: ~85,000 PLN
+- Sklepy nieaktywne (15 sklepów): ~45,000 PLN
+- Zwiększenie częstotliwości (top 10 sklepów): ~40,000 PLN
+```
+
+##### 3.5 Analiza Źródeł Zamówień
+**Rozkład według typu zamówienia:**
+- Zamówienia głosowe (voice) - liczba i wartość
+- Z cennika (price_list) - liczba i wartość
+- Ręczne (manual) - liczba i wartość
+- Skopiowane (copy) - liczba i wartość
+- Auto-sugestie (auto) - liczba i wartość
+
+**Metryki efektywności:**
+- Średni czas złożenia zamówienia według typu
+- Średnia wartość według typu
+- Współczynnik błędów (odrzucone pozycje)
+
+##### 3.6 Analiza Czasowa
+**Wzorce czasowe zamówień:**
+- Zamówienia według dnia tygodnia
+- Zamówienia według godziny dnia
+- Sezonowość (miesiące)
+- Trend długoterminowy
+
+**Prognozy:**
+- Przewidywana liczba zamówień w następnym okresie
+- Szacowane obroty
+
+##### 3.7 Analiza Produktów Promocyjnych
+**Skuteczność promocji:**
+- Produkty z promocją -15%, -50%, 10+1
+- Porównanie zamówień przed i podczas promocji
+- ROI promocji (wzrost obrotów vs koszt rabatu)
+- Najefektywniejsze promocje
+
+##### 3.8 Eksport Danych
+**Możliwość eksportu raportów do:**
+- CSV (Excel)
+- PDF
+- JSON (dla integracji)
+
+**Typy raportów:**
+- Raport produktowy (ranking produktów)
+- Raport sklepowy (analiza każdego sklepu)
+- Raport finansowy (obroty i marże)
+- Raport źródłowy (efektywność typów zamówień)
+
+### Implementacja w Kodzie
+
+**Nowe query do AnalyticsPanel.tsx:**
+```typescript
+// Top produktów według liczby zamówień
+const { data: topProducts } = await supabase
+  .from('order_items')
+  .select(`
+    product_id,
+    products(name, category),
+    quantity,
+    total_price
+  `)
+  .gte('created_at', dateFrom)
+  .lte('created_at', dateTo);
+
+// Agregacja produktów
+const productStats = aggregateByProduct(topProducts);
+
+// Obroty według kategorii
+const { data: categoryRevenue } = await supabase
+  .from('orders')
+  .select(`
+    total_amount,
+    order_items(
+      products(category)
+    )
+  `)
+  .in('status', ['confirmed', 'partially_confirmed'])
+  .gte('created_at', dateFrom);
+
+// Sklepy z analizą
+const { data: storeAnalytics } = await supabase
+  .from('orders')
+  .select(`
+    store_id,
+    stores(name, code),
+    total_amount,
+    order_items(
+      product_id,
+      quantity,
+      products(name)
+    )
+  `)
+  .gte('created_at', dateFrom);
+```
+
+**Nowa zakładka w UI:**
+```typescript
+const [activeTab, setActiveTab] = useState<'overview' | 'campaigns' | 'orders'>('overview');
+
+// Render
+{activeTab === 'orders' && <OrdersAnalytics timeFilter={timeFilter} />}
+```
+
+**Nowy komponent:** `src/components/OrdersAnalytics.tsx`
+
 ## Najważniejsze Zmiany (Ostatnia Aktualizacja)
 
-1. **Usunięto kody kreskowe:**
+1. **Dodano kompleksową dokumentację techniczną:**
+   - 6 plików dokumentacji (3,507 linii) w katalogu /docs
+   - JSDoc dla wszystkich kluczowych modułów
+   - Przewodnik utrzymywania dokumentacji
+   - README z indeksem całej dokumentacji
+
+2. **Usunięto kody kreskowe:**
    - Z wyświetlania w cenniku (grafika + tekst)
    - Z wyszukiwania w ManualOrderScreen
    - Pozostawiono indeksy produktów do wyszukiwania
 
-2. **Dodano mechanizm Swipe-to-Add:**
+3. **Dodano mechanizm Swipe-to-Add:**
    - Przesunięcie produktu w prawo w cenniku
    - Automatyczne dodawanie do zamówienia "notatnik"
    - Produkty znikają po dodaniu (animacja)
    - Ilość = 0, do uzupełnienia później
 
-3. **Nowy status zamówienia "notatnik":**
+4. **Nowy status zamówienia "notatnik":**
    - Dodany do bazy danych (constraint)
    - Dodany do TypeScript types
    - Dodany do OrdersList z ikoną i kolorem
    - Możliwość filtrowania zamówień notatnik
    - Możliwość usuwania zamówień notatnik
 
-4. **Uproszczenie cennika:**
+5. **Uproszczenie cennika:**
    - Usunięto filtry kategorii
    - Usunięto filtry tagów
    - Wyszukiwanie tylko po nazwie i indeksie
    - Czysty, minimalistyczny interfejs
 
-5. **Zmieniony przepływ zamawiania głosowego:**
+6. **Zmieniony przepływ zamawiania głosowego:**
    - Po dyktowaniu zamówienie zapisywane jako szkic (draft), nie wysyłane
    - Automatyczne przekierowanie do ekranu edycji szkicu (EditDraftOrderScreen)
    - Użytkownik może dalej edytować zamówienie przed wysłaniem
    - Przycisk "Zapisz jako szkic" zamiast "Przejdź do potwierdzenia"
    - Usunięty stage 'summary' (zbędny w nowym przepływie)
 
-6. **Poprawka filtrowania po wysłaniu zamówienia:**
+7. **Poprawka filtrowania po wysłaniu zamówienia:**
    - Po wysłaniu zamówienia filtr automatycznie przełącza się na "Wysłane"
    - Poprawiony typ stanu ordersListFilter w App.tsx
    - Dodany useEffect w OrdersList reagujący na zmiany initialFilter
+
+8. **Panel Analityczny rozszerzony o analizę zamówień:**
+   - Nowa zakładka "Analiza Zamówień"
+   - Ranking najczęściej zamawianych produktów
+   - Analiza obrotów według kategorii, sklepów, źródeł
+   - Potencjalne obroty i nieaktywne sklepy
+   - Analiza skuteczności promocji
+   - Eksport danych do CSV/PDF/JSON
