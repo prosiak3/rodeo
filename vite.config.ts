@@ -1,26 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { writeFileSync } from 'fs';
-import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    {
-      name: 'generate-version',
-      buildStart() {
-        const version = {
-          version: '1.0.0',
-          buildTime: Date.now(),
-        };
-        writeFileSync(
-          resolve(__dirname, 'public/version.json'),
-          JSON.stringify(version, null, 2)
-        );
-        console.log('Generated version.json:', version);
-      },
-    },
   ],
   define: {
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL || 'https://zpbhwjnuqiomuufscvho.supabase.co'),
