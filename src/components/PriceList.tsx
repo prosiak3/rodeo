@@ -644,7 +644,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 <div
                   key={product.id}
                   className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasAnyPromo ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-400' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
-                  style={{ touchAction: isDisabled ? 'auto' : 'none' }}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
                   onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
