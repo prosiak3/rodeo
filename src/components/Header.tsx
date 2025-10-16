@@ -18,7 +18,7 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
-          <span className="text-4xl">🐃</span>
+          <img src="/ChatGPT Image 16 paź 2025, 12_39_51 copy.png" alt="RODEO Logo" className="h-10 object-contain brightness-0 invert" />
           <div>
             <h2 className="text-xl font-bold">{title}</h2>
             {subtitle && <p className="text-white opacity-80 text-sm">{subtitle}</p>}
