@@ -530,23 +530,23 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
       <ConfirmComponent />
       <div className="fixed inset-0 flex flex-col bg-gray-50">
       <div className="flex-1 overflow-y-auto pb-16">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <div className="flex items-center gap-3 mb-3">
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={onBack}
-            className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 rounded-lg px-4 py-3 transition-all active:scale-95 min-w-[100px]"
+            className="flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-lg p-2 transition-all active:scale-95"
+            title="Powrót"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Powrót</span>
           </button>
-          <h2 className="text-xl font-bold flex-1">{order.order_number}</h2>
+          <h2 className="text-sm font-semibold flex-1 truncate">{order.order_number}</h2>
           {canDelete && (
             <button
               onClick={deleteOrder}
-              className="flex items-center justify-center bg-red-500/90 hover:bg-red-600 rounded-lg p-3 transition-all active:scale-95"
+              className="flex items-center justify-center bg-red-500/90 hover:bg-red-600 rounded-lg p-2 transition-all active:scale-95"
               title="Usuń zamówienie"
             >
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -563,20 +563,26 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             </div>
           ) : (
             <div className="space-y-1">
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <div key={item.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                      item.status === 'confirmed' ? 'bg-green-500 text-white' :
-                      item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
-                      item.status === 'rejected' ? 'bg-red-500 text-white' :
-                      'bg-gray-300 text-gray-600'
-                    }`}>
-                      {item.status === 'confirmed' ? '✓' :
-                       item.status === 'partially_confirmed' ? '~' :
-                       item.status === 'rejected' ? '✗' :
-                       '○'}
-                    </span>
+                    {order.status === 'notatnik' ? (
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 bg-amber-500 text-white font-semibold">
+                        {index + 1}
+                      </span>
+                    ) : (
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                        item.status === 'confirmed' ? 'bg-green-500 text-white' :
+                        item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
+                        item.status === 'rejected' ? 'bg-red-500 text-white' :
+                        'bg-gray-300 text-gray-600'
+                      }`}>
+                        {item.status === 'confirmed' ? '✓' :
+                         item.status === 'partially_confirmed' ? '~' :
+                         item.status === 'rejected' ? '✗' :
+                         '○'}
+                      </span>
+                    )}
                     <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-600 flex-shrink-0">
@@ -651,7 +657,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               e.currentTarget.blur();
                             }
                           }}
-                          className="w-16 px-1 py-1 border border-gray-300 rounded text-[15px] font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
+                          className="w-12 px-1 py-0.5 border border-gray-300 rounded text-sm font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
                         />
                         <button
                           onClick={async () => {
