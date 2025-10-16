@@ -305,6 +305,73 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
     });
   }, [currentScreen, trackEvent]);
 
+  // Track campaign/promotion interactions
+  const trackCampaignInteraction = useCallback(async (
+    campaignId: string,
+    campaignName: string,
+    interactionType: 'view' | 'click' | 'dismiss' | 'convert',
+    additionalData?: Record<string, any>
+  ) => {
+    if (!userId || !currentSession) return;
+
+    try {
+      await supabase.from('campaign_interactions').insert({
+        campaign_id: campaignId,
+        user_id: userId,
+        session_id: currentSession.sessionId,
+        interaction_type: interactionType,
+        interaction_data: {
+          campaign_name: campaignName,
+          screen: currentScreen,
+          timestamp: new Date().toISOString(),
+          ...additionalData,
+        },
+        timestamp: new Date().toISOString(),
+      });
+
+      // Also track as regular event for path analysis
+      trackEvent({
+        eventType: `campaign_${interactionType}`,
+        eventCategory: 'campaign',
+        screenName: currentScreen,
+        previousScreen: previousScreenRef.current,
+        eventData: {
+          campaign_id: campaignId,
+          campaign_name: campaignName,
+          interaction_type: interactionType,
+          ...additionalData,
+        },
+      });
+    } catch (error) {
+      console.error('[Tracking] Failed to track campaign interaction:', error);
+    }
+  }, [userId, currentScreen, currentSession, trackEvent]);
+
+  // Track campaign conversion
+  const trackCampaignConversion = useCallback(async (
+    campaignId: string,
+    orderId: string,
+    conversionValue: number,
+    productsFromCampaign: Array<{ productId: string; productName: string; quantity: number }>
+  ) => {
+    if (!userId) return;
+
+    try {
+      // Use the database function to track conversion with time calculation
+      await supabase.rpc('track_campaign_conversion', {
+        p_campaign_id: campaignId,
+        p_user_id: userId,
+        p_order_id: orderId,
+        p_conversion_value: conversionValue,
+        p_products: productsFromCampaign,
+      });
+
+      console.log('[Tracking] Campaign conversion tracked:', campaignId);
+    } catch (error) {
+      console.error('[Tracking] Failed to track campaign conversion:', error);
+    }
+  }, [userId]);
+
   return {
     trackClick,
     trackFormSubmit,
@@ -312,6 +379,8 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
     trackProductAction,
     trackListModification,
     trackSearch,
+    trackCampaignInteraction,
+    trackCampaignConversion,
     trackEvent,
   };
 }

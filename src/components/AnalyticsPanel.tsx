@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { processRecentSessions, clusterPaths, UserPath, PathCluster } from '../lib/pathClustering';
-import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download, Megaphone } from 'lucide-react';
+import CampaignAnalytics from './CampaignAnalytics';
 
 interface AnalyticsSummary {
   totalUsers: number;
@@ -32,6 +33,7 @@ export default function AnalyticsPanel() {
   const [selectedSession, setSelectedSession] = useState<SessionReplay | null>(null);
   const [timeFilter, setTimeFilter] = useState<'today' | 'week' | 'month' | 'all'>('week');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'overview' | 'campaigns'>('overview');
 
   useEffect(() => {
     loadAnalytics();
@@ -266,32 +268,62 @@ export default function AnalyticsPanel() {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={handleProcessSessions}
-              disabled={processing}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-base"
+              onClick={() => setActiveTab('overview')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg transition text-base ${
+                activeTab === 'overview'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
             >
-              <RefreshCw className={`w-5 h-5 ${processing ? 'animate-spin' : ''}`} />
-              Przetwórz sesje
+              <BarChart3 className="w-5 h-5" />
+              Przegląd
             </button>
             <button
-              onClick={handleRecluster}
-              disabled={processing}
-              className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 text-base"
+              onClick={() => setActiveTab('campaigns')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg transition text-base ${
+                activeTab === 'campaigns'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              }`}
             >
-              <Activity className="w-5 h-5" />
-              Przegrupuj ścieżki
-            </button>
-            <button
-              onClick={exportData}
-              className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-base"
-            >
-              <Download className="w-5 h-5" />
-              Eksportuj
+              <Megaphone className="w-5 h-5" />
+              Kampanie
             </button>
           </div>
         </div>
 
-        {/* Filters */}
+        {activeTab === 'campaigns' ? (
+          <CampaignAnalytics />
+        ) : (
+          <>
+            {/* Actions */}
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleProcessSessions}
+                disabled={processing}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-base"
+              >
+                <RefreshCw className={`w-5 h-5 ${processing ? 'animate-spin' : ''}`} />
+                Przetwórz sesje
+              </button>
+              <button
+                onClick={handleRecluster}
+                disabled={processing}
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 text-base"
+              >
+                <Activity className="w-5 h-5" />
+                Przegrupuj ścieżki
+              </button>
+              <button
+                onClick={exportData}
+                className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-base"
+              >
+                <Download className="w-5 h-5" />
+                Eksportuj
+              </button>
+            </div>
+
+            {/* Filters */}
         <div className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
           <Filter className="w-5 h-5 text-gray-500" />
           <div className="flex gap-2">
@@ -525,6 +557,8 @@ export default function AnalyticsPanel() {
               ))}
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

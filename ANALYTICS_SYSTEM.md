@@ -259,14 +259,116 @@ ORDER BY success_rate DESC
 LIMIT 10;
 ```
 
+## System Śledzenia Kampanii Marketingowych
+
+### Dodatkowe Tabele:
+
+- **marketing_campaigns** - Definicje kampanii i promocji
+- **campaign_interactions** - Wszystkie interakcje użytkowników z kampaniami
+- **campaign_conversions** - Konwersje przypisane do kampanii
+
+### Nowe Metody Trackingowe:
+
+```typescript
+const { trackCampaignInteraction, trackCampaignConversion } = useUserTracking(userId, currentScreen);
+
+// Śledzenie wyświetlenia bannera/promocji
+trackCampaignInteraction(
+  campaignId,
+  'Promocja Black Friday 2024',
+  'view',
+  { banner_position: 'home_top' }
+);
+
+// Śledzenie kliknięcia w banner
+trackCampaignInteraction(
+  campaignId,
+  'Promocja Black Friday 2024',
+  'click',
+  { banner_position: 'home_top', product_clicked: productId }
+);
+
+// Śledzenie odrzucenia (zamknięcie bez kliknięcia)
+trackCampaignInteraction(
+  campaignId,
+  'Push: Nowe produkty drobiowe',
+  'dismiss'
+);
+
+// Śledzenie konwersji (zamówienie z produktami z promocji)
+trackCampaignConversion(
+  campaignId,
+  orderId,
+  totalOrderValue,
+  [
+    { productId: 'uuid1', productName: 'Kurczak', quantity: 10 },
+    { productId: 'uuid2', productName: 'Indyk', quantity: 5 }
+  ]
+);
+```
+
+### Panel Analityczny dla Kampanii
+
+Nowa zakładka "Kampanie" w panelu analitycznym pokazuje:
+
+**Metryki dla każdej kampanii:**
+- 👁️ **Wyświetlenia** - ile razy banner/promocja została wyświetlona
+- 🖱️ **Kliknięcia** - ile osób kliknęło
+- ❌ **Odrzucenia** - ile osób zamknęło bez kliknięcia
+- 🛒 **Konwersje** - ile osób złożyło zamówienie
+
+**Wskaźniki skuteczności:**
+- **CTR (Click-Through Rate)** - % osób które kliknęły po wyświetleniu
+- **Conversion Rate** - % osób które złożyły zamówienie po kliknięciu
+- **Całkowity przychód** - suma wartości zamówień z kampanii
+- **Średni czas do konwersji** - ile czasu zajmuje od kliknięcia do złożenia zamówienia
+
+**Szczegółowe interakcje:**
+- Lista ostatnich 50 interakcji z imiennym określeniem użytkownika
+- Typ akcji (wyświetlenie/kliknięcie/odrzucenie/konwersja)
+- Timestamp każdej akcji
+
+### Przykładowe Zapytania Analityczne:
+
+**Które promocje są najbardziej efektywne?**
+```sql
+SELECT * FROM get_campaign_performance('campaign-uuid');
+```
+
+**Kto kliknął ale nie skorzystał z promocji?**
+```sql
+SELECT DISTINCT
+  u.full_name,
+  u.role,
+  ci.timestamp as clicked_at
+FROM campaign_interactions ci
+JOIN users u ON u.id = ci.user_id
+LEFT JOIN campaign_conversions cc ON cc.user_id = ci.user_id AND cc.campaign_id = ci.campaign_id
+WHERE ci.campaign_id = 'campaign-uuid'
+  AND ci.interaction_type = 'click'
+  AND cc.id IS NULL
+ORDER BY ci.timestamp DESC;
+```
+
+**Średni czas od kliknięcia do zakupu:**
+```sql
+SELECT
+  mc.campaign_name,
+  AVG(cc.time_to_conversion) as avg_time
+FROM campaign_conversions cc
+JOIN marketing_campaigns mc ON mc.id = cc.campaign_id
+GROUP BY mc.campaign_name;
+```
+
 ## Dalszy Rozwój
 
 ### Planowane funkcje:
 - Real-time dashboard z aktualizacją na żywo
 - Heatmapy kliknięć dla poszczególnych ekranów
-- A/B testing framework
+- A/B testing framework dla kampanii
 - Predykcja zachowań użytkowników (ML)
 - Alerty o anomaliach w zachowaniach
+- Automatyczne rekomendacje promocji na podstawie historii
 - Integracja z narzędziami zewnętrznymi (Google Analytics, Mixpanel)
 
 ### Optymalizacje:
