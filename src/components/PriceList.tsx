@@ -59,6 +59,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   const [showSortIcons, setShowSortIcons] = useState<boolean>(true);
   const [showPriceLayoutToggle, setShowPriceLayoutToggle] = useState<boolean>(true);
   const [showSortButtons, setShowSortButtons] = useState<boolean>(false);
+  const [showGroupButtons, setShowGroupButtons] = useState<boolean>(false);
   const [currentSessionNotebookId, setCurrentSessionNotebookId] = useState<string | null>(notebookOrderId || null);
 
   useEffect(() => {
@@ -138,7 +139,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       const { data: userData } = await supabase
         .from('users')
-        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle, show_sort_buttons')
+        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle, show_sort_buttons, show_group_buttons')
         .eq('id', authData.user.id)
         .single();
 
@@ -151,6 +152,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       setShowSortIcons((userData as any)?.show_sort_icons ?? true);
       setShowPriceLayoutToggle((userData as any)?.show_price_layout_toggle ?? true);
       setShowSortButtons((userData as any)?.show_sort_buttons ?? false);
+      setShowGroupButtons((userData as any)?.show_group_buttons ?? false);
 
       const { data, error } = await supabase
         .from('products')
@@ -528,18 +530,20 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           />
         </div>
 
-        <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition bg-gray-100 text-gray-700 hover:bg-gray-200"
-              style={selectedCategory === cat ? { backgroundColor: colors.primary, color: 'white' } : {}}
-            >
-              {cat === 'all' ? 'Wszystkie' : cat}
-            </button>
-          ))}
-        </div>
+        {showGroupButtons && (
+          <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition bg-gray-100 text-gray-700 hover:bg-gray-200"
+                style={selectedCategory === cat ? { backgroundColor: colors.primary, color: 'white' } : {}}
+              >
+                {cat === 'all' ? 'Wszystkie' : cat}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="flex gap-2 items-center justify-between">
           {showSortIcons && showSortButtons && (

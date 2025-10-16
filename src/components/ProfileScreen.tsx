@@ -27,6 +27,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [showSortIcons, setShowSortIcons] = useState<boolean>((user as any).show_sort_icons ?? true);
   const [showPriceLayoutToggle, setShowPriceLayoutToggle] = useState<boolean>((user as any).show_price_layout_toggle ?? true);
   const [showSortButtons, setShowSortButtons] = useState<boolean>(user.show_sort_buttons ?? false);
+  const [showGroupButtons, setShowGroupButtons] = useState<boolean>((user as any).show_group_buttons ?? false);
   const [enableVoiceOrders, setEnableVoiceOrders] = useState<boolean>((user as any).enable_voice_orders ?? true);
   const [enablePricelistOrders, setEnablePricelistOrders] = useState<boolean>((user as any).enable_pricelist_orders ?? true);
   const [enableCopyOrders, setEnableCopyOrders] = useState<boolean>((user as any).enable_copy_orders ?? true);
@@ -75,7 +76,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
-  const handleDisplayToggle = async (field: 'show_product_description' | 'show_product_index' | 'show_sort_icons' | 'show_price_layout_toggle' | 'show_sort_buttons') => {
+  const handleDisplayToggle = async (field: 'show_product_description' | 'show_product_index' | 'show_sort_icons' | 'show_price_layout_toggle' | 'show_sort_buttons' | 'show_group_buttons') => {
     setSaving(true);
     try {
       let currentValue: boolean;
@@ -83,7 +84,8 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
       else if (field === 'show_product_index') currentValue = showIndex;
       else if (field === 'show_sort_icons') currentValue = showSortIcons;
       else if (field === 'show_price_layout_toggle') currentValue = showPriceLayoutToggle;
-      else currentValue = showSortButtons;
+      else if (field === 'show_sort_buttons') currentValue = showSortButtons;
+      else currentValue = showGroupButtons;
 
       const newValue = !currentValue;
       const { error } = await supabase
@@ -103,6 +105,8 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
         setShowPriceLayoutToggle(newValue);
       } else if (field === 'show_sort_buttons') {
         setShowSortButtons(newValue);
+      } else if (field === 'show_group_buttons') {
+        setShowGroupButtons(newValue);
       }
 
       showAlert('Ustawienia zapisane!', 'success');
@@ -769,6 +773,27 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                       showPriceLayoutToggle ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-800">Przyciski grupowania towarów</div>
+                  <div className="text-sm text-gray-600">Pokazuj przyciski filtrowania po kategoriach</div>
+                </div>
+                <button
+                  onClick={() => handleDisplayToggle('show_group_buttons')}
+                  disabled={saving}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    showGroupButtons ? 'bg-amber-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      showGroupButtons ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
