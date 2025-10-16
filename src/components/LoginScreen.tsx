@@ -130,9 +130,9 @@ export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenP
 
             {showTestUsers && (
               <div className="mt-4 space-y-3">
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-300">
-                  <p className="text-sm font-semibold text-amber-900 mb-2">Ważne!</p>
-                  <p className="text-xs text-amber-800 mb-3">
+                <div className="p-4 bg-green-50 rounded-lg border border-green-300">
+                  <p className="text-sm font-semibold text-green-900 mb-2">Ważne!</p>
+                  <p className="text-xs text-green-800 mb-3">
                     Najpierw kliknij &quot;Utwórz użytkowników testowych&quot; poniżej, a następnie zaloguj się jednym z kont.
                   </p>
                 </div>
