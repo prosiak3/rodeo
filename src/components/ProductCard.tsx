@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 interface ProductCardProps {
   product: {
     id: string;
@@ -26,12 +28,45 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
   const finalPrice = product.promo_price || product.your_price || product.base_price;
   const is10Plus1 = product.promo_10_plus_1;
 
+  const touchStartY = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!onSelect || !touchStartY.current) return;
+
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaY = Math.abs(touchEndY - touchStartY.current);
+    const deltaTime = Date.now() - touchStartTime.current;
+
+    // Jeśli przesunięcie jest małe (<10px) i czas jest krótki (<300ms), to kliknięcie
+    if (deltaY < 10 && deltaTime < 300) {
+      onSelect();
+    }
+
+    touchStartY.current = null;
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Kliknięcie myszą (desktop)
+    if (onSelect) {
+      onSelect();
+    }
+  };
+
   return (
     <div
-      onClick={onSelect}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
       className={`bg-white rounded-lg shadow p-3 transition ${hasPromo || is10Plus1 ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${
         onSelect ? 'cursor-pointer hover:shadow-lg' : ''
       }`}
+      style={{ touchAction: 'pan-y' }}
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
