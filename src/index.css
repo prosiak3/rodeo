@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 112.5%;
+  }
   * {
     -webkit-user-select: none;
     -moz-user-select: none;
