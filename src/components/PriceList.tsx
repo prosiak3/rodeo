@@ -203,7 +203,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     }
   };
 
-  const categories = ['all', 'Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
+  const categories = ['all', 'Drób', 'Indyk', 'Mięso', 'Wołowina'];
 
   console.log('🔍 FILTERING - notebookItems:', notebookItems.length, 'products:', products.length);
 
@@ -228,7 +228,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   const sortProducts = (products: Product[]) => {
     return [...products].sort((a, b) => {
       if (selectedCategory === 'all') {
-        const categoryOrder = ['Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
+        const categoryOrder = ['Drób', 'Indyk', 'Mięso', 'Wołowina'];
         const categoryCompare = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
         if (categoryCompare !== 0) return categoryCompare;
       }
