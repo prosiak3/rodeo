@@ -1,11 +1,13 @@
-const CACHE_NAME = 'rodeo-ai-cache-v3';
-const AI_MODEL_CACHE = 'rodeo-ai-models-v3';
+const CACHE_NAME = 'rodeo-ai-cache-v4';
+const AI_MODEL_CACHE = 'rodeo-ai-models-v4';
 
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
 ];
+
+let currentVersion = null;
 
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing service worker...');
@@ -37,6 +39,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+
+  if (url.pathname === '/version.json') {
+    console.log('[SW] Fetching version.json (no cache)');
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+    );
+    return;
+  }
 
   if (url.hostname === 'huggingface.co' || url.pathname.includes('onnx') || url.pathname.includes('transformers')) {
     console.log('[SW] Caching AI model:', url.pathname);
@@ -87,5 +97,30 @@ self.addEventListener('message', (event) => {
         event.ports[0].postMessage({ success: true });
       })
     );
+  }
+
+  if (event.data && event.data.type === 'CHECK_VERSION') {
+    console.log('[SW] Checking version...');
+    fetch('/version.json', { cache: 'no-store' })
+      .then(response => response.json())
+      .then(serverVersion => {
+        console.log('[SW] Server version:', serverVersion);
+        event.ports[0].postMessage({
+          type: 'VERSION_INFO',
+          version: serverVersion
+        });
+      })
+      .catch(error => {
+        console.error('[SW] Error checking version:', error);
+        event.ports[0].postMessage({
+          type: 'VERSION_ERROR',
+          error: error.message
+        });
+      });
+  }
+
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Skipping waiting...');
+    self.skipWaiting();
   }
 });

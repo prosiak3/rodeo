@@ -18,11 +18,14 @@ import PriceList from './components/PriceList';
 import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
+import { UpdateNotification } from './components/UpdateNotification';
+import { useAppUpdate } from './hooks/useAppUpdate';
 import { supabase, OrderStatus } from './lib/supabase';
 import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
   const { session, user, loading, signIn, signOut } = useAuth();
+  const { updateAvailable, applyUpdate, dismissUpdate } = useAppUpdate();
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
@@ -430,6 +433,12 @@ function AppContent() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-gray-50">
+      {updateAvailable && (
+        <UpdateNotification
+          onUpdate={applyUpdate}
+          onDismiss={dismissUpdate}
+        />
+      )}
       <Header
         title={header.title}
         subtitle={header.subtitle}
