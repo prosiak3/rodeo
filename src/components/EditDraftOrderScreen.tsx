@@ -476,7 +476,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-800 truncate">{item.products?.name}</div>
                     {sourceType !== 'voice' && (
-                      <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)} / 1{item.unit}</div>
+                      <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)}{item.unit && item.unit !== 'kg' ? ` / 1${item.unit}` : ''}</div>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -563,7 +563,9 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                   {sourceType !== 'voice' && (
                     <div className="text-right">
                       <div className="font-semibold text-amber-600">{product.base_price.toFixed(2)} PLN</div>
-                      <div className="text-xs text-gray-500">za {product.unit}</div>
+                      {product.unit && product.unit !== 'kg' && (
+                        <div className="text-xs text-gray-500">za {product.unit}</div>
+                      )}
                     </div>
                   )}
                   <Plus className="w-5 h-5 text-amber-600 group-hover:scale-110 transition-transform" />

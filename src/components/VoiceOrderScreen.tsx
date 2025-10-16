@@ -1020,14 +1020,14 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                         {item.convertedQuantity && item.convertedUnit ? (
                           <div>
                             <p className="font-semibold text-amber-700">
-                              {item.convertedQuantity} {item.convertedUnit}
+                              {item.convertedQuantity}{item.convertedUnit && item.convertedUnit !== 'kg' ? ` ${item.convertedUnit}` : ''}
                             </p>
                             <p className="text-sm text-gray-500">
-                              (z {item.originalQuantity} {item.originalUnit})
+                              (z {item.originalQuantity}{item.originalUnit && item.originalUnit !== 'kg' ? ` ${item.originalUnit}` : ''})
                             </p>
                           </div>
                         ) : (
-                          <p>{item.quantity} {item.unit}</p>
+                          <p>{item.quantity}{item.unit && item.unit !== 'kg' ? ` ${item.unit}` : ''}</p>
                         )}
                       </div>
 
@@ -1304,7 +1304,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{item.productName}</p>
                       <p className="text-xs text-gray-600">
-                        {item.quantity} {item.unit}
+                        {item.quantity}{item.unit && item.unit !== 'kg' ? ` ${item.unit}` : ''}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">

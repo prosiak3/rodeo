@@ -668,7 +668,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           <span className="font-medium text-sm text-gray-800 truncate">
                             {product.name}
                           </span>
-                          {product.unit !== 'kg' && (
+                          {product.unit && product.unit !== 'kg' && (
                             <span className="text-xs text-gray-500 flex-shrink-0">({product.unit})</span>
                           )}
                           {isInNotebook && (

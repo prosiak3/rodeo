@@ -822,10 +822,12 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         >
                           <Plus className="w-4 h-4" />
                         </button>
-                        <span className="text-[13px] font-medium">{item.unit}</span>
+                        {item.unit && item.unit !== 'kg' && (
+                          <span className="text-[13px] font-medium">{item.unit}</span>
+                        )}
                       </>
                     ) : (
-                      <span className="font-medium text-[15px]">{item.quantity} {item.unit}</span>
+                      <span className="font-medium text-[15px]">{item.quantity}{item.unit && item.unit !== 'kg' ? ` ${item.unit}` : ''}</span>
                     )}
                     {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
                       <>
