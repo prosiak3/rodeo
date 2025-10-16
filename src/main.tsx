@@ -4,29 +4,18 @@ import App from './App.tsx';
 import './index.css';
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js', { updateViaCache: 'none' })
-      .then((registration) => {
-        console.log('[SW] Service Worker registered:', registration.scope);
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      registration.unregister();
+      console.log('[SW] Unregistered old service worker');
+    });
+  });
 
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[SW] New version available, reloading...');
-                window.location.reload();
-              }
-            });
-          }
-        });
-
-        registration.update();
-      })
-      .catch((error) => {
-        console.log('[SW] Service Worker registration failed:', error);
-      });
+  caches.keys().then((cacheNames) => {
+    cacheNames.forEach((cacheName) => {
+      caches.delete(cacheName);
+      console.log('[SW] Deleted cache:', cacheName);
+    });
   });
 }
 
