@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type UserRole = 'store_manager' | 'salesperson' | 'operator' | 'admin';
+export type UserRole = 'store_manager' | 'salesperson' | 'operator' | 'admin' | 'driver' | 'analyst';
 
 export type OrderStatus =
   | 'draft'

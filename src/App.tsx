@@ -14,11 +14,13 @@ import OrderDetails from './components/OrderDetails';
 import EditDraftOrderScreen from './components/EditDraftOrderScreen';
 import ProfileScreen from './components/ProfileScreen';
 import AdminPanel from './components/AdminPanel';
+import AnalyticsPanel from './components/AnalyticsPanel';
 import PriceList from './components/PriceList';
 import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import { supabase, OrderStatus } from './lib/supabase';
+import { useUserTracking } from './hooks/useUserTracking';
 import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
@@ -32,6 +34,15 @@ function AppContent() {
   const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
   const [ordersListFilter, setOrdersListFilter] = useState<OrderStatus | 'all' | null>(null);
   const [aiPreloaded, setAiPreloaded] = useState(false);
+
+  // Initialize user tracking
+  useUserTracking(
+    user?.id || null,
+    editingOrderId ? 'edit-draft' :
+    selectedOrderId ? 'order-details' :
+    activeTab === 'new-order' && orderMode ? orderMode :
+    activeTab
+  );
 
   useEffect(() => {
     if (session && user && !aiPreloaded) {
@@ -266,6 +277,14 @@ function AppContent() {
           setActiveTab('prices');
         }}
       />
+    );
+  }
+
+  if (user.role === 'analyst') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AnalyticsPanel />
+      </div>
     );
   }
 

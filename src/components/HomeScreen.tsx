@@ -75,7 +75,7 @@ export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeS
                     setShowPromoAlert(false);
                     onNavigate?.('prices');
                   }}
-                  className="bg-white text-orange-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition w-full"
+                  className="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition w-full text-base"
                 >
                   Zobacz promocje w cenniku
                 </button>
@@ -89,21 +89,21 @@ export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeS
           <div className="space-y-3">
             <button
               onClick={() => onVoiceOrder?.()}
-              className="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer flex items-center justify-center gap-2"
+              className="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer flex items-center justify-center gap-2 text-base"
             >
               <Mic className="w-5 h-5" />
               Zamówienie głosowe
             </button>
             <button
               onClick={() => onNavigate?.('orders')}
-              className="w-full p-4 bg-white border-2 border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition cursor-pointer"
+              className="w-full px-6 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition cursor-pointer text-base"
             >
               Pokaż aktualne zamówienia
             </button>
             {userRole === 'admin' && (
               <button
                 onClick={() => onNavigate?.('admin')}
-                className="w-full p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition shadow cursor-pointer"
+                className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition shadow cursor-pointer text-base"
               >
                 Panel administracyjny
               </button>
