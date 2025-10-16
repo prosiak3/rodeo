@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown, ArrowLeft, Plus } from 'lucide-react';
+import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -421,7 +421,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
         if (existingOrder) {
           orderId = existingOrder.id;
-          setCurrentSessionNotebookId(orderId);
+          setCurrentSessionNotebookId(orderId || null);
         }
       } else {
         const { data: existingOrder } = await supabase
@@ -468,7 +468,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         orderId = newOrder.id;
 
         if (notebookMode === 'multiple') {
-          setCurrentSessionNotebookId(orderId);
+          setCurrentSessionNotebookId(orderId || null);
         }
       }
 
@@ -487,7 +487,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       if (itemError) throw itemError;
 
       console.log('✅ Successfully added to order, reloading notebook items');
-      await loadNotebookItems(orderId);
+      if (orderId) await loadNotebookItems(orderId);
     } catch (error) {
       console.error('❌ Error adding to notebook:', error);
     }
@@ -633,7 +633,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
-              const hasDiscountPromo = hasPromo && product.promo_price < (product.your_price || product.base_price);
+              const hasDiscountPromo = hasPromo && product.promo_price! < (product.your_price || product.base_price);
               const is10Plus1 = product.promo_10_plus_1;
               const isInNotebook = notebookItems.includes(product.id);
               const swipeOffset = getSwipeTransform(product.id);
