@@ -1,29 +1,18 @@
-const CACHE_NAME = 'rodeo-v1';
-const CACHE_URLS = [
-  '/',
-  '/index.html',
-  '/rodeo.png',
-  '/manifest.json'
-];
+const CACHE_VERSION = 'rodeo-v2';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(CACHE_URLS).catch((err) => {
-        console.warn('[SW] Failed to cache some resources:', err);
-      });
-    }).then(() => self.skipWaiting())
-  );
+  console.log('[SW] Installing version:', CACHE_VERSION);
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating version:', CACHE_VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
+          console.log('[SW] Deleting old cache:', cacheName);
+          return caches.delete(cacheName);
         })
       );
     }).then(() => self.clients.claim())
@@ -32,11 +21,25 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch((err) => {
-        console.warn('[SW] Fetch failed:', event.request.url, err);
-        throw err;
-      });
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok && (event.request.url.includes('/assets/') || event.request.url.endsWith('.png'))) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_VERSION).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch((error) => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            console.log('[SW] Serving from cache:', event.request.url);
+            return cachedResponse;
+          }
+          console.warn('[SW] Fetch failed and no cache available:', event.request.url);
+          throw error;
+        });
+      })
   );
 });
