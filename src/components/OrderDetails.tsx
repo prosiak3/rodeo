@@ -25,6 +25,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
   const [showButtonLabels, setShowButtonLabels] = useState(false);
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<string>('');
   const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set());
@@ -48,7 +49,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     try {
       const { data } = await supabase
         .from('users')
-        .select('order_details_status_expanded, show_notebook_button_labels')
+        .select('order_details_status_expanded, show_notebook_button_labels, show_delete_icons')
         .eq('id', userId)
         .single();
 
@@ -58,6 +59,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         }
         if (data.show_notebook_button_labels !== null) {
           setShowButtonLabels(data.show_notebook_button_labels);
+        }
+        if (data.show_delete_icons !== null) {
+          setShowDeleteIcons(data.show_delete_icons);
         }
       }
     } catch (error) {
@@ -601,12 +605,12 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                   className={`flex items-center gap-2 p-2 rounded hover:bg-gray-100 transition ${
                     longPressItemId === item.id ? 'bg-red-100' : 'bg-gray-50'
                   }`}
-                  onMouseDown={() => canDeleteItems && handleLongPressStart(item.id)}
-                  onMouseUp={handleLongPressEnd}
-                  onMouseLeave={handleLongPressEnd}
-                  onTouchStart={() => canDeleteItems && handleLongPressStart(item.id)}
-                  onTouchEnd={handleLongPressEnd}
-                  onTouchCancel={handleLongPressEnd}
+                  onMouseDown={() => canDeleteItems && !showDeleteIcons && handleLongPressStart(item.id)}
+                  onMouseUp={() => !showDeleteIcons && handleLongPressEnd()}
+                  onMouseLeave={() => !showDeleteIcons && handleLongPressEnd()}
+                  onTouchStart={() => canDeleteItems && !showDeleteIcons && handleLongPressStart(item.id)}
+                  onTouchEnd={() => !showDeleteIcons && handleLongPressEnd()}
+                  onTouchCancel={() => !showDeleteIcons && handleLongPressEnd()}
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {order.status === 'notatnik' ? (
@@ -701,7 +705,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                                 e.currentTarget.blur();
                               }
                             }}
-                            className="w-14 pl-1 pr-6 py-0.5 border border-gray-300 rounded text-xs font-medium text-left focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-12 pl-1 pr-6 py-0.5 border border-gray-300 rounded text-xs font-medium text-left focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           {item.unit && item.unit !== 'kg' && (
                             <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] font-medium text-gray-400 pointer-events-none">{item.unit}</span>
@@ -742,6 +746,15 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                       </>
                     ) : (
                       <span className="text-sm font-medium">{item.quantity} {item.unit}</span>
+                    )}
+                    {canDeleteItems && showDeleteIcons && (
+                      <button
+                        onClick={() => deleteOrderItem(item.id)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                        title="Usuń pozycję"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     )}
                     {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
                       <>

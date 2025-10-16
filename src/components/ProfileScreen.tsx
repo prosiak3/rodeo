@@ -36,6 +36,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [autoOrderAnalysisDays, setAutoOrderAnalysisDays] = useState<number>((user as any).auto_order_analysis_days || 180);
   const [orderDetailsStatusExpanded, setOrderDetailsStatusExpanded] = useState<boolean>((user as any).order_details_status_expanded ?? false);
   const [showNotebookButtonLabels, setShowNotebookButtonLabels] = useState<boolean>((user as any).show_notebook_button_labels ?? false);
+  const [showDeleteIcons, setShowDeleteIcons] = useState<boolean>((user as any).show_delete_icons ?? false);
   const [saving, setSaving] = useState(false);
 
   const handleShowAllFiltersToggle = async () => {
@@ -256,6 +257,26 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
       showAlert('Ustawienia zapisane!', 'success');
     } catch (error) {
       console.error('Error updating notebook button labels settings:', error);
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteIconsToggle = async () => {
+    setSaving(true);
+    try {
+      const newValue = !showDeleteIcons;
+      const { error } = await supabase
+        .from('users')
+        .update({ show_delete_icons: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setShowDeleteIcons(newValue);
+      showAlert('Ustawienia zapisane!', 'success');
+    } catch (error) {
+      console.error('Error updating delete icons settings:', error);
       showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
@@ -650,28 +671,52 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <Edit className="w-5 h-5 text-amber-600" />
             <h3 className="font-semibold text-lg">Przyciski w notatniku</h3>
           </div>
-          <p className="text-sm text-gray-600 mb-3">Pokaż opisy słowne przycisków "Dodaj" i "Dalej" w zamówieniu notatnikowym:</p>
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <Plus className="w-5 h-5 text-amber-600" />
-              <div>
-                <div className="font-semibold text-gray-800">Opisy przycisków</div>
-                <div className="text-sm text-gray-600">Wyświetlaj teksty "Dodaj" i "Dalej" obok ikon</div>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600 mb-3">Dostosuj wyświetlanie przycisków w zamówieniu notatnikowym:</p>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Plus className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800">Opisy przycisków</div>
+                  <div className="text-sm text-gray-600">Wyświetlaj teksty "Dodaj" i "Dalej" obok ikon</div>
+                </div>
               </div>
-            </div>
-            <button
-              onClick={handleNotebookButtonLabelsToggle}
-              disabled={saving}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                showNotebookButtonLabels ? 'bg-amber-600' : 'bg-gray-300'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  showNotebookButtonLabels ? 'translate-x-6' : 'translate-x-1'
+              <button
+                onClick={handleNotebookButtonLabelsToggle}
+                disabled={saving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  showNotebookButtonLabels ? 'bg-amber-600' : 'bg-gray-300'
                 }`}
-              />
-            </button>
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    showNotebookButtonLabels ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Trash2 className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800">Ikony kosza</div>
+                  <div className="text-sm text-gray-600">Pokaż ikony kosza przy pozycjach (zamiast długiego przytrzymania)</div>
+                </div>
+              </div>
+              <button
+                onClick={handleDeleteIconsToggle}
+                disabled={saving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  showDeleteIcons ? 'bg-amber-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    showDeleteIcons ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 
