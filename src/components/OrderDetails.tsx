@@ -536,6 +536,185 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
       <div className="p-3 space-y-3">
         <div className="bg-white rounded-lg shadow p-3">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-base">Produkty ({items.length})</h3>
+            {canEditItems && items.length > 0 && (
+              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
+                Edytuj ilość bezpośrednio
+              </span>
+            )}
+          </div>
+          {items.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-sm">Brak produktów w zamówieniu</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {items.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
+                  <div className="flex-1 min-w-0 mr-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                        item.status === 'confirmed' ? 'bg-green-500 text-white' :
+                        item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
+                        item.status === 'rejected' ? 'bg-red-500 text-white' :
+                        'bg-gray-300 text-gray-600'
+                      }`}>
+                        {item.status === 'confirmed' ? '✓' :
+                         item.status === 'partially_confirmed' ? '~' :
+                         item.status === 'rejected' ? '✗' :
+                         '○'}
+                      </span>
+                      <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600 flex-shrink-0">
+                    {canEditItems ? (
+                      <>
+                        <button
+                          onClick={async () => {
+                            const newQuantity = Math.max(1, item.quantity - 1);
+                            const newTotalPrice = newQuantity * item.unit_price;
+
+                            setItems(prevItems =>
+                              prevItems.map(i =>
+                                i.id === item.id
+                                  ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                  : i
+                              )
+                            );
+
+                            setPendingUpdates(prev => new Set(prev).add(item.id));
+                            await supabase
+                              .from('order_items')
+                              .update({
+                                quantity: newQuantity,
+                                total_price: newTotalPrice
+                              })
+                              .eq('id', item.id);
+                            setPendingUpdates(prev => {
+                              const next = new Set(prev);
+                              next.delete(item.id);
+                              return next;
+                            });
+                          }}
+                          className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition active:scale-95"
+                          title="Zmniejsz ilość"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <input
+                          type="number"
+                          step="1"
+                          value={item.quantity}
+                          onChange={async (e) => {
+                            const newQuantity = parseFloat(e.target.value);
+                            if (!isNaN(newQuantity) && newQuantity > 0) {
+                              const newTotalPrice = newQuantity * item.unit_price;
+
+                              setItems(prevItems =>
+                                prevItems.map(i =>
+                                  i.id === item.id
+                                    ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                    : i
+                                )
+                              );
+
+                              setPendingUpdates(prev => new Set(prev).add(item.id));
+                              await supabase
+                                .from('order_items')
+                                .update({
+                                  quantity: newQuantity,
+                                  total_price: newTotalPrice
+                                })
+                                .eq('id', item.id);
+                              setPendingUpdates(prev => {
+                                const next = new Set(prev);
+                                next.delete(item.id);
+                                return next;
+                              });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          className="w-16 px-1 py-1 border border-gray-300 rounded text-[15px] font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
+                        />
+                        <button
+                          onClick={async () => {
+                            const newQuantity = item.quantity + 1;
+                            const newTotalPrice = newQuantity * item.unit_price;
+
+                            setItems(prevItems =>
+                              prevItems.map(i =>
+                                i.id === item.id
+                                  ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                  : i
+                              )
+                            );
+
+                            setPendingUpdates(prev => new Set(prev).add(item.id));
+                            await supabase
+                              .from('order_items')
+                              .update({
+                                quantity: newQuantity,
+                                total_price: newTotalPrice
+                              })
+                              .eq('id', item.id);
+                            setPendingUpdates(prev => {
+                              const next = new Set(prev);
+                              next.delete(item.id);
+                              return next;
+                            });
+                          }}
+                          className="w-6 h-6 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded transition active:scale-95"
+                          title="Zwiększ ilość"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        {item.unit && item.unit !== 'kg' && (
+                          <span className="text-[13px] font-medium">{item.unit}</span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="font-medium text-[15px]">{item.quantity}{item.unit && item.unit !== 'kg' ? ` ${item.unit}` : ''}</span>
+                    )}
+                    {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
+                      <>
+                        <span className="text-gray-400 text-[15px]">×</span>
+                        <span className="text-[15px]">{item.unit_price.toFixed(2)}</span>
+                        <span className="font-bold text-amber-600 min-w-[60px] text-right text-[15px]">{item.total_price.toFixed(2)} PLN</span>
+                      </>
+                    )}
+                    {canDeleteItems && (
+                      <button
+                        onClick={() => deleteOrderItem(item.id)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                        title="Usuń pozycję"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-700">Razem:</span>
+                <div className="text-right">
+                  <span className="font-bold text-lg text-amber-600">{formatPriceDisplay(order.total_amount)} PLN</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-3">
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
@@ -683,193 +862,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-base">Produkty ({items.length})</h3>
-            {canEditItems && items.length > 0 && (
-              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
-                Edytuj ilość bezpośrednio
-              </span>
-            )}
-          </div>
-          {items.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-sm">Brak produktów w zamówieniu</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
-                  <div className="flex-1 min-w-0 mr-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                        item.status === 'confirmed' ? 'bg-green-500 text-white' :
-                        item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
-                        item.status === 'rejected' ? 'bg-red-500 text-white' :
-                        'bg-gray-300 text-gray-600'
-                      }`}>
-                        {item.status === 'confirmed' ? '✓' :
-                         item.status === 'partially_confirmed' ? '~' :
-                         item.status === 'rejected' ? '✗' :
-                         '○'}
-                      </span>
-                      <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600 flex-shrink-0">
-                    {canEditItems ? (
-                      <>
-                        <button
-                          onClick={async () => {
-                            const newQuantity = Math.max(1, item.quantity - 1);
-                            const newTotalPrice = newQuantity * item.unit_price;
-
-                            setItems(prevItems =>
-                              prevItems.map(i =>
-                                i.id === item.id
-                                  ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
-                                  : i
-                              )
-                            );
-
-                            setPendingUpdates(prev => new Set(prev).add(item.id));
-                            await supabase
-                              .from('order_items')
-                              .update({
-                                quantity: newQuantity,
-                                total_price: newTotalPrice
-                              })
-                              .eq('id', item.id);
-                            setPendingUpdates(prev => {
-                              const next = new Set(prev);
-                              next.delete(item.id);
-                              return next;
-                            });
-                          }}
-                          className="w-7 h-7 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition active:scale-95"
-                          title="Zmniejsz ilość"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <input
-                          type="number"
-                          step="1"
-                          value={item.quantity}
-                          onChange={async (e) => {
-                            const newQuantity = parseFloat(e.target.value);
-                            if (!isNaN(newQuantity) && newQuantity > 0) {
-                              const newTotalPrice = newQuantity * item.unit_price;
-
-                              setItems(prevItems =>
-                                prevItems.map(i =>
-                                  i.id === item.id
-                                    ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
-                                    : i
-                                )
-                              );
-
-                              setPendingUpdates(prev => new Set(prev).add(item.id));
-                              await supabase
-                                .from('order_items')
-                                .update({
-                                  quantity: newQuantity,
-                                  total_price: newTotalPrice
-                                })
-                                .eq('id', item.id);
-                              setPendingUpdates(prev => {
-                                const next = new Set(prev);
-                                next.delete(item.id);
-                                return next;
-                              });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.currentTarget.blur();
-                            }
-                          }}
-                          className="w-16 px-1 py-1 border border-gray-300 rounded text-[15px] font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
-                        />
-                        <button
-                          onClick={async () => {
-                            const newQuantity = item.quantity + 1;
-                            const newTotalPrice = newQuantity * item.unit_price;
-
-                            setItems(prevItems =>
-                              prevItems.map(i =>
-                                i.id === item.id
-                                  ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
-                                  : i
-                              )
-                            );
-
-                            setPendingUpdates(prev => new Set(prev).add(item.id));
-                            await supabase
-                              .from('order_items')
-                              .update({
-                                quantity: newQuantity,
-                                total_price: newTotalPrice
-                              })
-                              .eq('id', item.id);
-                            setPendingUpdates(prev => {
-                              const next = new Set(prev);
-                              next.delete(item.id);
-                              return next;
-                            });
-                          }}
-                          className="w-7 h-7 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded transition active:scale-95"
-                          title="Zwiększ ilość"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                        {item.unit && item.unit !== 'kg' && (
-                          <span className="text-[13px] font-medium">{item.unit}</span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="font-medium text-[15px]">{item.quantity}{item.unit && item.unit !== 'kg' ? ` ${item.unit}` : ''}</span>
-                    )}
-                    {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
-                      <>
-                        <span className="text-gray-400 text-[15px]">×</span>
-                        <span className="text-[15px]">{item.unit_price.toFixed(2)}</span>
-                        <span className="font-bold text-amber-600 min-w-[60px] text-right text-[15px]">{item.total_price.toFixed(2)} PLN</span>
-                      </>
-                    )}
-                    {canDeleteItems && (
-                      <button
-                        onClick={() => deleteOrderItem(item.id)}
-                        className="p-1 text-red-500 hover:bg-red-50 rounded transition"
-                        title="Usuń pozycję"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
-            <div className="mt-2 pt-2 border-t border-gray-200">
-              <div className="flex justify-between items-center text-sm">
-                <span className="font-semibold text-gray-700">Razem:</span>
-                <div className="text-right">
-                  <span className="font-bold text-lg text-amber-600">{formatPriceDisplay(order.total_amount)} PLN</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
         {(canAddMore || canConvertToDraft) && (
           <div className="bg-white rounded-lg shadow p-3 space-y-3">
-            {canConvertToDraft && (
-              <div className="bg-blue-600 text-white p-3 rounded-lg text-sm">
-                <p className="font-medium">Przekształć w szkic aby móc wysłać zamówienie</p>
-                <p className="text-xs mt-1 opacity-90">Po kliknięciu "Dalej" zamówienie zostanie przekształcone w szkic i będzie można je edytować oraz wysłać do hurtowni.</p>
-              </div>
-            )}
             <div className="grid grid-cols-2 gap-2">
               {canAddMore && (
                 <button
