@@ -488,14 +488,14 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
         <div className="flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+            className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
           >
             Anuluj
           </button>
           <button
             onClick={() => handleSendOrder(true)}
             disabled={sending || orderItems.size === 0}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Save className="w-5 h-5" />
             Zapisz szkic

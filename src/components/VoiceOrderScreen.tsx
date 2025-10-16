@@ -1188,7 +1188,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           <div className="mt-6 flex gap-3">
             <button
               onClick={addMoreItems}
-              className="flex-1 py-4 bg-white border-2 border-amber-500 text-amber-600 rounded-xl font-medium hover:bg-amber-50 transition flex items-center justify-center gap-2 shadow"
+              className="flex-1 py-2.5 px-4 bg-white border-2 border-amber-500 text-amber-600 rounded-xl font-medium hover:bg-amber-50 transition flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Dodaj więcej
@@ -1196,7 +1196,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             <button
               onClick={sendOrder}
               disabled={sending}
-              className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+              className="flex-1 py-5 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check className="w-5 h-5" />
               {sending ? 'Zapisuję...' : 'Zapisz jako szkic'}
@@ -1356,7 +1356,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               </div>
               <button
                 onClick={() => setStage('confirmation')}
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
+                className="w-full py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95"
               >
                 <Check className="w-5 h-5" />
                 Zapisz jako szkic

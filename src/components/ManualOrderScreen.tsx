@@ -295,14 +295,14 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 p-4 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+            className="flex-1 py-2.5 px-4 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
           >
             Anuluj
           </button>
           <button
             onClick={sendOrder}
             disabled={sending || orderItems.length === 0}
-            className="flex-1 p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-5 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? (
               <>Wysyłanie...</>

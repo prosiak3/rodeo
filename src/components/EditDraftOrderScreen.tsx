@@ -544,7 +544,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
           <button
             onClick={saveOrder}
             disabled={saving || orderItems.length === 0}
-            className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-5 h-5" />
             {saving ? 'Zapisywanie...' : 'Zapisz zmiany'}
