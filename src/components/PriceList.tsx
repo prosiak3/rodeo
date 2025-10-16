@@ -643,7 +643,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 <div
                   key={product.id}
                   className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : (hasDiscountPromo || is10Plus1) ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
-                  style={{ touchAction: isDisabled ? 'auto' : 'pan-y' }}
+                  style={{ touchAction: 'pan-y' }}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
                   onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
@@ -684,7 +684,27 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                       </div>
                       {priceLayout === 'horizontal' ? (
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {!product.your_price && !product.promo_price && (
+                          {product.promo_price && product.promo_price > 0 ? (
+                            <>
+                              <div className="flex flex-col items-end animate-pulse">
+                                <span className="text-[9px] text-red-600 uppercase font-bold leading-none">Promocja</span>
+                                <span className="text-base font-bold text-red-600">
+                                  {product.promo_price.toFixed(2)}
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500">1{product.unit}</span>
+                            </>
+                          ) : product.your_price && product.your_price > 0 ? (
+                            <>
+                              <div className="flex flex-col items-end">
+                                <span className="text-[9px] text-blue-600 uppercase font-medium leading-none">Twoja</span>
+                                <span className="text-sm font-bold text-blue-600">
+                                  {product.your_price.toFixed(2)}
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500">1{product.unit}</span>
+                            </>
+                          ) : (
                             <div className="flex items-center gap-1">
                               <span className="text-sm font-bold" style={{ color: colors.text }}>
                                 {product.base_price.toFixed(2)}
@@ -692,70 +712,36 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                               <span className="text-xs text-gray-500">1{product.unit}</span>
                             </div>
                           )}
-                          {(product.your_price || product.promo_price) && (
-                            <>
-                              <div className="flex flex-col items-end">
-                                <span className="text-[9px] text-gray-400 uppercase leading-none">Norm.</span>
-                                <span className="text-xs line-through text-gray-400">
-                                  {product.base_price.toFixed(2)}
-                                </span>
-                              </div>
-                              {product.your_price && product.your_price > 0 && (
-                                <div className="flex flex-col items-end">
-                                  <span className="text-[9px] text-blue-600 uppercase font-medium leading-none">Twoja</span>
-                                  <span className={`text-sm font-bold ${product.promo_price ? 'line-through text-gray-400' : 'text-blue-600'}`}>
-                                    {product.your_price.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              {product.promo_price && product.promo_price > 0 && (
-                                <div className="flex flex-col items-end animate-pulse">
-                                  <span className="text-[9px] text-red-600 uppercase font-bold leading-none">Specj.</span>
-                                  <span className="text-base font-bold text-red-600">
-                                    {product.promo_price.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              <span className="text-xs text-gray-500">1{product.unit}</span>
-                            </>
-                          )}
                         </div>
                       ) : (
                         <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                          {!product.your_price && !product.promo_price && (
+                          {product.promo_price && product.promo_price > 0 ? (
+                            <>
+                              <div className="flex items-baseline gap-1 animate-pulse">
+                                <span className="text-[10px] text-red-600 uppercase font-bold">Promocja</span>
+                                <span className="text-base font-bold text-red-600">
+                                  {product.promo_price.toFixed(2)}
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500">1{product.unit}</span>
+                            </>
+                          ) : product.your_price && product.your_price > 0 ? (
+                            <>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-[10px] text-blue-600 uppercase font-medium">Twoja</span>
+                                <span className="text-sm font-bold text-blue-600">
+                                  {product.your_price.toFixed(2)}
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-500">1{product.unit}</span>
+                            </>
+                          ) : (
                             <div className="flex items-baseline gap-1">
                               <span className="text-base font-bold" style={{ color: colors.text }}>
                                 {product.base_price.toFixed(2)}
                               </span>
                               <span className="text-xs text-gray-500">1{product.unit}</span>
                             </div>
-                          )}
-                          {(product.your_price || product.promo_price) && (
-                            <>
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-[10px] text-gray-400 uppercase">Normalna</span>
-                                <span className="text-sm line-through text-gray-400">
-                                  {product.base_price.toFixed(2)}
-                                </span>
-                              </div>
-                              {product.your_price && product.your_price > 0 && (
-                                <div className="flex items-baseline gap-1">
-                                  <span className="text-[10px] text-blue-600 uppercase font-medium">Twoja</span>
-                                  <span className={`text-sm ${product.promo_price ? 'line-through text-gray-400' : 'font-bold text-blue-600'}`}>
-                                    {product.your_price.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              {product.promo_price && product.promo_price > 0 && (
-                                <div className="flex items-baseline gap-1 animate-pulse">
-                                  <span className="text-[10px] text-red-600 uppercase font-bold">Specjalna</span>
-                                  <span className="text-base font-bold text-red-600">
-                                    {product.promo_price.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              <span className="text-xs text-gray-500">1{product.unit}</span>
-                            </>
                           )}
                         </div>
                       )}
