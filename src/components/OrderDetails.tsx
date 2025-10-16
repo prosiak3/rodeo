@@ -591,7 +591,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
       <div className="p-3 space-y-3">
         <div className="bg-white rounded-lg shadow p-3">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-base">Produkty ({items.length})</h3>
+            <h3 className="font-medium text-sm text-gray-600">Produkty ({items.length})</h3>
           </div>
           {items.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -630,7 +630,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                          '○'}
                       </span>
                     )}
-                    <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
+                    <span className="font-semibold text-gray-900 truncate text-base">{item.products?.name || 'Produkt'}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-600 flex-shrink-0">
                     {canEditItems ? (
@@ -705,7 +705,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                                 e.currentTarget.blur();
                               }
                             }}
-                            className="w-12 pl-1 pr-6 py-0.5 border border-gray-300 rounded text-xs font-medium text-left focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-12 pl-1 pr-6 py-0.5 border border-gray-300 rounded text-xs font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           {item.unit && item.unit !== 'kg' && (
                             <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] font-medium text-gray-400 pointer-events-none">{item.unit}</span>
@@ -794,7 +794,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 {canConvertToDraft && (
                   <button
                     onClick={convertToDraft}
-                    className="py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg font-medium hover:from-orange-700 hover:to-orange-800 transition flex items-center justify-center gap-2 shadow"
+                    className="py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition flex items-center justify-center gap-2 shadow"
                   >
                     <ArrowRight className="w-5 h-5" />
                     {showButtonLabels && <span className="text-sm">Dalej</span>}
@@ -819,7 +819,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           </button>
           {statusExpanded && (
           <div className="px-3 pb-3 space-y-3 border-t border-gray-100">
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
               <div>
                 <span className="text-gray-500">Status:</span>
                 <span className="ml-1 font-medium">{order.status}</span>
@@ -864,10 +864,10 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             </div>
 
             <div className="border-t border-gray-200 pt-3">
-              <h4 className="font-semibold text-xs text-gray-700 mb-2">Uczestnicy realizacji:</h4>
+              <h4 className="font-semibold text-[10px] text-gray-700 mb-2">Uczestnicy realizacji:</h4>
               <div className="space-y-2">
                 {order.creator && (
-                  <div className="flex items-start gap-2 text-xs">
+                  <div className="flex items-start gap-2 text-[10px]">
                     <span className="text-2xl">📝</span>
                     <div>
                       <div className="font-medium text-gray-700">
@@ -885,7 +885,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 )}
 
                 {history.filter(h => h.action.toLowerCase().includes('wysłano')).map(h => h.users).filter(Boolean)[0] && (
-                  <div className="flex items-start gap-2 text-xs">
+                  <div className="flex items-start gap-2 text-[10px]">
                     <span className="text-2xl">📤</span>
                     <div>
                       <div className="font-medium text-gray-700">Wysłał do realizacji</div>
@@ -903,7 +903,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 )}
 
                 {history.filter(h => h.action.toLowerCase().includes('potwierdz')).map(h => h.users).filter(Boolean)[0] && (
-                  <div className="flex items-start gap-2 text-xs">
+                  <div className="flex items-start gap-2 text-[10px]">
                     <span className="text-2xl">✅</span>
                     <div>
                       <div className="font-medium text-gray-700">Potwierdził realizację</div>
@@ -920,7 +920,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 )}
 
                 {history.filter(h => h.action.toLowerCase().includes('odrzuc')).map(h => h.users).filter(Boolean)[0] && (
-                  <div className="flex items-start gap-2 text-xs">
+                  <div className="flex items-start gap-2 text-[10px]">
                     <span className="text-2xl">❌</span>
                     <div>
                       <div className="font-medium text-gray-700">Odrzucił zamówienie</div>

@@ -334,7 +334,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
             <button
               onClick={saveAsDraft}
               disabled={saving}
-              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow"
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow"
             >
               {saving ? (
                 <>
