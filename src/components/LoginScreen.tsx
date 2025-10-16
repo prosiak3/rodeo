@@ -59,7 +59,7 @@ export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenP
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex flex-col items-center mb-8">
-            <img src="/ChatGPT Image 16 paź 2025, 12_39_51 copy.png" alt="RODEO Logo" className="w-64 object-contain mb-4" />
+            <img src="/rodeo.png" alt="RODEO Logo" className="w-64 object-contain mb-4" />
             <p className="text-amber-600 font-semibold text-lg">Weź byka za rogi</p>
             <p className="text-gray-600 mt-1 text-sm">System Zamówień Mięsno-Wędliniarskich</p>
           </div>
