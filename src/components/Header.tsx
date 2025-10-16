@@ -13,7 +13,7 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 text-white py-1 px-4 shadow-lg z-30"
+      className="fixed top-0 left-0 right-0 text-white py-0 px-4 shadow-lg z-30"
       style={{ background: colors.gradient }}
     >
       <div className="flex items-center justify-between">
