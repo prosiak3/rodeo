@@ -674,7 +674,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                             value={item.quantity}
                             onChange={async (e) => {
                               const newQuantity = parseFloat(e.target.value);
-                              if (!isNaN(newQuantity) && newQuantity > 0) {
+                              if (!isNaN(newQuantity) && newQuantity >= 0) {
                                 const newTotalPrice = newQuantity * item.unit_price;
 
                                 setItems(prevItems =>
@@ -794,7 +794,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 {canConvertToDraft && (
                   <button
                     onClick={convertToDraft}
-                    className="py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
+                    className="py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-lg font-medium hover:from-orange-700 hover:to-orange-800 transition flex items-center justify-center gap-2 shadow"
                   >
                     <ArrowRight className="w-5 h-5" />
                     {showButtonLabels && <span className="text-sm">Dalej</span>}
