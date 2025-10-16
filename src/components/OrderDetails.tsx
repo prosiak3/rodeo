@@ -23,13 +23,31 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [history, setHistory] = useState<OrderHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [statusExpanded, setStatusExpanded] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<string>('');
   const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadOrderDetails();
+    loadUserPreferences();
   }, [orderId]);
+
+  const loadUserPreferences = async () => {
+    try {
+      const { data } = await supabase
+        .from('users')
+        .select('order_details_status_expanded')
+        .eq('id', userId)
+        .single();
+
+      if (data && data.order_details_status_expanded !== null) {
+        setStatusExpanded(data.order_details_status_expanded);
+      }
+    } catch (error) {
+      console.error('Error loading user preferences:', error);
+    }
+  };
 
   const loadOrderDetails = async () => {
     setLoading(true);
@@ -538,11 +556,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         <div className="bg-white rounded-lg shadow p-3">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-semibold text-base">Produkty ({items.length})</h3>
-            {canEditItems && items.length > 0 && (
-              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
-                Edytuj ilość bezpośrednio
-              </span>
-            )}
           </div>
           {items.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -551,24 +564,22 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           ) : (
             <div className="space-y-1">
               {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
-                  <div className="flex-1 min-w-0 mr-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                        item.status === 'confirmed' ? 'bg-green-500 text-white' :
-                        item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
-                        item.status === 'rejected' ? 'bg-red-500 text-white' :
-                        'bg-gray-300 text-gray-600'
-                      }`}>
-                        {item.status === 'confirmed' ? '✓' :
-                         item.status === 'partially_confirmed' ? '~' :
-                         item.status === 'rejected' ? '✗' :
-                         '○'}
-                      </span>
-                      <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
-                    </div>
+                <div key={item.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                      item.status === 'confirmed' ? 'bg-green-500 text-white' :
+                      item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
+                      item.status === 'rejected' ? 'bg-red-500 text-white' :
+                      'bg-gray-300 text-gray-600'
+                    }`}>
+                      {item.status === 'confirmed' ? '✓' :
+                       item.status === 'partially_confirmed' ? '~' :
+                       item.status === 'rejected' ? '✗' :
+                       '○'}
+                    </span>
+                    <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 text-gray-600 flex-shrink-0">
                     {canEditItems ? (
                       <>
                         <button
@@ -712,10 +723,47 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               </div>
             </div>
           )}
+
+          {(canAddMore || canConvertToDraft) && (
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="grid grid-cols-2 gap-2">
+                {canAddMore && (
+                  <button
+                    onClick={onAddProducts || onBack}
+                    className="py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Dodaj asortyment
+                  </button>
+                )}
+                {canConvertToDraft && (
+                  <button
+                    onClick={convertToDraft}
+                    className="py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
+                  >
+                    <FileEdit className="w-5 h-5" />
+                    Dalej
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3">
-          <div className="space-y-3">
+        <div className="bg-white rounded-lg shadow">
+          <button
+            onClick={() => setStatusExpanded(!statusExpanded)}
+            className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition"
+          >
+            <h3 className="font-semibold text-sm">Status i uczestnicy</h3>
+            {statusExpanded ? (
+              <ChevronUp className="w-4 h-4 text-gray-600" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
+          {statusExpanded && (
+          <div className="px-3 pb-3 space-y-3 border-t border-gray-100">
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <span className="text-gray-500">Status:</span>
@@ -860,32 +908,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               </div>
             </div>
           </div>
+          )}
         </div>
-
-        {(canAddMore || canConvertToDraft) && (
-          <div className="bg-white rounded-lg shadow p-3 space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              {canAddMore && (
-                <button
-                  onClick={onAddProducts || onBack}
-                  className="py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
-                >
-                  <Plus className="w-5 h-5" />
-                  Dodaj asortyment
-                </button>
-              )}
-              {canConvertToDraft && (
-                <button
-                  onClick={convertToDraft}
-                  className="py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
-                >
-                  <FileEdit className="w-5 h-5" />
-                  Dalej
-                </button>
-              )}
-            </div>
-          </div>
-        )}
 
         {canEdit && onEdit && (
           <div className="bg-white rounded-lg shadow p-3">

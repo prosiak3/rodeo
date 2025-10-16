@@ -34,6 +34,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [enableManualOrders, setEnableManualOrders] = useState<boolean>((user as any).enable_manual_orders ?? true);
   const [orderModeLayout, setOrderModeLayout] = useState<'list' | 'grid'>((user as any).order_mode_layout || 'list');
   const [autoOrderAnalysisDays, setAutoOrderAnalysisDays] = useState<number>((user as any).auto_order_analysis_days || 180);
+  const [orderDetailsStatusExpanded, setOrderDetailsStatusExpanded] = useState<boolean>((user as any).order_details_status_expanded ?? false);
   const [saving, setSaving] = useState(false);
 
   const handleShowAllFiltersToggle = async () => {
@@ -214,6 +215,26 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
       showAlert('Ustawienia zapisane!', 'success');
     } catch (error) {
       console.error('Error updating auto order analysis period:', error);
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleOrderDetailsStatusExpandedToggle = async () => {
+    setSaving(true);
+    try {
+      const newValue = !orderDetailsStatusExpanded;
+      const { error } = await supabase
+        .from('users')
+        .update({ order_details_status_expanded: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setOrderDetailsStatusExpanded(newValue);
+      showAlert('Ustawienia zapisane!', 'success');
+    } catch (error) {
+      console.error('Error updating order details settings:', error);
       showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
@@ -569,6 +590,36 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   <div className="text-sm text-gray-600">Przyciski ułożone w siatce 2 kolumny</div>
                 </div>
               </div>
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Eye className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Szczegóły zamówienia</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-3">Domyślny stan sekcji &quot;Status i uczestnicy&quot; w szczegółach zamówienia:</p>
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <ChevronDown className="w-5 h-5 text-amber-600" />
+              <div>
+                <div className="font-semibold text-gray-800">Rozwiń statusy i uczestników</div>
+                <div className="text-sm text-gray-600">Sekcja będzie domyślnie rozwinięta</div>
+              </div>
+            </div>
+            <button
+              onClick={handleOrderDetailsStatusExpandedToggle}
+              disabled={saving}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                orderDetailsStatusExpanded ? 'bg-amber-600' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  orderDetailsStatusExpanded ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
             </button>
           </div>
         </div>
