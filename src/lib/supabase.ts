@@ -48,6 +48,7 @@ export interface User {
   updated_at: string;
   show_all_order_filters?: boolean;
   auto_order_analysis_days?: number;
+  show_sort_buttons?: boolean;
 }
 
 export interface Product {

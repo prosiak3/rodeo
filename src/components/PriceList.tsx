@@ -58,6 +58,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>('multiple');
   const [showSortIcons, setShowSortIcons] = useState<boolean>(true);
   const [showPriceLayoutToggle, setShowPriceLayoutToggle] = useState<boolean>(true);
+  const [showSortButtons, setShowSortButtons] = useState<boolean>(false);
   const [currentSessionNotebookId, setCurrentSessionNotebookId] = useState<string | null>(notebookOrderId || null);
 
   useEffect(() => {
@@ -137,7 +138,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       const { data: userData } = await supabase
         .from('users')
-        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle')
+        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle, show_sort_buttons')
         .eq('id', authData.user.id)
         .single();
 
@@ -149,6 +150,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       setNotebookMode((userData as any)?.notebook_mode || 'multiple');
       setShowSortIcons((userData as any)?.show_sort_icons ?? true);
       setShowPriceLayoutToggle((userData as any)?.show_price_layout_toggle ?? true);
+      setShowSortButtons((userData as any)?.show_sort_buttons ?? false);
 
       const { data, error } = await supabase
         .from('products')
@@ -540,7 +542,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         </div>
 
         <div className="flex gap-2 items-center justify-between">
-          {showSortIcons && (
+          {showSortIcons && showSortButtons && (
             <div className="flex gap-1">
               <button
                 onClick={() => setSortBy('name-asc')}
