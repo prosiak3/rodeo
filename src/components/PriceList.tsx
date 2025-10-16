@@ -679,7 +679,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         )}
                       </div>
                       {priceLayout === 'horizontal' ? (
-                        <div className="flex items-center gap-2 flex-shrink-0 mr-2.5">
+                        <div className="flex items-center gap-2 flex-shrink-0 mr-5">
                           {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
                               <span className="text-xs line-through text-gray-400">
@@ -696,7 +696,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           )}
                         </div>
                       ) : (
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0 mr-2.5">
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0 mr-5">
                           {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
                               <span className="text-sm line-through text-gray-400">
