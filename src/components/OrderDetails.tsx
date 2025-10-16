@@ -28,11 +28,21 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<string>('');
   const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set());
+  const [longPressItemId, setLongPressItemId] = useState<string | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadOrderDetails();
     loadUserPreferences();
   }, [orderId]);
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+      }
+    };
+  }, [longPressTimer]);
 
   const loadUserPreferences = async () => {
     try {
@@ -468,6 +478,22 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     }
   };
 
+  const handleLongPressStart = (itemId: string) => {
+    const timer = setTimeout(() => {
+      setLongPressItemId(itemId);
+      deleteOrderItem(itemId);
+    }, 800); // 800ms długiego przytrzymania
+    setLongPressTimer(timer);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    setLongPressItemId(null);
+  };
+
   const startEditingItem = (item: OrderItem) => {
     setEditingItemId(item.id);
     setEditingQuantity(item.quantity.toString());
@@ -570,7 +596,18 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           ) : (
             <div className="space-y-1">
               {items.map((item, index) => (
-                <div key={item.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-2 p-2 rounded hover:bg-gray-100 transition ${
+                    longPressItemId === item.id ? 'bg-red-100' : 'bg-gray-50'
+                  }`}
+                  onMouseDown={() => canDeleteItems && handleLongPressStart(item.id)}
+                  onMouseUp={handleLongPressEnd}
+                  onMouseLeave={handleLongPressEnd}
+                  onTouchStart={() => canDeleteItems && handleLongPressStart(item.id)}
+                  onTouchEnd={handleLongPressEnd}
+                  onTouchCancel={handleLongPressEnd}
+                >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {order.status === 'notatnik' ? (
                       <span className="text-xs text-gray-500 font-semibold flex-shrink-0 w-5 text-center">
@@ -710,15 +747,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         <span className="text-[15px]">{item.unit_price.toFixed(2)}</span>
                         <span className="font-bold text-amber-600 min-w-[60px] text-right text-[15px]">{item.total_price.toFixed(2)} PLN</span>
                       </>
-                    )}
-                    {canDeleteItems && (
-                      <button
-                        onClick={() => deleteOrderItem(item.id)}
-                        className="p-1 text-red-500 hover:bg-red-50 rounded transition"
-                        title="Usuń pozycję"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
                     )}
                   </div>
                 </div>
