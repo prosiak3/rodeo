@@ -624,8 +624,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
-              const hasDiscountPromo = hasPromo && product.promo_price < (product.your_price || product.base_price);
+              const hasDiscountPromo = hasPromo && product.promo_price! < (product.your_price || product.base_price);
               const is10Plus1 = product.promo_10_plus_1;
+              const hasAnyPromo = hasDiscountPromo || is10Plus1;
               const isInNotebook = notebookItems.includes(product.id);
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
@@ -633,7 +634,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : (hasDiscountPromo || is10Plus1) ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasAnyPromo ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-400' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
                   style={{ touchAction: isDisabled ? 'auto' : 'none' }}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
