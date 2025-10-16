@@ -275,30 +275,58 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     }
   }
 
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [isHorizontalSwipe, setIsHorizontalSwipe] = useState<boolean>(false);
+
   const handleTouchStart = (e: React.TouchEvent, productId: string) => {
     const touch = e.touches[0];
-    console.log('📱 SWIPE START:', touch.clientX);
+    console.log('📱 SWIPE START:', touch.clientX, touch.clientY);
     setTouchStart(touch.clientX);
     setTouchCurrent(touch.clientX);
+    setTouchStartY(touch.clientY);
     setSwipedProduct(productId);
+    setIsHorizontalSwipe(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStart === null || swipedProduct === null) {
+    if (touchStart === null || swipedProduct === null || touchStartY === null) {
       return;
     }
-    e.preventDefault();
+
     const touch = e.touches[0];
-    console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
-    setTouchCurrent(touch.clientX);
+    const deltaX = Math.abs(touch.clientX - touchStart);
+    const deltaY = Math.abs(touch.clientY - touchStartY);
+
+    // Determine swipe direction on first significant movement
+    if (!isHorizontalSwipe && (deltaX > 10 || deltaY > 10)) {
+      if (deltaX > deltaY) {
+        setIsHorizontalSwipe(true);
+      } else {
+        // It's a vertical scroll, reset swipe state
+        setTouchStart(null);
+        setTouchCurrent(null);
+        setTouchStartY(null);
+        setSwipedProduct(null);
+        return;
+      }
+    }
+
+    // Only prevent default and track movement if it's a horizontal swipe
+    if (isHorizontalSwipe) {
+      e.preventDefault();
+      console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
+      setTouchCurrent(touch.clientX);
+    }
   };
 
   const handleTouchEnd = async (product: Product) => {
-    console.log('📱 SWIPE END:', { touchStart, touchCurrent });
-    if (touchStart === null || touchCurrent === null) {
+    console.log('📱 SWIPE END:', { touchStart, touchCurrent, isHorizontalSwipe });
+    if (touchStart === null || touchCurrent === null || !isHorizontalSwipe) {
       setTouchStart(null);
       setTouchCurrent(null);
+      setTouchStartY(null);
       setSwipedProduct(null);
+      setIsHorizontalSwipe(false);
       return;
     }
 
@@ -315,7 +343,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
     setTouchStart(null);
     setTouchCurrent(null);
+    setTouchStartY(null);
     setSwipedProduct(null);
+    setIsHorizontalSwipe(false);
   };
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
