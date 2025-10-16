@@ -311,9 +311,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       }
     }
 
-    // Only prevent default and track movement if it's a horizontal swipe
+    // Track movement for horizontal swipe but DON'T prevent default
     if (isHorizontalSwipe) {
-      e.preventDefault();
       console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
       setTouchCurrent(touch.clientX);
     }
