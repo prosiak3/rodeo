@@ -642,20 +642,19 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : (hasDiscountPromo || is10Plus1) ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
-                  style={{ touchAction: 'pan-y' }}
-                  onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
-                  onTouchMove={isDisabled ? undefined : handleTouchMove}
-                  onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
-                  onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
+                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : (hasDiscountPromo || is10Plus1) ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${isDisabled ? 'opacity-60' : ''}`}
                 >
                     <div
-                      className={`px-3 py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'}`}
+                      className={`px-3 py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50 cursor-grab active:cursor-grabbing'}`}
                       style={{
                         transform: isDisabled ? 'none' : `translateX(${swipeOffset}px)`,
                         transition: swipeOffset === 0 ? 'transform 0.2s ease-out' : 'none',
                         willChange: swipeOffset !== 0 ? 'transform' : 'auto'
                       }}
+                      onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
+                      onTouchMove={isDisabled ? undefined : handleTouchMove}
+                      onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
+                      onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
                     >
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0 mr-2">
@@ -683,7 +682,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         )}
                       </div>
                       {priceLayout === 'horizontal' ? (
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-auto pl-4">
                           {product.promo_price && product.promo_price > 0 ? (
                             <>
                               <div className="flex flex-col items-end">
@@ -697,19 +696,23 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                                   {product.promo_price.toFixed(2)}
                                 </span>
                               </div>
-                              <span className="text-xs text-gray-500">1{product.unit}</span>
+                              {product.unit !== 'kg' && (
+                                <span className="text-xs text-gray-500">/{product.unit}</span>
+                              )}
                             </>
                           ) : (
                             <div className="flex items-center gap-1">
                               <span className="text-sm font-bold" style={{ color: colors.text }}>
                                 {product.base_price.toFixed(2)}
                               </span>
-                              <span className="text-xs text-gray-500">1{product.unit}</span>
+                              {product.unit !== 'kg' && (
+                                <span className="text-xs text-gray-500">/{product.unit}</span>
+                              )}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-auto pl-4">
                           {product.promo_price && product.promo_price > 0 ? (
                             <>
                               <div className="flex items-baseline gap-1">
@@ -723,14 +726,18 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                                   {product.promo_price.toFixed(2)}
                                 </span>
                               </div>
-                              <span className="text-xs text-gray-500">1{product.unit}</span>
+                              {product.unit !== 'kg' && (
+                                <span className="text-xs text-gray-500">/{product.unit}</span>
+                              )}
                             </>
                           ) : (
                             <div className="flex items-baseline gap-1">
                               <span className="text-base font-bold" style={{ color: colors.text }}>
                                 {product.base_price.toFixed(2)}
                               </span>
-                              <span className="text-xs text-gray-500">1{product.unit}</span>
+                              {product.unit !== 'kg' && (
+                                <span className="text-xs text-gray-500">/{product.unit}</span>
+                              )}
                             </div>
                           )}
                         </div>
