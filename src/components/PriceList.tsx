@@ -668,6 +668,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           <span className="font-medium text-sm text-gray-800 truncate">
                             {product.name}
                           </span>
+                          {product.unit !== 'kg' && (
+                            <span className="text-xs text-gray-500 flex-shrink-0">({product.unit})</span>
+                          )}
                           {isInNotebook && (
                             <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">W NOTATNIKU</span>
                           )}
@@ -683,7 +686,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         )}
                       </div>
                       {priceLayout === 'horizontal' ? (
-                        <div className="flex items-center gap-2 flex-shrink-0 mr-5">
+                        <div className="flex items-center gap-2 flex-shrink-0 mr-8">
                           {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
                               <span className="text-xs line-through text-gray-400">
@@ -700,7 +703,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           )}
                         </div>
                       ) : (
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0 mr-5">
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0 mr-8">
                           {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
                               <span className="text-sm line-through text-gray-400">
