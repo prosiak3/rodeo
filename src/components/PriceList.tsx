@@ -686,20 +686,15 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {product.promo_price && product.promo_price > 0 ? (
                             <>
+                              <div className="flex flex-col items-end">
+                                <span className="text-xs line-through text-gray-400">
+                                  {product.base_price.toFixed(2)}
+                                </span>
+                              </div>
                               <div className="flex flex-col items-end animate-pulse">
                                 <span className="text-[9px] text-red-600 uppercase font-bold leading-none">Promocja</span>
                                 <span className="text-base font-bold text-red-600">
                                   {product.promo_price.toFixed(2)}
-                                </span>
-                              </div>
-                              <span className="text-xs text-gray-500">1{product.unit}</span>
-                            </>
-                          ) : product.your_price && product.your_price > 0 ? (
-                            <>
-                              <div className="flex flex-col items-end">
-                                <span className="text-[9px] text-blue-600 uppercase font-medium leading-none">Twoja</span>
-                                <span className="text-sm font-bold text-blue-600">
-                                  {product.your_price.toFixed(2)}
                                 </span>
                               </div>
                               <span className="text-xs text-gray-500">1{product.unit}</span>
@@ -717,20 +712,15 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         <div className="flex flex-col items-end gap-1 flex-shrink-0">
                           {product.promo_price && product.promo_price > 0 ? (
                             <>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-sm line-through text-gray-400">
+                                  {product.base_price.toFixed(2)}
+                                </span>
+                              </div>
                               <div className="flex items-baseline gap-1 animate-pulse">
                                 <span className="text-[10px] text-red-600 uppercase font-bold">Promocja</span>
                                 <span className="text-base font-bold text-red-600">
                                   {product.promo_price.toFixed(2)}
-                                </span>
-                              </div>
-                              <span className="text-xs text-gray-500">1{product.unit}</span>
-                            </>
-                          ) : product.your_price && product.your_price > 0 ? (
-                            <>
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-[10px] text-blue-600 uppercase font-medium">Twoja</span>
-                                <span className="text-sm font-bold text-blue-600">
-                                  {product.your_price.toFixed(2)}
                                 </span>
                               </div>
                               <span className="text-xs text-gray-500">1{product.unit}</span>
