@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp, Minus } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp, Minus, ArrowRight } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
 import { formatPriceDisplay } from '../lib/priceCalculations';
@@ -24,7 +24,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [loading, setLoading] = useState(true);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
-  const [showButtonLabels, setShowButtonLabels] = useState(true);
+  const [showButtonLabels, setShowButtonLabels] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<string>('');
   const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set());
@@ -663,45 +663,50 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         >
                           <Minus className="w-2.5 h-2.5" />
                         </button>
-                        <input
-                          type="number"
-                          step="1"
-                          value={item.quantity}
-                          onChange={async (e) => {
-                            const newQuantity = parseFloat(e.target.value);
-                            if (!isNaN(newQuantity) && newQuantity > 0) {
-                              const newTotalPrice = newQuantity * item.unit_price;
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="1"
+                            value={item.quantity}
+                            onChange={async (e) => {
+                              const newQuantity = parseFloat(e.target.value);
+                              if (!isNaN(newQuantity) && newQuantity > 0) {
+                                const newTotalPrice = newQuantity * item.unit_price;
 
-                              setItems(prevItems =>
-                                prevItems.map(i =>
-                                  i.id === item.id
-                                    ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
-                                    : i
-                                )
-                              );
+                                setItems(prevItems =>
+                                  prevItems.map(i =>
+                                    i.id === item.id
+                                      ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                      : i
+                                  )
+                                );
 
-                              setPendingUpdates(prev => new Set(prev).add(item.id));
-                              await supabase
-                                .from('order_items')
-                                .update({
-                                  quantity: newQuantity,
-                                  total_price: newTotalPrice
-                                })
-                                .eq('id', item.id);
-                              setPendingUpdates(prev => {
-                                const next = new Set(prev);
-                                next.delete(item.id);
-                                return next;
-                              });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.currentTarget.blur();
-                            }
-                          }}
-                          className="w-10 px-0.5 py-0.5 border border-gray-300 rounded text-xs font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
+                                setPendingUpdates(prev => new Set(prev).add(item.id));
+                                await supabase
+                                  .from('order_items')
+                                  .update({
+                                    quantity: newQuantity,
+                                    total_price: newTotalPrice
+                                  })
+                                  .eq('id', item.id);
+                                setPendingUpdates(prev => {
+                                  const next = new Set(prev);
+                                  next.delete(item.id);
+                                  return next;
+                                });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur();
+                              }
+                            }}
+                            className="w-14 pl-1 pr-6 py-0.5 border border-gray-300 rounded text-xs font-medium text-left focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          {item.unit && item.unit !== 'kg' && (
+                            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] font-medium text-gray-400 pointer-events-none">{item.unit}</span>
+                          )}
+                        </div>
                         <button
                           onClick={async () => {
                             const newQuantity = item.quantity + 1;
@@ -734,12 +739,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         >
                           <Plus className="w-2.5 h-2.5" />
                         </button>
-                        {item.unit && item.unit !== 'kg' && (
-                          <span className="text-[10px] font-medium text-gray-500 w-8 text-center">{item.unit}</span>
-                        )}
                       </>
                     ) : (
-                      <span className="font-medium text-[15px]">{item.quantity}{item.unit && item.unit !== 'kg' ? ` ${item.unit}` : ''}</span>
+                      <span className="text-sm font-medium">{item.quantity} {item.unit}</span>
                     )}
                     {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
                       <>
@@ -781,7 +783,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                     onClick={convertToDraft}
                     className="py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
                   >
-                    <FileEdit className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                     {showButtonLabels && <span className="text-sm">Dalej</span>}
                   </button>
                 )}

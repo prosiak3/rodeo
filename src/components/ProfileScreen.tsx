@@ -35,7 +35,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [orderModeLayout, setOrderModeLayout] = useState<'list' | 'grid'>((user as any).order_mode_layout || 'list');
   const [autoOrderAnalysisDays, setAutoOrderAnalysisDays] = useState<number>((user as any).auto_order_analysis_days || 180);
   const [orderDetailsStatusExpanded, setOrderDetailsStatusExpanded] = useState<boolean>((user as any).order_details_status_expanded ?? false);
-  const [showNotebookButtonLabels, setShowNotebookButtonLabels] = useState<boolean>((user as any).show_notebook_button_labels ?? true);
+  const [showNotebookButtonLabels, setShowNotebookButtonLabels] = useState<boolean>((user as any).show_notebook_button_labels ?? false);
   const [saving, setSaving] = useState(false);
 
   const handleShowAllFiltersToggle = async () => {
