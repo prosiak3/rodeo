@@ -1,5 +1,5 @@
-const CACHE_NAME = 'rodeo-ai-cache-v1';
-const AI_MODEL_CACHE = 'rodeo-ai-models-v1';
+const CACHE_NAME = 'rodeo-ai-cache-v2';
+const AI_MODEL_CACHE = 'rodeo-ai-models-v2';
 
 const urlsToCache = [
   '/',
@@ -62,8 +62,8 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
 });
