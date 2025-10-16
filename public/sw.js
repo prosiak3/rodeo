@@ -1,5 +1,5 @@
-const CACHE_NAME = 'rodeo-ai-cache-v2';
-const AI_MODEL_CACHE = 'rodeo-ai-models-v2';
+const CACHE_NAME = 'rodeo-ai-cache-v3';
+const AI_MODEL_CACHE = 'rodeo-ai-models-v3';
 
 const urlsToCache = [
   '/',
@@ -62,9 +62,19 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
+    fetch(event.request)
+      .then(response => {
+        if (response.ok) {
+          return response;
+        }
+        return caches.match(event.request).then(cached => cached || response);
+      })
+      .catch(() => {
+        return caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+        });
+      })
   );
 });
 
