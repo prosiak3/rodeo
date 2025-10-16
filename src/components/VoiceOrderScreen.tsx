@@ -56,11 +56,25 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   const [productSearchQuery, setProductSearchQuery] = useState('');
   const [searchingItemIndex, setSearchingItemIndex] = useState<number | null>(null);
   const [inlineSearchQuery, setInlineSearchQuery] = useState('');
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy. Użyj Chrome lub Edge.');
     }
+    loadUserPreferences();
     loadProducts();
 
     const checkAIStatus = async () => {
@@ -1328,12 +1342,14 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                       >
                         <Plus className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => removeItem(index)}
-                        className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {showDeleteIcons && (
+                        <button
+                          onClick={() => removeItem(index)}
+                          className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

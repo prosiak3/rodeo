@@ -35,10 +35,24 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
   const [loadingItems, setLoadingItems] = useState(false);
   const [sending, setSending] = useState(false);
   const [notes, setNotes] = useState('');
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
 
   useEffect(() => {
+    loadUserPreferences();
     loadCompletedOrders();
   }, [storeId]);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
     if (preselectedOrderId && orders.length > 0 && !selectedOrder) {
@@ -272,12 +286,14 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
                           {item.price_per_unit.toFixed(2)} / 1{item.unit}
                         </p>
                       </div>
-                      <button
-                        onClick={() => removeItem(item.product_id)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      {showDeleteIcons && (
+                        <button
+                          onClick={() => removeItem(item.product_id)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <button

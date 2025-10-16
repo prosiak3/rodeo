@@ -32,10 +32,24 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
   const [notes, setNotes] = useState('');
   const [sending, setSending] = useState(false);
   const [showProductList, setShowProductList] = useState(false);
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
 
   useEffect(() => {
+    loadUserPreferences();
     loadProducts();
   }, []);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -229,12 +243,14 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                     <div className="flex-1">
                       <p className="font-semibold text-gray-800">{item.product_name}</p>
                     </div>
-                    <button
-                      onClick={() => removeItem(item.product_id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    {showDeleteIcons && (
+                      <button
+                        onClick={() => removeItem(item.product_id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <button

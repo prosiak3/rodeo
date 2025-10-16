@@ -50,8 +50,22 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
   const [saving, setSaving] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [priceLayout, setPriceLayout] = useState<PriceLayout>('horizontal');
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
+    loadUserPreferences();
     loadProducts();
   }, []);
 
@@ -305,12 +319,14 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
                     >
                       <Plus className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => removeFromList(item.productId)}
-                      className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {showDeleteIcons && (
+                      <button
+                        onClick={() => removeFromList(item.productId)}
+                        className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

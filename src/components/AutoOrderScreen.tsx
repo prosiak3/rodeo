@@ -56,11 +56,25 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
 
   useEffect(() => {
+    loadUserPreferences();
     loadSuggestion();
     loadAvailableProducts();
   }, [storeId]);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
     if (suggestion?.products) {
@@ -427,12 +441,14 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
                         <span className="text-xs text-gray-700 w-16 text-right">
                           {(Math.ceil(quantity) * product.base_price).toFixed(2)} zł
                         </span>
-                        <button
-                          onClick={() => removeProduct(product.product_id)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        {showDeleteIcons && (
+                          <button
+                            onClick={() => removeProduct(product.product_id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

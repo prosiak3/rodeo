@@ -22,11 +22,25 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [sourceType, setSourceType] = useState<string | null>(null);
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
   const productsRef = useRef<Product[]>([]);
 
   useEffect(() => {
+    loadUserPreferences();
     loadData();
   }, [orderId]);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -500,12 +514,14 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                     >
                       +
                     </button>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="w-8 h-8 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition flex items-center justify-center"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {showDeleteIcons && (
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="w-8 h-8 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition flex items-center justify-center"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                   {sourceType !== 'voice' && (
                     <div className="text-right min-w-[80px]">
