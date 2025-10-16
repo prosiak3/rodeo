@@ -42,6 +42,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   const [swipedProduct, setSwipedProduct] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchCurrent, setTouchCurrent] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const mouseStateRef = useRef({
@@ -276,17 +277,24 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     console.log('📱 SWIPE START:', touch.clientX);
     setTouchStart(touch.clientX);
     setTouchCurrent(touch.clientX);
+    setTouchStartY(touch.clientY);
     setSwipedProduct(productId);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStart === null || swipedProduct === null) {
+    if (touchStart === null || touchStartY === null || swipedProduct === null) {
       return;
     }
-    e.preventDefault();
     const touch = e.touches[0];
-    console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
-    setTouchCurrent(touch.clientX);
+    const horizontalDistance = Math.abs(touch.clientX - touchStart);
+    const verticalDistance = Math.abs(touch.clientY - touchStartY);
+
+    // Only prevent default if it's a clear horizontal swipe (more horizontal than vertical)
+    if (horizontalDistance > verticalDistance && horizontalDistance > 10) {
+      e.preventDefault();
+      console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
+      setTouchCurrent(touch.clientX);
+    }
   };
 
   const handleTouchEnd = async (product: Product) => {
@@ -311,6 +319,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
     setTouchStart(null);
     setTouchCurrent(null);
+    setTouchStartY(null);
     setSwipedProduct(null);
   };
 
@@ -634,7 +643,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 <div
                   key={product.id}
                   className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : (hasDiscountPromo || is10Plus1) ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
-                  style={{ touchAction: isDisabled ? 'auto' : 'none' }}
+                  style={{ touchAction: isDisabled ? 'auto' : 'pan-y' }}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
                   onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
