@@ -290,7 +290,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     const verticalDistance = Math.abs(touch.clientY - touchStartY);
 
     // Only prevent default if it's a clear horizontal swipe (more horizontal than vertical)
-    if (horizontalDistance > verticalDistance && horizontalDistance > 10) {
+    if (horizontalDistance > verticalDistance && horizontalDistance > 5) {
       e.preventDefault();
       console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
       setTouchCurrent(touch.clientX);
@@ -650,10 +650,11 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                   onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
                 >
                     <div
-                      className={`px-3 py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
+                      className={`px-3 py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'}`}
                       style={{
                         transform: isDisabled ? 'none' : `translateX(${swipeOffset}px)`,
-                        transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
+                        transition: swipeOffset === 0 ? 'transform 0.2s ease-out' : 'none',
+                        willChange: swipeOffset !== 0 ? 'transform' : 'auto'
                       }}
                     >
                     <div className="flex items-center gap-2">
