@@ -24,6 +24,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [loading, setLoading] = useState(true);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
+  const [showButtonLabels, setShowButtonLabels] = useState(true);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<string>('');
   const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set());
@@ -37,12 +38,17 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     try {
       const { data } = await supabase
         .from('users')
-        .select('order_details_status_expanded')
+        .select('order_details_status_expanded, show_notebook_button_labels')
         .eq('id', userId)
         .single();
 
-      if (data && data.order_details_status_expanded !== null) {
-        setStatusExpanded(data.order_details_status_expanded);
+      if (data) {
+        if (data.order_details_status_expanded !== null) {
+          setStatusExpanded(data.order_details_status_expanded);
+        }
+        if (data.show_notebook_button_labels !== null) {
+          setShowButtonLabels(data.show_notebook_button_labels);
+        }
       }
     } catch (error) {
       console.error('Error loading user preferences:', error);
@@ -567,7 +573,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 <div key={item.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {order.status === 'notatnik' ? (
-                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0 bg-amber-500 text-white font-semibold">
+                      <span className="text-xs text-gray-500 font-semibold flex-shrink-0 w-5 text-center">
                         {index + 1}
                       </span>
                     ) : (
@@ -615,10 +621,10 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               return next;
                             });
                           }}
-                          className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition active:scale-95"
+                          className="w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition active:scale-95"
                           title="Zmniejsz ilość"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-2.5 h-2.5" />
                         </button>
                         <input
                           type="number"
@@ -657,7 +663,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               e.currentTarget.blur();
                             }
                           }}
-                          className="w-12 px-1 py-0.5 border border-gray-300 rounded text-sm font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none"
+                          className="w-10 px-0.5 py-0.5 border border-gray-300 rounded text-xs font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <button
                           onClick={async () => {
@@ -686,13 +692,13 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                               return next;
                             });
                           }}
-                          className="w-6 h-6 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded transition active:scale-95"
+                          className="w-5 h-5 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded transition active:scale-95"
                           title="Zwiększ ilość"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-2.5 h-2.5" />
                         </button>
                         {item.unit && item.unit !== 'kg' && (
-                          <span className="text-[13px] font-medium">{item.unit}</span>
+                          <span className="text-[10px] font-medium text-gray-500 w-8 text-center">{item.unit}</span>
                         )}
                       </>
                     ) : (
@@ -711,7 +717,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                         className="p-1 text-red-500 hover:bg-red-50 rounded transition"
                         title="Usuń pozycję"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </button>
                     )}
                   </div>
@@ -736,19 +742,19 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 {canAddMore && (
                   <button
                     onClick={onAddProducts || onBack}
-                    className="py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
+                    className="py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
                   >
-                    <Plus className="w-5 h-5" />
-                    Dodaj asortyment
+                    <Plus className="w-4 h-4" />
+                    {showButtonLabels && <span className="text-sm">Dodaj</span>}
                   </button>
                 )}
                 {canConvertToDraft && (
                   <button
                     onClick={convertToDraft}
-                    className="py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
+                    className="py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
                   >
-                    <FileEdit className="w-5 h-5" />
-                    Dalej
+                    <FileEdit className="w-4 h-4" />
+                    {showButtonLabels && <span className="text-sm">Dalej</span>}
                   </button>
                 )}
               </div>
