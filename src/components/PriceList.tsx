@@ -627,6 +627,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
               const hasDiscountPromo = hasPromo && product.promo_price! < (product.your_price || product.base_price);
+              const discountPercent = hasDiscountPromo
+                ? Math.round(((product.your_price || product.base_price) - product.promo_price!) / (product.your_price || product.base_price) * 100)
+                : 0;
               const is10Plus1 = product.promo_10_plus_1;
               const hasAnyPromo = hasDiscountPromo || is10Plus1;
               const isInNotebook = notebookItems.includes(product.id);
@@ -665,7 +668,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                             <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">W NOTATNIKU</span>
                           )}
                           {hasDiscountPromo && (
-                            <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold animate-pulse">-15%</span>
+                            <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold animate-pulse">-{discountPercent}%</span>
                           )}
                           {is10Plus1 && (
                             <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">10+1 GRATIS</span>
@@ -676,7 +679,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         )}
                       </div>
                       {priceLayout === 'horizontal' ? (
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0 mr-2.5">
                           {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
                               <span className="text-xs line-through text-gray-400">
@@ -693,7 +696,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           )}
                         </div>
                       ) : (
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0 mr-2.5">
                           {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
                               <span className="text-sm line-through text-gray-400">
