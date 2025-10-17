@@ -350,10 +350,82 @@ class EmbeddingsManager {
     });
   }
 
+  async getAllCachedEmbeddings(): Promise<ProductEmbedding[]> {
+    if (!this.db) return [];
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['embeddings'], 'readonly');
+      const store = transaction.objectStore('embeddings');
+      const request = store.getAll();
+
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async updateCachedEmbedding(embedding: ProductEmbedding): Promise<void> {
+    this.embeddingsCache.set(embedding.productId, embedding);
+    await this.storeEmbedding(embedding);
+  }
+
+  async deleteCachedEmbedding(productId: string): Promise<void> {
+    this.embeddingsCache.delete(productId);
+
+    if (!this.db) return;
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['embeddings'], 'readwrite');
+      const store = transaction.objectStore('embeddings');
+      const request = store.delete(productId);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async exportCache(): Promise<string> {
+    const embeddings = await this.getAllCachedEmbeddings();
+    return JSON.stringify(embeddings, null, 2);
+  }
+
+  async importCache(jsonData: string): Promise<{ success: number; failed: number }> {
+    try {
+      const embeddings: ProductEmbedding[] = JSON.parse(jsonData);
+      let success = 0;
+      let failed = 0;
+
+      for (const embedding of embeddings) {
+        try {
+          if (embedding.productId && embedding.embedding && embedding.name && embedding.index) {
+            await this.updateCachedEmbedding(embedding);
+            success++;
+          } else {
+            failed++;
+          }
+        } catch (error) {
+          console.error('[AI] Failed to import embedding:', error);
+          failed++;
+        }
+      }
+
+      return { success, failed };
+    } catch (error) {
+      console.error('[AI] Failed to parse import data:', error);
+      throw new Error('Invalid JSON format');
+    }
+  }
+
+  getCacheStats(): { size: number; products: string[] } {
+    return {
+      size: this.embeddingsCache.size,
+      products: Array.from(this.embeddingsCache.keys())
+    };
+  }
+
   isReady(): boolean {
     return this.isInitialized;
   }
 }
 
 export const embeddingsManager = new EmbeddingsManager();
-export type { Product, SimilarityResult };
+export type { Product, SimilarityResult, ProductEmbedding };
