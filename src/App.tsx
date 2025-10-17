@@ -745,7 +745,7 @@ function AppContent() {
         if (tab === 'orders') {
           setOrdersListFilter(null);
         }
-      }} />
+      }} userRole={user.role} />
     </div>
   );
 }
