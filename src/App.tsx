@@ -19,6 +19,7 @@ import PriceList from './components/PriceList';
 import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
+import SessionCleanupService from './components/SessionCleanupService';
 import { supabase, OrderStatus } from './lib/supabase';
 import { useUserTracking } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
@@ -517,6 +518,9 @@ function AppContent() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-gray-50">
+      {/* Background service: automatically closes inactive sessions every 5 minutes */}
+      <SessionCleanupService />
+
       <Header
         title={header.title}
         subtitle={header.subtitle}

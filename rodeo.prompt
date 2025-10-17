@@ -587,6 +587,50 @@ Wszystkie migracje znajdują się w katalogu `/supabase/migrations/`:
 - Dodanie statusu "notatnik" dla zamówień
 - Polityki usuwania zamówień draft i notatnik
 
+## System Analityki i Automatycznego Zarządzania Sesjami
+
+### Komponenty Analityki
+
+1. **useUserTracking** (src/hooks/useUserTracking.tsx)
+   - Automatyczne śledzenie nawigacji i akcji użytkowników
+   - Batch processing zdarzeń (co 5s lub 20 zdarzeń)
+   - Zarządzanie sesjami z timeoutem 30 minut
+   - Wykrywanie typu interakcji (touch/mouse/mixed)
+   - Zbieranie informacji o urządzeniu i przeglądarce
+
+2. **SessionCleanupService** (src/components/SessionCleanupService.tsx)
+   - **AUTOMATYCZNE** zamykanie nieaktywnych sesji co 5 minut
+   - Działa w tle bez interakcji użytkownika
+   - Uruchamia `close_inactive_sessions()` z bazy danych
+   - Żadnych ręcznych przycisków - całkowicie automatyczny proces
+
+3. **Funkcje Bazodanowe**
+   - `close_inactive_sessions()` - zamyka sesje bez aktywności przez 30+ minut
+   - `close_user_sessions(user_id)` - zamyka wszystkie sesje użytkownika przy wylogowaniu
+   - Funkcje wywoływane automatycznie przez system
+
+### Panele Analityczne (dla analyst/admin)
+
+1. **AnalyticsPanel** - Dashboard KPI, top wydarzenia, sesje
+2. **SessionsBrowserPanel** - Przegląd sesji z filtrowaniem
+3. **TopProductsPanel** - Najpopularniejsze produkty
+4. **AIMetricsPanel** - Metryki AI (rozpoznawanie głosu)
+5. **LoginRankingsPanel** - Ranking aktywności użytkowników
+6. **PushAnalyticsPanel** - Analityka powiadomień push
+
+### Zabezpieczenia Analityki (RLS)
+
+- **user_events** - użytkownicy wstawiają własne, analyst/admin czytają wszystkie
+- **user_sessions** - użytkownicy zarządzają własnymi, analyst/admin widzą wszystkie
+- **user_paths** - tylko analyst/admin mają dostęp
+- **path_clusters** - tylko analyst/admin mają dostęp
+
+### WAŻNE: Sesje są zarządzane AUTOMATYCZNIE!
+- Brak ręcznych przycisków do zamykania sesji
+- System sam zamyka nieaktywne sesje co 5 minut
+- Sesje zamykane przy wylogowaniu użytkownika
+- Statystyki pokazują tylko rzeczywiste aktywne sesje (< 30 min)
+
 ## Szczegóły Techniczne - Cennik
 
 ### PriceList.tsx

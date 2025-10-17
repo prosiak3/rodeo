@@ -21,6 +21,8 @@ Został zaimplementowany kompleksowy system do zbierania, analizy i wizualizacji
 - `calculate_lcs_similarity()` - Oblicza podobieństwo między ścieżkami
 - `cleanup_old_analytics_data()` - Czyści dane starsze niż 90 dni
 - `update_session_stats()` - Automatycznie aktualizuje statystyki sesji
+- **`close_inactive_sessions()`** - **NOWOŚĆ:** Automatycznie zamyka sesje bez aktywności przez 30+ minut
+- **`close_user_sessions(user_id)`** - **NOWOŚĆ:** Zamyka wszystkie sesje użytkownika (wywołane przy wylogowaniu)
 
 ### 2. Hook React: useUserTracking
 
@@ -105,14 +107,20 @@ Lokalizacja: `src/components/AnalyticsPanel.tsx`
 
 ### Row Level Security (RLS)
 
-- **user_events** - Użytkownicy mogą dodawać własne zdarzenia, tylko analitycy mogą je czytać
-- **user_sessions** - Użytkownicy zarządzają własnymi sesjami, tylko analitycy widzą wszystkie
-- **user_paths** - Tylko analitycy mają dostęp do odczytu
-- **path_clusters** - Tylko analitycy mają dostęp do odczytu
+- **user_events** - Użytkownicy mogą dodawać własne zdarzenia, tylko analitycy i admini mogą je czytać
+- **user_sessions** - Użytkownicy zarządzają własnymi sesjami, tylko analitycy i admini widzą wszystkie
+- **user_paths** - Tylko analitycy i admini mają dostęp do odczytu
+- **path_clusters** - Tylko analitycy i admini mają dostęp do odczytu
 
 ### Automatyczne czyszczenie danych
 
-Dane analityczne są automatycznie archiwizowane po 90 dniach poprzez funkcję `cleanup_old_analytics_data()`.
+1. **Stare dane analityczne** - Automatyczne archiwizowanie po 90 dniach (`cleanup_old_analytics_data()`)
+2. **Nieaktywne sesje** - Automatyczne zamykanie co 5 minut:
+   - Sesje bez aktywności przez 30+ minut są zamykane
+   - Sesje użytkownika zamykane przy wylogowaniu
+   - Proces działa w tle bez interakcji użytkownika (`SessionCleanupService`)
+
+**WAŻNE:** System automatycznie dba o zamykanie sesji - brak potrzeby ręcznej interwencji!
 
 ### Minimalizacja wpływu na wydajność
 

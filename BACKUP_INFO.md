@@ -111,12 +111,15 @@ project/
 - System promocji (10+1, zniżki procentowe)
 
 ### Analityka
-- Tracking sesji użytkowników
+- **Automatyczne** zarządzanie sesjami (zamykanie nieaktywnych co 5 min)
+- Tracking sesji użytkowników z wykrywaniem urządzeń
 - Metryki AI (embeddings, similarity search)
 - Voice recognition accuracy
 - Rankingi logowań (sklepy, użytkownicy)
 - Przeglądarka sesji z filtrowaniem
 - Path clustering
+- Top produkty z filtrowaniem i statystykami
+- SessionCleanupService - automatyczne czyszczenie w tle
 
 ### AI & Machine Learning
 - Embeddings dla produktów (IndexedDB)

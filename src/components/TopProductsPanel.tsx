@@ -58,14 +58,13 @@ export default function TopProductsPanel() {
         .select(`
           id,
           user_id,
-          store_id,
           users!inner (
             full_name,
             store_id,
             stores (name)
           )
         `)
-        .in('status', ['sent', 'confirmed', 'partially_confirmed', 'in_progress', 'pending_confirmation'])
+        .in('status', ['sent', 'confirmed', 'partially_confirmed'])
         .gte('created_at', cutoffDate);
 
       if (storeFilter !== 'all') {
