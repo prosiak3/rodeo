@@ -139,6 +139,13 @@ function AppContent() {
         role: 'driver',
         store_code: null,
       },
+      {
+        email: 'analyse@sklep.pl',
+        password: 'test123',
+        full_name: 'Analityk Systemu',
+        role: 'analyst',
+        store_code: null,
+      },
     ];
 
     for (const testUser of testUsers) {

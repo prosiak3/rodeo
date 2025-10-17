@@ -12,6 +12,7 @@ const testUsers = [
   { email: 'handlowiec@hurtownia.pl', password: 'test123', role: 'Handlowiec' },
   { email: 'operator@hurtownia.pl', password: 'test123', role: 'Hurtownia' },
   { email: 'kierowca@rodeo.pl', password: 'test123', role: 'Kierowca' },
+  { email: 'analyse@sklep.pl', password: 'test123', role: 'Analityk' },
 ];
 
 export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenProps) {
