@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { processRecentSessions, clusterPaths, UserPath, PathCluster } from '../lib/pathClustering';
-import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download, LogOut } from 'lucide-react';
 
 interface AnalyticsSummary {
   totalUsers: number;
@@ -247,6 +247,11 @@ export default function AnalyticsPanel() {
     URL.revokeObjectURL(url);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -287,6 +292,13 @@ export default function AnalyticsPanel() {
             >
               <Download className="w-5 h-5" />
               Eksportuj
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-base"
+            >
+              <LogOut className="w-5 h-5" />
+              Wyloguj
             </button>
           </div>
         </div>
