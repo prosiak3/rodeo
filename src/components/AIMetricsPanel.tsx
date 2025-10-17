@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { embeddingsManager, ProductEmbedding } from '../lib/embeddingsManager';
-import { Activity, TrendingUp, AlertCircle, Clock, CheckCircle, XCircle, Database, Download, Upload, Trash2, Edit2, Save, X } from 'lucide-react';
+import { Activity, TrendingUp, AlertCircle, Clock, CheckCircle, XCircle, Database, Download, Upload, Trash2, Edit2, Save, X, MessageSquare } from 'lucide-react';
+import VoiceLearningPanel from './VoiceLearningPanel';
 
 interface AIMetric {
   id: string;
@@ -42,7 +43,7 @@ export default function AIMetricsPanel() {
   });
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
-  const [activeTab, setActiveTab] = useState<'metrics' | 'cache'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'cache' | 'learning'>('metrics');
   const [cacheData, setCacheData] = useState<ProductEmbedding[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedEmbedding, setEditedEmbedding] = useState<ProductEmbedding | null>(null);
@@ -277,6 +278,17 @@ export default function AIMetricsPanel() {
           Metryki
         </button>
         <button
+          onClick={() => setActiveTab('learning')}
+          className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+            activeTab === 'learning'
+              ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <MessageSquare className="w-5 h-5" />
+          Nauka głosowa
+        </button>
+        <button
           onClick={() => setActiveTab('cache')}
           className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
             activeTab === 'cache'
@@ -452,6 +464,8 @@ export default function AIMetricsPanel() {
         </div>
       </div>
       </>
+      ) : activeTab === 'learning' ? (
+        <VoiceLearningPanel />
       ) : (
         <div className="space-y-4">
           <div className="flex gap-3">
