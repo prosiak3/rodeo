@@ -5,6 +5,7 @@ import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Downl
 import AIMetricsPanel from './AIMetricsPanel';
 import LoginRankingsPanel from './LoginRankingsPanel';
 import SessionsBrowserPanel from './SessionsBrowserPanel';
+import TopProductsPanel from './TopProductsPanel';
 
 interface AnalyticsSummary {
   totalUsers: number;
@@ -25,7 +26,7 @@ export default function AnalyticsPanel() {
   const [clusters, setClusters] = useState<PathCluster[]>([]);
   const [timeFilter, setTimeFilter] = useState<'today' | 'week' | 'month' | 'all'>('week');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'analytics' | 'ai-metrics' | 'rankings' | 'sessions'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'ai-metrics' | 'rankings' | 'sessions' | 'products'>('analytics');
 
   useEffect(() => {
     loadAnalytics();
@@ -240,6 +241,17 @@ export default function AnalyticsPanel() {
         Sesje
       </button>
       <button
+        onClick={() => setActiveTab('products')}
+        className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+          activeTab === 'products'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-600 hover:text-gray-900'
+        }`}
+      >
+        <TrendingUp className="w-5 h-5" />
+        Produkty
+      </button>
+      <button
         onClick={() => setActiveTab('ai-metrics')}
         className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
           activeTab === 'ai-metrics'
@@ -326,6 +338,32 @@ export default function AnalyticsPanel() {
             {renderTabs()}
           </div>
           <SessionsBrowserPanel />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'products') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Panel Analityczny</h1>
+                <p className="text-gray-600 mt-1">Analiza zachowań użytkowników systemu RODEO</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-base"
+              >
+                <LogOut className="w-5 h-5" />
+                Wyloguj
+              </button>
+            </div>
+            {renderTabs()}
+          </div>
+          <TopProductsPanel />
         </div>
       </div>
     );

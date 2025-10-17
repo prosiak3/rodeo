@@ -25,11 +25,42 @@ const FLUSH_INTERVAL = 5000; // 5 seconds
 let currentSession: SessionInfo | null = null;
 let lastActivityTime = Date.now();
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+let interactionType: 'touch' | 'mouse' | 'mixed' | null = null;
 
 export function useUserTracking(userId: string | null, currentScreen: string) {
   const previousScreenRef = useRef<string>('');
   const screenStartTimeRef = useRef<Date>(new Date());
   const isTrackingEnabledRef = useRef(true);
+
+  // Detect interaction type
+  const detectInteractionType = useCallback(() => {
+    const updateInteractionType = (type: 'touch' | 'mouse') => {
+      if (!interactionType) {
+        interactionType = type;
+      } else if (interactionType !== type) {
+        interactionType = 'mixed';
+      }
+
+      if (currentSession) {
+        supabase
+          .from('user_sessions')
+          .update({ interaction_type: interactionType })
+          .eq('id', currentSession.sessionId)
+          .then(() => {});
+      }
+    };
+
+    const handleTouch = () => updateInteractionType('touch');
+    const handleMouse = () => updateInteractionType('mouse');
+
+    window.addEventListener('touchstart', handleTouch, { once: true, passive: true });
+    window.addEventListener('mousedown', handleMouse, { once: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouch);
+      window.removeEventListener('mousedown', handleMouse);
+    };
+  }, []);
 
   // Initialize or resume session
   const initializeSession = useCallback(async () => {
@@ -41,6 +72,7 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
     // Check if we need to create a new session (timeout or no session)
     if (!currentSession || timeSinceLastActivity > SESSION_TIMEOUT) {
       const sessionId = crypto.randomUUID();
+      interactionType = null;
 
       try {
         const ua = navigator.userAgent;
@@ -70,6 +102,8 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
             userId,
             sessionStart: new Date(),
           };
+
+          detectInteractionType();
         }
       } catch (err) {
         console.error('[Tracking] Failed to initialize session:', err);
@@ -77,7 +111,7 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
     }
 
     lastActivityTime = now;
-  }, [userId]);
+  }, [userId, detectInteractionType]);
 
   // Flush events to database
   const flushEvents = useCallback(async () => {

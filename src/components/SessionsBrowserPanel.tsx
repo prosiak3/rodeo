@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Monitor, Smartphone, Tablet, Globe, Chrome, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Monitor, Smartphone, Tablet, Chrome, Filter, ChevronDown, ChevronUp, MousePointer, Hand } from 'lucide-react';
 
 interface Session {
   id: string;
@@ -19,6 +19,7 @@ interface Session {
   device_model: string | null;
   is_pwa: boolean | null;
   screen_resolution: string | null;
+  interaction_type: string | null;
   event_count: number;
 }
 
@@ -116,6 +117,7 @@ export default function SessionsBrowserPanel() {
         device_model: session.device_model,
         is_pwa: session.is_pwa,
         screen_resolution: session.screen_resolution,
+        interaction_type: session.interaction_type,
         event_count: 0
       }));
 
@@ -233,10 +235,136 @@ export default function SessionsBrowserPanel() {
     );
   }
 
+  const calculateStats = () => {
+    const stats = {
+      byDevice: { mobile: 0, tablet: 0, desktop: 0 },
+      byOS: {} as Record<string, number>,
+      byBrowser: {} as Record<string, number>,
+      byInteraction: { touch: 0, mouse: 0, mixed: 0, unknown: 0 },
+      pwaVsBrowser: { pwa: 0, browser: 0 },
+    };
+
+    filteredSessions.forEach(session => {
+      if (session.device_type) {
+        stats.byDevice[session.device_type as keyof typeof stats.byDevice] =
+          (stats.byDevice[session.device_type as keyof typeof stats.byDevice] || 0) + 1;
+      }
+
+      if (session.os_name) {
+        stats.byOS[session.os_name] = (stats.byOS[session.os_name] || 0) + 1;
+      }
+
+      if (session.browser_name) {
+        stats.byBrowser[session.browser_name] = (stats.byBrowser[session.browser_name] || 0) + 1;
+      }
+
+      if (session.interaction_type) {
+        stats.byInteraction[session.interaction_type as keyof typeof stats.byInteraction] =
+          (stats.byInteraction[session.interaction_type as keyof typeof stats.byInteraction] || 0) + 1;
+      } else {
+        stats.byInteraction.unknown++;
+      }
+
+      if (session.is_pwa) {
+        stats.pwaVsBrowser.pwa++;
+      } else {
+        stats.pwaVsBrowser.browser++;
+      }
+    });
+
+    return stats;
+  };
+
+  const stats = calculateStats();
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Przeglądarka sesji</h2>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Urządzenia</h3>
+          <div className="space-y-2">
+            {Object.entries(stats.byDevice).map(([device, count]) => (
+              <div key={device} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {getDeviceIcon(device)}
+                  <span className="text-sm text-gray-800 dark:text-white capitalize">{device}</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Systemy operacyjne</h3>
+          <div className="space-y-2">
+            {Object.entries(stats.byOS).slice(0, 5).map(([os, count]) => (
+              <div key={os} className="flex items-center justify-between">
+                <span className="text-sm text-gray-800 dark:text-white">{os}</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Typ interakcji</h3>
+          <div className="space-y-2">
+            {stats.byInteraction.mouse > 0 && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MousePointer className="w-4 h-4 text-purple-500" />
+                  <span className="text-sm text-gray-800 dark:text-white">Mysz</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">{stats.byInteraction.mouse}</span>
+              </div>
+            )}
+            {stats.byInteraction.touch > 0 && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Hand className="w-4 h-4 text-blue-500" />
+                  <span className="text-sm text-gray-800 dark:text-white">Dotyk</span>
+                </div>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">{stats.byInteraction.touch}</span>
+              </div>
+            )}
+            {stats.byInteraction.mixed > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-800 dark:text-white">Mieszane</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">{stats.byInteraction.mixed}</span>
+              </div>
+            )}
+            {stats.byInteraction.unknown > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Nieznane</span>
+                <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{stats.byInteraction.unknown}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Tryb aplikacji</h3>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-800 dark:text-white">PWA</span>
+              <span className="text-sm font-semibold text-green-600 dark:text-green-400">{stats.pwaVsBrowser.pwa}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-800 dark:text-white">Browser</span>
+              <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{stats.pwaVsBrowser.browser}</span>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+            <div className="text-xs text-gray-600 dark:text-gray-400">
+              Współczynnik PWA: {((stats.pwaVsBrowser.pwa / filteredSessions.length) * 100).toFixed(1)}%
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -383,6 +511,12 @@ export default function SessionsBrowserPanel() {
                       Przeglądarka
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      Rozdzielczość
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      Interakcja
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       Tryb
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
@@ -422,6 +556,34 @@ export default function SessionsBrowserPanel() {
                           {session.browser_name || 'Unknown'}
                           {session.browser_version && <span className="text-gray-600 dark:text-gray-400"> {session.browser_version}</span>}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                        {session.screen_resolution || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {session.interaction_type === 'touch' ? (
+                          <div className="flex items-center gap-1">
+                            <Hand className="w-4 h-4 text-blue-500" />
+                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium">
+                              Dotyk
+                            </span>
+                          </div>
+                        ) : session.interaction_type === 'mouse' ? (
+                          <div className="flex items-center gap-1">
+                            <MousePointer className="w-4 h-4 text-purple-500" />
+                            <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-xs font-medium">
+                              Mysz
+                            </span>
+                          </div>
+                        ) : session.interaction_type === 'mixed' ? (
+                          <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full text-xs font-medium">
+                            Mieszane
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-xs font-medium">
+                            N/A
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         {session.is_pwa ? (
