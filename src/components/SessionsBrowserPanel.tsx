@@ -220,6 +220,34 @@ export default function SessionsBrowserPanel() {
     });
   };
 
+  const formatDuration = (startDate: string, endDate: string | null) => {
+    if (!endDate) {
+      const now = new Date();
+      const start = new Date(startDate);
+      const durationMs = now.getTime() - start.getTime();
+      return formatDurationMs(durationMs) + ' (aktywna)';
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const durationMs = end.getTime() - start.getTime();
+    return formatDurationMs(durationMs);
+  };
+
+  const formatDurationMs = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
   const uniqueDeviceTypes = Array.from(new Set(sessions.map(s => s.device_type).filter(Boolean)));
   const uniqueOSNames = Array.from(new Set(sessions.map(s => s.os_name).filter(Boolean)));
   const uniqueBrowserNames = Array.from(new Set(sessions.map(s => s.browser_name).filter(Boolean)));
@@ -242,7 +270,12 @@ export default function SessionsBrowserPanel() {
       byBrowser: {} as Record<string, number>,
       byInteraction: { touch: 0, mouse: 0, mixed: 0, unknown: 0 },
       pwaVsBrowser: { pwa: 0, browser: 0 },
+      avgDuration: 0,
+      activeSessions: 0,
     };
+
+    let totalDuration = 0;
+    let sessionsWithDuration = 0;
 
     filteredSessions.forEach(session => {
       if (session.device_type) {
@@ -270,7 +303,20 @@ export default function SessionsBrowserPanel() {
       } else {
         stats.pwaVsBrowser.browser++;
       }
+
+      if (session.session_end) {
+        const start = new Date(session.session_start);
+        const end = new Date(session.session_end);
+        totalDuration += end.getTime() - start.getTime();
+        sessionsWithDuration++;
+      } else {
+        stats.activeSessions++;
+      }
     });
+
+    if (sessionsWithDuration > 0) {
+      stats.avgDuration = totalDuration / sessionsWithDuration;
+    }
 
     return stats;
   };
@@ -348,20 +394,28 @@ export default function SessionsBrowserPanel() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Tryb aplikacji</h3>
+          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Czas sesji</h3>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-800 dark:text-white">PWA</span>
-              <span className="text-sm font-semibold text-green-600 dark:text-green-400">{stats.pwaVsBrowser.pwa}</span>
+              <span className="text-sm text-gray-800 dark:text-white">Średni czas</span>
+              <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                {stats.avgDuration > 0 ? formatDurationMs(stats.avgDuration) : 'N/A'}
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-800 dark:text-white">Browser</span>
-              <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">{stats.pwaVsBrowser.browser}</span>
+              <span className="text-sm text-gray-800 dark:text-white">Aktywne sesje</span>
+              <span className="text-sm font-semibold text-green-600 dark:text-green-400">{stats.activeSessions}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-800 dark:text-white">Zakończone</span>
+              <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                {filteredSessions.length - stats.activeSessions}
+              </span>
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
             <div className="text-xs text-gray-600 dark:text-gray-400">
-              Współczynnik PWA: {((stats.pwaVsBrowser.pwa / filteredSessions.length) * 100).toFixed(1)}%
+              PWA: {stats.pwaVsBrowser.pwa} | Browser: {stats.pwaVsBrowser.browser}
             </div>
           </div>
         </div>
@@ -520,6 +574,9 @@ export default function SessionsBrowserPanel() {
                       Tryb
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      Czas trwania
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       Rozpoczęcie
                     </th>
                   </tr>
@@ -595,6 +652,11 @@ export default function SessionsBrowserPanel() {
                             Browser
                           </span>
                         )}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="text-gray-900 dark:text-white font-medium">
+                          {formatDuration(session.session_start, session.session_end)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                         {formatDate(session.session_start)}
