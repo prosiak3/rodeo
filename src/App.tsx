@@ -21,10 +21,11 @@ import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import { supabase, OrderStatus } from './lib/supabase';
 import { useUserTracking } from './hooks/useUserTracking';
+import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
-  const { session, user, loading, signIn, signOut } = useAuth();
+  const { session, user, loading, signIn, signOut, savedLocation } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
@@ -43,6 +44,66 @@ function AppContent() {
     activeTab === 'new-order' && orderMode ? orderMode :
     activeTab
   );
+
+  // Auto-logout with location saving
+  useAutoLogout({
+    timeoutMinutes: 15,
+    enabled: !!(session && user && (user as any).auto_logout_enabled !== false),
+    onBeforeLogout: async () => {
+      console.log('[Auto-Logout] Saving location before logout...');
+      if (user) {
+        await saveUserLocation(user.id, {
+          activeTab,
+          orderMode,
+          selectedOrderId,
+          editingOrderId,
+        });
+      }
+    },
+    onLogout: async () => {
+      console.log('[Auto-Logout] Executing logout...');
+      await signOut();
+    },
+  });
+
+  // Restore saved location after login
+  useEffect(() => {
+    if (savedLocation && !selectedOrderId && !editingOrderId) {
+      console.log('[App] Restoring saved location:', savedLocation);
+
+      if (savedLocation.activeTab) {
+        setActiveTab(savedLocation.activeTab);
+      }
+
+      if (savedLocation.orderMode) {
+        setOrderMode(savedLocation.orderMode);
+      }
+
+      if (savedLocation.selectedOrderId) {
+        setSelectedOrderId(savedLocation.selectedOrderId);
+      }
+
+      if (savedLocation.editingOrderId) {
+        setEditingOrderId(savedLocation.editingOrderId);
+      }
+    }
+  }, [savedLocation]);
+
+  // Save location periodically while user is active
+  useEffect(() => {
+    if (!user) return;
+
+    const saveInterval = setInterval(() => {
+      saveUserLocation(user.id, {
+        activeTab,
+        orderMode,
+        selectedOrderId,
+        editingOrderId,
+      });
+    }, 30000); // Save every 30 seconds
+
+    return () => clearInterval(saveInterval);
+  }, [user, activeTab, orderMode, selectedOrderId, editingOrderId]);
 
   useEffect(() => {
     if (session && user && !aiPreloaded) {

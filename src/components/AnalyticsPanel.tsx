@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { processRecentSessions, clusterPaths, UserPath, PathCluster } from '../lib/pathClustering';
-import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download, LogOut, Brain, Award, Monitor } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download, LogOut, Brain, Award, Monitor, Bell } from 'lucide-react';
 import AIMetricsPanel from './AIMetricsPanel';
 import LoginRankingsPanel from './LoginRankingsPanel';
 import SessionsBrowserPanel from './SessionsBrowserPanel';
 import TopProductsPanel from './TopProductsPanel';
+import PushAnalyticsPanel from './PushAnalyticsPanel';
 
 interface AnalyticsSummary {
   totalUsers: number;
@@ -26,7 +27,7 @@ export default function AnalyticsPanel() {
   const [clusters, setClusters] = useState<PathCluster[]>([]);
   const [timeFilter, setTimeFilter] = useState<'today' | 'week' | 'month' | 'all'>('week');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'analytics' | 'ai-metrics' | 'rankings' | 'sessions' | 'products'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'ai-metrics' | 'rankings' | 'sessions' | 'products' | 'push'>('analytics');
 
   useEffect(() => {
     loadAnalytics();
@@ -262,6 +263,17 @@ export default function AnalyticsPanel() {
         <Brain className="w-5 h-5" />
         Metryki AI
       </button>
+      <button
+        onClick={() => setActiveTab('push')}
+        className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+          activeTab === 'push'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-600 hover:text-gray-900'
+        }`}
+      >
+        <Bell className="w-5 h-5" />
+        Push Notifications
+      </button>
     </div>
   );
 
@@ -338,6 +350,32 @@ export default function AnalyticsPanel() {
             {renderTabs()}
           </div>
           <SessionsBrowserPanel />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'push') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Analityka Push Notifications</h2>
+                <p className="text-gray-600">Śledź skuteczność powiadomień push w czasie rzeczywistym</p>
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              >
+                <LogOut className="w-5 h-5" />
+                Wyloguj
+              </button>
+            </div>
+            {renderTabs()}
+          </div>
+          <PushAnalyticsPanel />
         </div>
       </div>
     );

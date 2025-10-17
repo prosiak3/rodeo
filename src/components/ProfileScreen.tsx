@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { showAlert } from '../lib/alerts';
@@ -37,6 +37,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [orderDetailsStatusExpanded, setOrderDetailsStatusExpanded] = useState<boolean>((user as any).order_details_status_expanded ?? false);
   const [showNotebookButtonLabels, setShowNotebookButtonLabels] = useState<boolean>((user as any).show_notebook_button_labels ?? false);
   const [showDeleteIcons, setShowDeleteIcons] = useState<boolean>((user as any).show_delete_icons ?? false);
+  const [afterAutoLogout, setAfterAutoLogout] = useState<string>((user as any).after_auto_logout_return_to || 'last_location');
   const [saving, setSaving] = useState(false);
 
   const handleShowAllFiltersToggle = async () => {
@@ -283,6 +284,25 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
+  const handleAfterAutoLogoutChange = async (value: string) => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ after_auto_logout_return_to: value })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setAfterAutoLogout(value);
+      showAlert('Ustawienia zapisane!', 'success');
+    } catch (error) {
+      console.error('Error updating auto-logout settings:', error);
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const themeNames: Record<Theme, string> = {
     amber: 'Bursztynowy',
     blue: 'Niebieski',
@@ -427,6 +447,83 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
               <div className="text-sm text-gray-600">1 rok</div>
               <div className="text-xs text-gray-500 mt-1">Pełny cykl roczny</div>
             </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Automatyczne wylogowanie</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Po 15 minutach bezczynności zostaniesz automatycznie wylogowany. Wybierz gdzie chcesz wrócić po ponownym zalogowaniu:
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => handleAfterAutoLogoutChange('last_location')}
+              disabled={saving}
+              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                afterAutoLogout === 'last_location'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <Clock className="w-5 h-5 text-amber-600" />
+                <div className="font-semibold text-gray-800">Wróć gdzie byłem (domyślnie)</div>
+              </div>
+              <div className="text-sm text-gray-600">Aplikacja zapamięta gdzie skończyłeś i wróci Cię tam po zalogowaniu</div>
+            </button>
+            <button
+              onClick={() => handleAfterAutoLogoutChange('home')}
+              disabled={saving}
+              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                afterAutoLogout === 'home'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <Home className="w-5 h-5 text-amber-600" />
+                <div className="font-semibold text-gray-800">Strona główna</div>
+              </div>
+              <div className="text-sm text-gray-600">Po zalogowaniu przejdź do ekranu głównego</div>
+            </button>
+            <button
+              onClick={() => handleAfterAutoLogoutChange('orders')}
+              disabled={saving}
+              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                afterAutoLogout === 'orders'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <ShoppingBag className="w-5 h-5 text-amber-600" />
+                <div className="font-semibold text-gray-800">Moje zamówienia</div>
+              </div>
+              <div className="text-sm text-gray-600">Po zalogowaniu przejdź do listy zamówień</div>
+            </button>
+            <button
+              onClick={() => handleAfterAutoLogoutChange('prices')}
+              disabled={saving}
+              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                afterAutoLogout === 'prices'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <List className="w-5 h-5 text-amber-600" />
+                <div className="font-semibold text-gray-800">Cennik</div>
+              </div>
+              <div className="text-sm text-gray-600">Po zalogowaniu przejdź do cennika produktów</div>
+            </button>
+          </div>
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              ℹ️ Zamówienia głosowe w trakcie tworzenia będą automatycznie zapisane jako szkic przed wylogowaniem
+            </p>
           </div>
         </div>
 
