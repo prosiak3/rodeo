@@ -1,0 +1,325 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { Activity, TrendingUp, AlertCircle, Clock, CheckCircle, XCircle } from 'lucide-react';
+
+interface AIMetric {
+  id: string;
+  metric_type: string;
+  operation_name: string;
+  duration_ms: number;
+  input_size: number;
+  output_size: number;
+  success: boolean;
+  error_message?: string;
+  metadata?: any;
+  created_at: string;
+}
+
+interface ModelPerformance {
+  model_name: string;
+  total_operations: number;
+  successful_operations: number;
+  average_duration_ms: number;
+  last_updated: string;
+}
+
+interface MetricsSummary {
+  totalOperations: number;
+  successRate: number;
+  avgDuration: number;
+  recentErrors: number;
+}
+
+export default function AIMetricsPanel() {
+  const [metrics, setMetrics] = useState<AIMetric[]>([]);
+  const [modelPerformance, setModelPerformance] = useState<ModelPerformance[]>([]);
+  const [summary, setSummary] = useState<MetricsSummary>({
+    totalOperations: 0,
+    successRate: 0,
+    avgDuration: 0,
+    recentErrors: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
+
+  useEffect(() => {
+    loadMetrics();
+  }, [timeRange]);
+
+  const loadMetrics = async () => {
+    setLoading(true);
+    try {
+      const now = new Date();
+      let startDate = new Date();
+
+      switch (timeRange) {
+        case '1h':
+          startDate.setHours(now.getHours() - 1);
+          break;
+        case '24h':
+          startDate.setDate(now.getDate() - 1);
+          break;
+        case '7d':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(now.getDate() - 30);
+          break;
+      }
+
+      const { data: metricsData, error: metricsError } = await supabase
+        .from('ai_metrics')
+        .select('*')
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (metricsError) throw metricsError;
+
+      const { data: performanceData, error: performanceError } = await supabase
+        .from('ai_model_performance')
+        .select('*');
+
+      if (performanceError) throw performanceError;
+
+      setMetrics(metricsData || []);
+      setModelPerformance(performanceData || []);
+
+      if (metricsData && metricsData.length > 0) {
+        const total = metricsData.length;
+        const successful = metricsData.filter(m => m.success).length;
+        const avgDur = metricsData.reduce((sum, m) => sum + m.duration_ms, 0) / total;
+        const errors = metricsData.filter(m => !m.success).length;
+
+        setSummary({
+          totalOperations: total,
+          successRate: (successful / total) * 100,
+          avgDuration: avgDur,
+          recentErrors: errors
+        });
+      }
+    } catch (error) {
+      console.error('Error loading metrics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getMetricTypeIcon = (type: string) => {
+    switch (type) {
+      case 'embedding_generation':
+        return <Activity className="w-4 h-4" />;
+      case 'similarity_search':
+        return <TrendingUp className="w-4 h-4" />;
+      case 'clustering_operation':
+        return <Activity className="w-4 h-4" />;
+      default:
+        return <Activity className="w-4 h-4" />;
+    }
+  };
+
+  const formatDuration = (ms: number) => {
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(2)}s`;
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleString('pl-PL', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Metryki AI</h2>
+        <div className="flex gap-2">
+          {(['1h', '24h', '7d', '30d'] as const).map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                timeRange === range
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              {range === '1h' ? '1 godz' : range === '24h' ? '24 godz' : range === '7d' ? '7 dni' : '30 dni'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Operacje</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{summary.totalOperations}</p>
+            </div>
+            <Activity className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Sukces</p>
+              <p className="text-3xl font-bold text-green-600">{summary.successRate.toFixed(1)}%</p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-green-600" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Średni czas</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{formatDuration(summary.avgDuration)}</p>
+            </div>
+            <Clock className="w-8 h-8 text-blue-600" />
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Błędy</p>
+              <p className="text-3xl font-bold text-red-600">{summary.recentErrors}</p>
+            </div>
+            <XCircle className="w-8 h-8 text-red-600" />
+          </div>
+        </div>
+      </div>
+
+      {modelPerformance.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Wydajność modelu</h3>
+          </div>
+          <div className="p-6 space-y-4">
+            {modelPerformance.map((model) => (
+              <div key={model.model_name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-gray-900 dark:text-white">{model.model_name}</h4>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {formatDate(model.last_updated)}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">Operacje</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{model.total_operations}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">Sukces</p>
+                    <p className="font-semibold text-green-600">
+                      {((model.successful_operations / model.total_operations) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">Śr. czas</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      {formatDuration(Number(model.average_duration_ms))}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Ostatnie operacje</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Typ
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Operacja
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Czas
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Wejście
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Wyjście
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Data
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {metrics.map((metric) => (
+                <tr key={metric.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2 text-gray-900 dark:text-white">
+                      {getMetricTypeIcon(metric.metric_type)}
+                      <span className="text-sm">{metric.metric_type}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {metric.operation_name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {formatDuration(metric.duration_ms)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                    {metric.input_size}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                    {metric.output_size}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {metric.success ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                        <CheckCircle className="w-3 h-3" />
+                        Sukces
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                        <AlertCircle className="w-3 h-3" />
+                        Błąd
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                    {formatDate(metric.created_at)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {metrics.length === 0 && (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              Brak danych dla wybranego okresu
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

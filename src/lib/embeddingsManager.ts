@@ -1,4 +1,5 @@
 import { pipeline, env } from '@xenova/transformers';
+import { supabase } from './supabase';
 
 env.allowLocalModels = false;
 env.useBrowserCache = true;
@@ -23,6 +24,17 @@ interface SimilarityResult {
   confidence: number;
 }
 
+interface AIMetric {
+  metric_type: 'embedding_generation' | 'clustering_operation' | 'similarity_search';
+  operation_name: string;
+  duration_ms: number;
+  input_size: number;
+  output_size: number;
+  success: boolean;
+  error_message?: string;
+  metadata?: Record<string, any>;
+}
+
 class EmbeddingsManager {
   private pipeline: any = null;
   private embeddingsCache: Map<string, ProductEmbedding> = new Map();
@@ -31,6 +43,20 @@ class EmbeddingsManager {
   private dbName = 'rodeo-embeddings';
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
+
+  private async trackMetric(metric: AIMetric): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      await supabase.from('ai_metrics').insert({
+        ...metric,
+        user_id: user?.id || null,
+        created_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[AI] Failed to track metric:', error);
+    }
+  }
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
@@ -98,16 +124,36 @@ class EmbeddingsManager {
       await this.initialize();
     }
 
+    const startTime = Date.now();
+    let success = true;
+    let errorMessage: string | undefined;
+    let result: number[] = [];
+
     try {
       const output = await this.pipeline(text, {
         pooling: 'mean',
         normalize: true,
       });
 
-      return Array.from(output.data);
+      result = Array.from(output.data);
+      return result;
     } catch (error) {
+      success = false;
+      errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[AI] Failed to generate embedding:', error);
       throw error;
+    } finally {
+      const duration = Date.now() - startTime;
+      await this.trackMetric({
+        metric_type: 'embedding_generation',
+        operation_name: 'generate_single_embedding',
+        duration_ms: duration,
+        input_size: text.length,
+        output_size: result.length,
+        success,
+        error_message: errorMessage,
+        metadata: { text_preview: text.substring(0, 50) }
+      });
     }
   }
 
@@ -118,30 +164,58 @@ class EmbeddingsManager {
 
     console.log(`[AI] Generating embeddings for ${products.length} products...`);
     const startTime = Date.now();
+    let generatedCount = 0;
+    let cachedCount = 0;
+    let success = true;
+    let errorMessage: string | undefined;
 
-    for (const product of products) {
-      const cached = await this.getStoredEmbedding(product.id);
+    try {
+      for (const product of products) {
+        const cached = await this.getStoredEmbedding(product.id);
 
-      if (cached && cached.name === product.name) {
-        this.embeddingsCache.set(product.id, cached);
-        continue;
+        if (cached && cached.name === product.name) {
+          this.embeddingsCache.set(product.id, cached);
+          cachedCount++;
+          continue;
+        }
+
+        const embedding = await this.generateEmbedding(product.name);
+
+        const productEmbedding: ProductEmbedding = {
+          productId: product.id,
+          embedding,
+          name: product.name,
+          index: product.index,
+        };
+
+        this.embeddingsCache.set(product.id, productEmbedding);
+        await this.storeEmbedding(productEmbedding);
+        generatedCount++;
       }
 
-      const embedding = await this.generateEmbedding(product.name);
-
-      const productEmbedding: ProductEmbedding = {
-        productId: product.id,
-        embedding,
-        name: product.name,
-        index: product.index,
-      };
-
-      this.embeddingsCache.set(product.id, productEmbedding);
-      await this.storeEmbedding(productEmbedding);
+      const duration = Date.now() - startTime;
+      console.log(`[AI] Generated ${products.length} embeddings in ${duration}ms`);
+    } catch (error) {
+      success = false;
+      errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw error;
+    } finally {
+      const duration = Date.now() - startTime;
+      await this.trackMetric({
+        metric_type: 'embedding_generation',
+        operation_name: 'generate_product_embeddings_batch',
+        duration_ms: duration,
+        input_size: products.length,
+        output_size: generatedCount,
+        success,
+        error_message: errorMessage,
+        metadata: {
+          generated: generatedCount,
+          cached: cachedCount,
+          total: products.length
+        }
+      });
     }
-
-    const duration = Date.now() - startTime;
-    console.log(`[AI] Generated ${products.length} embeddings in ${duration}ms`);
   }
 
   private async storeEmbedding(embedding: ProductEmbedding): Promise<void> {
@@ -204,33 +278,58 @@ class EmbeddingsManager {
       await this.initialize();
     }
 
-    const searchEmbedding = await this.generateEmbedding(searchText);
+    const startTime = Date.now();
+    let success = true;
+    let errorMessage: string | undefined;
+    let results: SimilarityResult[] = [];
 
-    const results: SimilarityResult[] = [];
+    try {
+      const searchEmbedding = await this.generateEmbedding(searchText);
 
-    for (const product of products) {
-      const cachedEmbedding = this.embeddingsCache.get(product.id);
+      for (const product of products) {
+        const cachedEmbedding = this.embeddingsCache.get(product.id);
 
-      if (!cachedEmbedding) {
-        continue;
+        if (!cachedEmbedding) {
+          continue;
+        }
+
+        const similarity = this.cosineSimilarity(searchEmbedding, cachedEmbedding.embedding);
+
+        const confidence = Math.round(similarity * 100);
+
+        if (similarity > 0.3) {
+          results.push({
+            product,
+            similarity,
+            confidence,
+          });
+        }
       }
 
-      const similarity = this.cosineSimilarity(searchEmbedding, cachedEmbedding.embedding);
+      results.sort((a, b) => b.similarity - a.similarity);
 
-      const confidence = Math.round(similarity * 100);
-
-      if (similarity > 0.3) {
-        results.push({
-          product,
-          similarity,
-          confidence,
-        });
-      }
+      return results.slice(0, limit);
+    } catch (error) {
+      success = false;
+      errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw error;
+    } finally {
+      const duration = Date.now() - startTime;
+      await this.trackMetric({
+        metric_type: 'similarity_search',
+        operation_name: 'find_similar_products',
+        duration_ms: duration,
+        input_size: products.length,
+        output_size: results.length,
+        success,
+        error_message: errorMessage,
+        metadata: {
+          search_text: searchText,
+          limit,
+          results_found: results.length
+        }
+      });
     }
-
-    results.sort((a, b) => b.similarity - a.similarity);
-
-    return results.slice(0, limit);
   }
 
   async clearCache(): Promise<void> {

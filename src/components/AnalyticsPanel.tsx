@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { processRecentSessions, clusterPaths, UserPath, PathCluster } from '../lib/pathClustering';
-import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download, LogOut } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download, LogOut, Brain } from 'lucide-react';
+import AIMetricsPanel from './AIMetricsPanel';
 
 interface AnalyticsSummary {
   totalUsers: number;
@@ -32,6 +33,7 @@ export default function AnalyticsPanel() {
   const [selectedSession, setSelectedSession] = useState<SessionReplay | null>(null);
   const [timeFilter, setTimeFilter] = useState<'today' | 'week' | 'month' | 'all'>('week');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'ai-metrics'>('analytics');
 
   useEffect(() => {
     loadAnalytics();
@@ -260,15 +262,86 @@ export default function AnalyticsPanel() {
     );
   }
 
+  if (activeTab === 'ai-metrics') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Panel Analityczny</h1>
+                <p className="text-gray-600 mt-1">Analiza zachowań użytkowników systemu RODEO</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-base"
+              >
+                <LogOut className="w-5 h-5" />
+                Wyloguj
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-2 border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className="flex items-center gap-2 px-4 py-2 font-medium transition-colors text-gray-600 hover:text-gray-900"
+              >
+                <Activity className="w-5 h-5" />
+                Analityka użytkowników
+              </button>
+              <button
+                onClick={() => setActiveTab('ai-metrics')}
+                className="flex items-center gap-2 px-4 py-2 font-medium transition-colors text-blue-600 border-b-2 border-blue-600"
+              >
+                <Brain className="w-5 h-5" />
+                Metryki AI
+              </button>
+            </div>
+          </div>
+          <AIMetricsPanel />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Panel Analityczny</h1>
             <p className="text-gray-600 mt-1">Analiza zachowań użytkowników systemu RODEO</p>
           </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-base"
+            >
+              <LogOut className="w-5 h-5" />
+              Wyloguj
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 border-b border-gray-200 mb-6">
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className="flex items-center gap-2 px-4 py-2 font-medium transition-colors text-blue-600 border-b-2 border-blue-600"
+            >
+              <Activity className="w-5 h-5" />
+              Analityka użytkowników
+            </button>
+            <button
+              onClick={() => setActiveTab('ai-metrics')}
+              className="flex items-center gap-2 px-4 py-2 font-medium transition-colors text-gray-600 hover:text-gray-900"
+            >
+              <Brain className="w-5 h-5" />
+              Metryki AI
+            </button>
+          </div>
+
           <div className="flex gap-3">
             <button
               onClick={handleProcessSessions}
@@ -292,13 +365,6 @@ export default function AnalyticsPanel() {
             >
               <Download className="w-5 h-5" />
               Eksportuj
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-base"
-            >
-              <LogOut className="w-5 h-5" />
-              Wyloguj
             </button>
           </div>
         </div>
