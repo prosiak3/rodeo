@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import LoginScreen from './components/LoginScreen';
@@ -8,16 +8,19 @@ import ManualOrderScreen from './components/ManualOrderScreen';
 import CopyOrderScreen from './components/CopyOrderScreen';
 import PriceListOrderScreen from './components/PriceListOrderScreen';
 import PriceListOrderListMode from './components/PriceListOrderListMode';
+import AutoOrderScreen from './components/AutoOrderScreen';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
 import EditDraftOrderScreen from './components/EditDraftOrderScreen';
 import ProfileScreen from './components/ProfileScreen';
 import AdminPanel from './components/AdminPanel';
+import AnalyticsPanel from './components/AnalyticsPanel';
 import PriceList from './components/PriceList';
 import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import { supabase, OrderStatus } from './lib/supabase';
+import { useUserTracking } from './hooks/useUserTracking';
 import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
@@ -26,10 +29,78 @@ function AppContent() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
-  const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
+  const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | 'auto' | null>(null);
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
   const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
   const [ordersListFilter, setOrdersListFilter] = useState<OrderStatus | 'all' | null>(null);
+  const [aiPreloaded, setAiPreloaded] = useState(false);
+
+  // Initialize user tracking
+  useUserTracking(
+    user?.id || null,
+    editingOrderId ? 'edit-draft' :
+    selectedOrderId ? 'order-details' :
+    activeTab === 'new-order' && orderMode ? orderMode :
+    activeTab
+  );
+
+  useEffect(() => {
+    if (session && user && !aiPreloaded) {
+      const preloadAI = async () => {
+        try {
+          console.log('[AI Preload] Starting background initialization...');
+
+          if (typeof window === 'undefined') {
+            console.log('[AI Preload] Not in browser environment, skipping');
+            setAiPreloaded(false);
+            return;
+          }
+
+          // Dynamiczny import z obsługą błędów
+          const { embeddingsManager } = await import('./lib/embeddingsManager');
+
+          console.log('[AI Preload] Initializing AI model...');
+          await embeddingsManager.initialize();
+          console.log('[AI Preload] Model loaded successfully');
+
+          // Załaduj produkty
+          console.log('[AI Preload] Loading products...');
+          const { data: products, error: productsError } = await supabase
+            .from('products')
+            .select('id, name, index, base_price')
+            .eq('active', true);
+
+          if (productsError) {
+            console.error('[AI Preload] Failed to load products:', productsError);
+            setAiPreloaded(false);
+            return;
+          }
+
+          if (products && products.length > 0) {
+            console.log('[AI Preload] Generating embeddings for', products.length, 'products...');
+            await embeddingsManager.generateProductEmbeddings(products);
+            console.log('[AI Preload] All embeddings ready!');
+          }
+
+          setAiPreloaded(true);
+          console.log('[AI Preload] ✅ Complete!');
+        } catch (error) {
+          console.error('[AI Preload] ❌ Failed:', error);
+          // Nie blokuj aplikacji - AI jest opcjonalne
+          setAiPreloaded(false);
+        }
+      };
+
+      // Opóźnij inicjalizację, żeby nie blokować UI
+      const timer = setTimeout(() => {
+        preloadAI().catch(err => {
+          console.error('[AI Preload] Unhandled error:', err);
+        });
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [session, user, aiPreloaded]);
 
   const createTestUsers = async () => {
     const testUsers = [
@@ -186,11 +257,13 @@ function AppContent() {
         onEdit={() => {
           setEditingOrderId(selectedOrderId);
           setSelectedOrderId(null);
+          setOrderRefreshKey(prev => prev + 1);
         }}
         onOrderSent={() => {
           setSelectedOrderId(null);
           setOrdersListFilter('sent');
           setActiveTab('orders');
+          setOrderRefreshKey(prev => prev + 1);
         }}
         onUseAsTemplate={(orderId) => {
           setTemplateOrderId(orderId);
@@ -204,6 +277,14 @@ function AppContent() {
           setActiveTab('prices');
         }}
       />
+    );
+  }
+
+  if (user.role === 'analyst') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AnalyticsPanel />
+      </div>
     );
   }
 
@@ -298,10 +379,20 @@ function AppContent() {
           showProfile={activeTab !== 'profile'}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
-          {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
+          {activeTab === 'home' && (
+            <HomeScreen
+              onNavigate={setActiveTab}
+              onVoiceOrder={() => {
+                setActiveTab('new-order');
+                setOrderMode('voice');
+              }}
+              userRole={user.role}
+            />
+          )}
           {activeTab === 'orders' && (
             <div className="p-6">
               <OrdersList
+                key={`orders-list-${orderRefreshKey}`}
                 userRole={user.role}
                 onSelectOrder={setSelectedOrderId}
                 initialFilter={ordersListFilter || undefined}
@@ -365,7 +456,16 @@ function AppContent() {
         showProfile={activeTab !== 'profile'}
       />
       <div className="flex-1 overflow-y-auto pt-20 pb-16">
-        {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
+        {activeTab === 'home' && (
+          <HomeScreen
+            onNavigate={setActiveTab}
+            onVoiceOrder={() => {
+              setActiveTab('new-order');
+              setOrderMode('voice');
+            }}
+            userRole={user.role}
+          />
+        )}
 
         {activeTab === 'admin' && user.role === 'admin' && (
           <AdminPanel
@@ -491,6 +591,25 @@ function AppContent() {
                     </div>
                   </button>
                 )}
+
+                <button
+                  onClick={() => setOrderMode('auto')}
+                  className={`w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg shadow-lg hover:shadow-xl transition text-left ${
+                    (user as any).order_mode_layout === 'grid' ? 'p-4' : 'p-3'
+                  }`}
+                >
+                  <div className={`flex gap-3 ${
+                    (user as any).order_mode_layout === 'grid' ? 'flex-col items-center text-center' : 'items-center'
+                  }`}>
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-xl">✨</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-base">Auto zamówienie</h3>
+                      <p className="text-xs opacity-90">Wygenerowane na podstawie historii</p>
+                    </div>
+                  </div>
+                </button>
               </div>
               </>
             )}
@@ -512,6 +631,8 @@ function AppContent() {
                 userId={user.id}
                 onOrderSent={() => {
                   setOrderMode(null);
+                  setOrderRefreshKey(prev => prev + 1);
+                  setOrdersListFilter('draft');
                   setActiveTab('orders');
                 }}
                 onCancel={() => setOrderMode(null)}
@@ -525,6 +646,8 @@ function AppContent() {
                   userId={user.id}
                   onOrderSaved={() => {
                     setOrderMode(null);
+                    setOrderRefreshKey(prev => prev + 1);
+                    setOrdersListFilter('draft');
                     setActiveTab('orders');
                   }}
                   onCancel={() => {
@@ -538,6 +661,8 @@ function AppContent() {
                   userId={user.id}
                   onOrderSent={() => {
                     setOrderMode(null);
+                    setOrderRefreshKey(prev => prev + 1);
+                    setOrdersListFilter('draft');
                     setActiveTab('orders');
                   }}
                   onCancel={() => {
@@ -555,6 +680,8 @@ function AppContent() {
                 onOrderSent={() => {
                   setOrderMode(null);
                   setTemplateOrderId(null);
+                  setOrderRefreshKey(prev => prev + 1);
+                  setOrdersListFilter('draft');
                   setActiveTab('orders');
                 }}
                 onCancel={() => {
@@ -564,12 +691,27 @@ function AppContent() {
                 preselectedOrderId={templateOrderId || undefined}
               />
             )}
+
+            {orderMode === 'auto' && (
+              <AutoOrderScreen
+                storeId={user.store_id}
+                userId={user.id}
+                onOrderSent={() => {
+                  setOrderMode(null);
+                  setOrderRefreshKey(prev => prev + 1);
+                  setOrdersListFilter('draft');
+                  setActiveTab('orders');
+                }}
+                onCancel={() => setOrderMode(null)}
+              />
+            )}
           </>
         )}
 
         {activeTab === 'orders' && (
           <div className="p-6">
             <OrdersList
+              key={`orders-list-${orderRefreshKey}`}
               storeId={user.store_id}
               userRole={user.role}
               onSelectOrder={setSelectedOrderId}

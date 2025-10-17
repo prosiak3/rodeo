@@ -36,3 +36,15 @@ export function showAlert(message: string, variant: 'success' | 'error' | 'info'
     alertElement.remove();
   }, 2000);
 }
+
+export function showSuccess(message: string) {
+  showAlert(message, 'success');
+}
+
+export function showError(message: string) {
+  showAlert(message, 'error');
+}
+
+export function showInfo(message: string) {
+  showAlert(message, 'info');
+}

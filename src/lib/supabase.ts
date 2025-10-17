@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type UserRole = 'store_manager' | 'salesperson' | 'operator' | 'admin';
+export type UserRole = 'store_manager' | 'salesperson' | 'operator' | 'admin' | 'driver' | 'analyst';
 
 export type OrderStatus =
   | 'draft'
@@ -23,6 +23,8 @@ export type OrderStatus =
   | 'partially_confirmed'
   | 'rejected'
   | 'archived';
+
+export type OrderSourceType = 'price_list' | 'manual' | 'voice' | 'copy' | 'auto';
 
 export interface Store {
   id: string;
@@ -45,6 +47,8 @@ export interface User {
   created_at: string;
   updated_at: string;
   show_all_order_filters?: boolean;
+  auto_order_analysis_days?: number;
+  show_sort_buttons?: boolean;
 }
 
 export interface Product {
@@ -60,6 +64,7 @@ export interface Product {
   created_at: string;
   updated_at: string;
   index?: string;
+  average_weight?: number;
 }
 
 export interface SpecialPrice {
@@ -87,6 +92,7 @@ export interface Order {
   delivery_date?: string;
   created_at: string;
   updated_at: string;
+  source_type?: OrderSourceType;
   creator?: {
     full_name: string;
     email: string;
@@ -110,6 +116,7 @@ export interface OrderItem {
   status: 'pending' | 'confirmed' | 'partially_confirmed' | 'rejected';
   created_at: string;
   products?: Product;
+  is_estimated?: boolean;
 }
 
 export interface OrderHistory {

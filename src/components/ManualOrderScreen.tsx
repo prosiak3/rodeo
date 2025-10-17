@@ -6,7 +6,6 @@ interface Product {
   id: string;
   name: string;
   unit: string;
-  price_per_unit: number;
   description: string;
   barcode?: string;
 }
@@ -16,8 +15,6 @@ interface OrderItem {
   product_name: string;
   quantity: number;
   unit: string;
-  price_per_unit: number;
-  total_price: number;
 }
 
 interface ManualOrderScreenProps {
@@ -35,10 +32,24 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
   const [notes, setNotes] = useState('');
   const [sending, setSending] = useState(false);
   const [showProductList, setShowProductList] = useState(false);
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
 
   useEffect(() => {
+    loadUserPreferences();
     loadProducts();
   }, []);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -58,37 +69,22 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
     try {
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('id, name, unit, base_price, description, barcode')
+        .select('id, name, unit, description, barcode')
         .eq('active', true)
         .order('name');
 
       if (productsError) throw productsError;
 
-      const { data: specialPricesData, error: specialPricesError } = await supabase
-        .from('special_prices')
-        .select('product_id, your_price, promo_price')
-        .eq('store_id', storeId);
-
-      if (specialPricesError) throw specialPricesError;
-
-      const specialPricesMap = new Map(
-        (specialPricesData || []).map(sp => [
-          sp.product_id,
-          sp.promo_price || sp.your_price || null
-        ])
-      );
-
-      const productsWithPrices = (productsData || []).map(p => ({
+      const productsSimple = (productsData || []).map(p => ({
         id: p.id,
         name: p.name,
         unit: p.unit,
         description: p.description || '',
-        barcode: p.barcode || '',
-        price_per_unit: specialPricesMap.get(p.id) || p.base_price || 0
+        barcode: p.barcode || ''
       }));
 
-      setProducts(productsWithPrices);
-      setFilteredProducts(productsWithPrices);
+      setProducts(productsSimple);
+      setFilteredProducts(productsSimple);
     } catch (error) {
       console.error('Error loading products:', error);
     }
@@ -101,8 +97,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
         item.product_id === product.id
           ? {
               ...item,
-              quantity: item.quantity + 1,
-              total_price: (item.quantity + 1) * item.price_per_unit
+              quantity: item.quantity + 1
             }
           : item
       ));
@@ -113,9 +108,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
           product_id: product.id,
           product_name: product.name,
           quantity: 1,
-          unit: product.unit,
-          price_per_unit: product.price_per_unit,
-          total_price: product.price_per_unit
+          unit: product.unit
         }
       ]);
     }
@@ -132,8 +125,7 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
       item.product_id === productId
         ? {
             ...item,
-            quantity,
-            total_price: quantity * item.price_per_unit
+            quantity
           }
         : item
     ));
@@ -143,9 +135,6 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
     setOrderItems(orderItems.filter(item => item.product_id !== productId));
   };
 
-  const calculateTotal = () => {
-    return orderItems.reduce((sum, item) => sum + item.total_price, 0);
-  };
 
   const sendOrder = async () => {
     if (orderItems.length === 0) {
@@ -156,7 +145,6 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
     setSending(true);
     try {
       const orderNumber = `ORD-${Date.now()}`;
-      const totalAmount = calculateTotal();
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -166,9 +154,10 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
           created_by: userId,
           status: 'sent',
           requires_confirmation: false,
-          total_amount: totalAmount,
+          total_amount: 0,
           notes: notes || null,
-          sent_at: new Date().toISOString()
+          sent_at: new Date().toISOString(),
+          source_type: 'manual'
         })
         .select()
         .single();
@@ -178,10 +167,11 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
       const orderItemsData = orderItems.map(item => ({
         order_id: order.id,
         product_id: item.product_id,
-        quantity_ordered: item.quantity,
+        quantity: item.quantity,
         unit: item.unit,
-        price_per_unit: item.price_per_unit,
-        total_price: item.total_price
+        unit_price: 0,
+        total_price: 0,
+        status: 'pending'
       }));
 
       const { error: itemsError } = await supabase
@@ -234,8 +224,8 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                 >
                   <p className="font-semibold text-gray-800">{product.name}</p>
                   <p className="text-sm text-gray-600">{product.barcode}</p>
-                  <p className="text-sm text-amber-600 font-medium">
-                    {(product.price_per_unit || 0).toFixed(2)} PLN/{product.unit}
+                  <p className="text-sm text-gray-500">
+                    Jednostka: {product.unit}
                   </p>
                 </div>
               ))}
@@ -252,16 +242,15 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <p className="font-semibold text-gray-800">{item.product_name}</p>
-                      <p className="text-sm text-gray-600">
-                        {(item.price_per_unit || 0).toFixed(2)} PLN/{item.unit}
-                      </p>
                     </div>
-                    <button
-                      onClick={() => removeItem(item.product_id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    {showDeleteIcons && (
+                      <button
+                        onClick={() => removeItem(item.product_id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <button
@@ -285,22 +274,11 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
                       +
                     </button>
                     <span className="text-sm text-gray-600">{item.unit}</span>
-                    <span className="ml-auto font-bold text-gray-800">
-                      {(item.total_price || 0).toFixed(2)} PLN
-                    </span>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-lg">Suma:</span>
-                <span className="font-bold text-xl text-amber-600">
-                  {(calculateTotal() || 0).toFixed(2)} PLN
-                </span>
-              </div>
-            </div>
           </div>
         )}
 
@@ -317,14 +295,14 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 p-4 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+            className="flex-1 py-2.5 px-4 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
           >
             Anuluj
           </button>
           <button
             onClick={sendOrder}
             disabled={sending || orderItems.length === 0}
-            className="flex-1 p-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-5 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition shadow-lg active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? (
               <>Wysyłanie...</>

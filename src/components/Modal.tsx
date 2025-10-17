@@ -60,8 +60,8 @@ export default function Modal({
             onClick={handleConfirm}
             className={`flex-1 px-6 py-3 rounded-xl font-medium transition ${
               type === 'confirm'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
-                : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
             }`}
           >
             {confirmText}

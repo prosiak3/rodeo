@@ -50,8 +50,22 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
   const [saving, setSaving] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [priceLayout, setPriceLayout] = useState<PriceLayout>('horizontal');
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
+    loadUserPreferences();
     loadProducts();
   }, []);
 
@@ -281,7 +295,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{item.productName}</p>
                     <p className="text-xs text-gray-600">
-                      {item.unitPrice.toFixed(2)} PLN/{item.unit}
+                      {item.unitPrice.toFixed(2)} / 1{item.unit}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
@@ -305,12 +319,14 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
                     >
                       <Plus className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => removeFromList(item.productId)}
-                      className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {showDeleteIcons && (
+                      <button
+                        onClick={() => removeFromList(item.productId)}
+                        className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -318,7 +334,7 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
             <button
               onClick={saveAsDraft}
               disabled={saving}
-              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow"
+              className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow"
             >
               {saving ? (
                 <>

@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-size: 112.5%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   * {
     -webkit-user-select: none;
     -moz-user-select: none;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, FileText, ChevronRight, Package } from 'lucide-react';
+import { Copy, FileText, ChevronRight, Package, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Order {
@@ -8,6 +8,7 @@ interface Order {
   created_at: string;
   total_amount: number;
   status: string;
+  source_type?: string;
 }
 
 interface OrderItem {
@@ -34,10 +35,24 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
   const [loadingItems, setLoadingItems] = useState(false);
   const [sending, setSending] = useState(false);
   const [notes, setNotes] = useState('');
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
 
   useEffect(() => {
+    loadUserPreferences();
     loadCompletedOrders();
   }, [storeId]);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
     if (preselectedOrderId && orders.length > 0 && !selectedOrder) {
@@ -53,7 +68,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('id, order_number, created_at, total_amount, status')
+        .select('id, order_number, created_at, total_amount, status, source_type')
         .eq('store_id', storeId)
         .in('status', ['sent', 'in_progress', 'confirmed', 'partially_confirmed'])
         .order('created_at', { ascending: false })
@@ -147,7 +162,8 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
           status: 'draft',
           requires_confirmation: false,
           total_amount: totalAmount,
-          notes: notes || null
+          notes: notes || null,
+          source_type: 'copy'
         })
         .select()
         .single();
@@ -267,15 +283,17 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">{item.product_name}</p>
                         <p className="text-sm text-gray-600">
-                          {item.price_per_unit.toFixed(2)} PLN/{item.unit}
+                          {item.price_per_unit.toFixed(2)} / 1{item.unit}
                         </p>
                       </div>
-                      <button
-                        onClick={() => removeItem(item.product_id)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      {showDeleteIcons && (
+                        <button
+                          onClick={() => removeItem(item.product_id)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <button

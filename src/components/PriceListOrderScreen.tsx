@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Plus, Minus, Trash2, Save, ArrowLeft, LayoutGrid, AlignJustify } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ProductCard from './ProductCard';
+import { calculateItemPrice, formatPriceDisplay } from '../lib/priceCalculations';
 
 interface Product {
   id: string;
@@ -17,6 +18,7 @@ interface Product {
   your_price?: number;
   promo_price?: number;
   final_price: number;
+  average_weight?: number;
 }
 
 type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
@@ -50,10 +52,24 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
   const [sending, setSending] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [priceLayout, setPriceLayout] = useState<PriceLayout>('horizontal');
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
 
   useEffect(() => {
+    loadUserPreferences();
     loadProducts();
   }, []);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -160,14 +176,15 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
       return;
     }
 
-    const totalPrice = qty * selectedProduct.final_price;
+    const priceCalc = calculateItemPrice(qty, selectedProduct.final_price);
 
     const existingItemIndex = orderItems.findIndex(item => item.productId === selectedProduct.id);
 
     if (existingItemIndex >= 0) {
       const updated = [...orderItems];
       updated[existingItemIndex].quantity += qty;
-      updated[existingItemIndex].totalPrice = updated[existingItemIndex].quantity * updated[existingItemIndex].unitPrice;
+      const recalc = calculateItemPrice(updated[existingItemIndex].quantity, updated[existingItemIndex].unitPrice);
+      updated[existingItemIndex].totalPrice = recalc.totalPrice;
       setOrderItems(updated);
     } else {
       setOrderItems([...orderItems, {
@@ -177,7 +194,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
         quantity: qty,
         unit: selectedProduct.unit,
         unitPrice: selectedProduct.final_price,
-        totalPrice,
+        totalPrice: priceCalc.totalPrice,
       }]);
     }
 
@@ -191,8 +208,10 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
       return;
     }
     const updated = [...orderItems];
+    const item = updated[index];
+    const priceCalc = calculateItemPrice(newQuantity, item.unitPrice);
     updated[index].quantity = newQuantity;
-    updated[index].totalPrice = newQuantity * updated[index].unitPrice;
+    updated[index].totalPrice = priceCalc.totalPrice;
     setOrderItems(updated);
   };
 
@@ -208,7 +227,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
 
     setSending(true);
     try {
-      const totalAmount = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+      const orderTotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
       const orderNumber = `RO-${Date.now()}`;
 
       const { data: order, error: orderError } = await supabase
@@ -219,8 +238,9 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
           created_by: userId,
           status: 'draft',
           requires_confirmation: false,
-          total_amount: totalAmount,
+          total_amount: orderTotal,
           notes: 'Zamówienie utworzone z cennika - tryb ilości',
+          source_type: 'price_list',
         })
         .select()
         .single();
@@ -291,7 +311,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
               <div>
                 <p className="text-sm text-gray-600">Cena jednostkowa</p>
                 <p className="font-bold text-amber-600 text-xl">
-                  {selectedProduct.base_price.toFixed(2)} PLN/{selectedProduct.unit}
+                  {selectedProduct.base_price.toFixed(2)} / 1{selectedProduct.unit}
                 </p>
               </div>
               {selectedProduct.index && (
@@ -371,7 +391,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
           <button
             onClick={addToOrder}
             disabled={!quantity || parseFloat(quantity) <= 0}
-            className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-5 h-5" />
             Dodaj do zamówienia
@@ -423,7 +443,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
               </h3>
               <div className="text-right">
                 <p className="text-xs text-gray-500">Wartość</p>
-                <p className="font-bold text-amber-600 text-lg">{totalAmount.toFixed(2)} PLN</p>
+                <p className="font-bold text-amber-600 text-lg">{formatPriceDisplay(totalAmount)} PLN</p>
               </div>
             </div>
             <div className="space-y-2 mb-4">
@@ -449,12 +469,14 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
                     >
                       <Plus className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => removeItem(index)}
-                      className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {showDeleteIcons && (
+                      <button
+                        onClick={() => removeItem(index)}
+                        className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -462,7 +484,7 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
             <button
               onClick={sendOrder}
               disabled={sending}
-              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow disabled:opacity-50"
+              className="w-full py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5" />
               {sending ? 'Zapisywanie...' : 'Zapisz jako szkic'}

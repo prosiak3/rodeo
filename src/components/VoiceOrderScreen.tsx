@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2 } from 'lucide-react';
+import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Product {
   id: string;
   name: string;
   index: string;
-  base_price: number;
+  unit: string;
 }
 
 interface OrderItem {
@@ -15,8 +15,18 @@ interface OrderItem {
   unit: string;
   productIndex?: string;
   productId?: string;
-  matched?: boolean;
+  matched?: boolean | 'ambiguous';
   suggestions?: Product[];
+  confidence?: number;
+  aiMatched?: boolean;
+  matchCount?: number;
+  convertedQuantity?: number;
+  convertedUnit?: string;
+  originalQuantity?: number;
+  originalUnit?: string;
+  phraseMapped?: boolean;
+  originalPhrase?: string;
+  mappedPhrase?: string;
 }
 
 interface VoiceOrderScreenProps {
@@ -38,29 +48,123 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   const [shouldContinueListening, setShouldContinueListening] = useState(false);
   const [notification, setNotification] = useState<string>('');
   const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null);
+  const [aiReady, setAiReady] = useState(false);
+  const [aiInitializing, setAiInitializing] = useState(false);
+  const [useAI, setUseAI] = useState(true);
+  const [showProductBrowser, setShowProductBrowser] = useState(false);
+  const [browsingItemIndex, setBrowsingItemIndex] = useState<number | null>(null);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [searchingItemIndex, setSearchingItemIndex] = useState<number | null>(null);
+  const [inlineSearchQuery, setInlineSearchQuery] = useState('');
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy. Użyj Chrome lub Edge.');
     }
+    loadUserPreferences();
     loadProducts();
+
+    const checkAIStatus = async () => {
+      try {
+        const { embeddingsManager } = await import('../lib/embeddingsManager');
+        if (embeddingsManager.isReady()) {
+          console.log('[AI] Detected preloaded AI');
+          setAiReady(true);
+        }
+      } catch (error) {
+        console.log('[AI] Not yet loaded');
+      }
+    };
+
+    setTimeout(checkAIStatus, 500);
   }, []);
+
+  const initializeAI = async () => {
+    if (aiReady || aiInitializing) return;
+
+    try {
+      setAiInitializing(true);
+      console.log('[AI] Checking initialization...');
+
+      const { embeddingsManager } = await import('../lib/embeddingsManager');
+
+      if (embeddingsManager.isReady()) {
+        console.log('[AI] Already initialized (preloaded)!');
+        setAiReady(true);
+        setAiInitializing(false);
+
+        // Jeśli mamy już produkty, wygeneruj embeddingi
+        if (allProductsRef.current.length > 0) {
+          console.log('[AI] Generating embeddings for existing products...');
+          await embeddingsManager.generateProductEmbeddings(allProductsRef.current);
+          console.log('[AI] Embeddings ready!');
+        }
+        return;
+      }
+
+      console.log('[AI] Starting initialization...');
+      await embeddingsManager.initialize();
+
+      // Wygeneruj embeddingi dla produktów
+      if (allProductsRef.current.length > 0) {
+        console.log('[AI] Generating embeddings for', allProductsRef.current.length, 'products...');
+        await embeddingsManager.generateProductEmbeddings(allProductsRef.current);
+        console.log('[AI] Embeddings ready!');
+      }
+
+      setAiReady(true);
+      console.log('[AI] Ready!');
+    } catch (error) {
+      console.error('[AI] Failed to initialize:', error);
+      setUseAI(false);
+      setNotification('⚠️ AI niedostępne - używam klasycznego dopasowania');
+      setTimeout(() => setNotification(''), 5000);
+    } finally {
+      setAiInitializing(false);
+    }
+  };
 
   const loadProducts = async () => {
     try {
       const { data } = await supabase
         .from('products')
-        .select('id, name, index, base_price')
+        .select('id, name, index, unit')
         .eq('active', true);
       if (data) {
         console.log('Loaded products:', data.length);
         setAllProducts(data);
         allProductsRef.current = data;
+
+        // Jeśli AI jest gotowe, wygeneruj embeddingi dla produktów
+        if (aiReady && useAI) {
+          try {
+            console.log('[AI] Generating embeddings for loaded products...');
+            const { embeddingsManager } = await import('../lib/embeddingsManager');
+            await embeddingsManager.generateProductEmbeddings(data);
+            console.log('[AI] Embeddings ready for', data.length, 'products');
+          } catch (error) {
+            console.error('[AI] Failed to generate embeddings:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading products:', error);
     }
   };
+
 
   const findSimilarProducts = (searchName: string, products: Product[], limit = 3): Product[] => {
     const normalized = searchName.toLowerCase().trim();
@@ -94,7 +198,59 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     }
   };
 
+  const checkAndCleanProfanity = async (text: string): Promise<string> => {
+    try {
+      // Check if text contains profanity
+      const { data: hasProfanity, error: checkError } = await supabase
+        .rpc('contains_profanity', { input_text: text });
+
+      if (checkError) {
+        console.error('[Profanity] Error checking:', checkError);
+        return text;
+      }
+
+      if (hasProfanity) {
+        console.warn('[Profanity] Detected profanity in voice input');
+
+        // Log the profanity attempt
+        try {
+          await supabase.rpc('log_profanity_attempt', {
+            p_user_id: userId,
+            p_store_id: storeId,
+            p_original_text: text
+          });
+        } catch (logError) {
+          console.error('[Profanity] Error logging:', logError);
+        }
+
+        // Clean the profanity
+        const { data: cleanedText, error: cleanError } = await supabase
+          .rpc('clean_profanity', { input_text: text });
+
+        if (cleanError) {
+          console.error('[Profanity] Error cleaning:', cleanError);
+          return text;
+        }
+
+        // Show warning to user
+        setNotification('⚠️ Wykryto niedozwolone słowa. Tekst został ocenzurowany.');
+        setTimeout(() => setNotification(''), 3000);
+
+        return cleanedText || text;
+      }
+
+      return text;
+    } catch (error) {
+      console.error('[Profanity] Unexpected error:', error);
+      return text;
+    }
+  };
+
   const startListening = () => {
+    if (!aiReady && !aiInitializing && useAI) {
+      initializeAI();
+    }
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
@@ -135,7 +291,10 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       setTranscript(currentText);
 
       if (finalTranscript) {
-        parseTranscript(finalTranscript, allProductsRef.current);
+        // Check and clean profanity before processing
+        checkAndCleanProfanity(finalTranscript).then(cleanedText => {
+          parseTranscript(cleanedText, allProductsRef.current);
+        });
         setTranscript('');
       }
     };
@@ -242,26 +401,256 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       }
 
       if (productName && productName.length > 2) {
-        const normalizedName = productName.toLowerCase().trim();
-        console.log('Looking for product:', normalizedName, 'in', products.length, 'products');
-        const product = products.find(p => {
+        let normalizedName = productName.toLowerCase().trim();
+        let originalPhrase = normalizedName;
+        let phraseMapped = false;
+
+        console.log('[SmartMatch] Looking for product:', normalizedName);
+
+        // Use the new smart_product_match function that combines all methods
+        try {
+          const { data: smartMatches, error } = await supabase
+            .rpc('smart_product_match', {
+              search_phrase: normalizedName,
+              p_store_id: storeId,
+              max_results: 5
+            });
+
+          if (error) {
+            console.error('[SmartMatch] Error:', error);
+          } else if (smartMatches && smartMatches.length > 0) {
+            console.log(`[SmartMatch] Found ${smartMatches.length} matches:`, smartMatches);
+
+            const topMatch = smartMatches[0];
+
+            // Check if phrase was mapped
+            const { data: mappedPhrase } = await supabase
+              .rpc('apply_phrase_mapping', {
+                phrase: normalizedName,
+                p_store_id: storeId
+              });
+
+            if (mappedPhrase && mappedPhrase !== normalizedName) {
+              phraseMapped = true;
+            }
+
+            // If we have a single high-confidence match (>= 90%), use it directly
+            if (smartMatches.length === 1 || topMatch.confidence >= 90) {
+              console.log(`[SmartMatch] Auto-matching with ${topMatch.confidence}% confidence (${topMatch.match_method})`);
+              items.push({
+                productName: topMatch.product_name,
+                quantity,
+                unit,
+                productIndex: topMatch.product_index,
+                productId: topMatch.product_id,
+                matched: true,
+                confidence: topMatch.confidence,
+                aiMatched: topMatch.match_method === 'learned',
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? topMatch.product_name : undefined,
+              });
+              continue;
+            }
+
+            // If we have multiple matches or moderate confidence, show as ambiguous
+            if (smartMatches.length > 1) {
+              const matchProducts = smartMatches.map(m => ({
+                id: m.product_id,
+                name: m.product_name,
+                index: m.product_index,
+                unit: 'kg',
+                store_id: storeId
+              }));
+
+              console.log(`[SmartMatch] Multiple matches, showing ${matchProducts.length} suggestions`);
+              items.push({
+                productName,
+                quantity,
+                unit,
+                matched: 'ambiguous',
+                suggestions: matchProducts,
+                confidence: topMatch.confidence,
+                aiMatched: false,
+                matchCount: smartMatches.length,
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? normalizedName : undefined,
+              });
+              continue;
+            }
+          }
+
+          // If smart match didn't find anything, continue with fallback
+          console.log('[SmartMatch] No matches found, trying fallback methods');
+        } catch (error) {
+          console.error('[SmartMatch] Unexpected error:', error);
+        }
+
+        const allMatches = products.filter(p => {
           const pName = p.name.toLowerCase();
-          return pName.includes(normalizedName) || normalizedName.includes(pName);
+
+          // Exact match
+          if (pName === normalizedName) return true;
+
+          // Normalize Polish word forms (dopełniacz, etc)
+          const normalizedBase = normalizedName.replace(/y$|i$|ę$|ą$/, 'a').replace(/ów$/, '');
+          const pNameBase = pName.replace(/y$|i$|ę$|ą$/, 'a').replace(/ów$/, '');
+
+          // Check if product name starts with the normalized search term
+          if (pName.startsWith(normalizedBase) || pName.startsWith(normalizedName)) return true;
+
+          // Check if search term (min 4 chars) is at the beginning of any word in product name
+          if (normalizedName.length >= 4) {
+            const words = pName.split(' ');
+            return words.some(word => word.startsWith(normalizedBase) || word.startsWith(normalizedName));
+          }
+
+          return false;
         });
 
-        if (product) {
-          console.log('Found product:', product.name);
+        if (allMatches.length === 1) {
+          console.log('Found exact match:', allMatches[0].name);
           items.push({
-            productName: product.name,
+            productName: allMatches[0].name,
             quantity,
             unit,
-            productIndex: product.index,
-            productId: product.id,
+            productIndex: allMatches[0].index,
+            productId: allMatches[0].id,
             matched: true,
+            confidence: 100,
+            aiMatched: false,
+            phraseMapped,
+            originalPhrase: phraseMapped ? originalPhrase : undefined,
+            mappedPhrase: phraseMapped ? normalizedName : undefined,
           });
+        } else if (allMatches.length > 1) {
+          console.log('[Fallback] Found multiple matches:', allMatches.length, allMatches.map(p => p.name));
+
+          items.push({
+            productName,
+            quantity,
+            unit,
+            matched: 'ambiguous',
+            suggestions: allMatches,
+            confidence: 100,
+            aiMatched: false,
+            matchCount: allMatches.length,
+            phraseMapped,
+            originalPhrase: phraseMapped ? originalPhrase : undefined,
+            mappedPhrase: phraseMapped ? normalizedName : undefined,
+          });
+        } else if (useAI && aiReady) {
+          console.log('[AI] Using AI to find similar products for:', productName);
+          console.log('[AI] useAI:', useAI, 'aiReady:', aiReady);
+          try {
+            const { embeddingsManager } = await import('../lib/embeddingsManager');
+            console.log('[AI] embeddingsManager loaded, isReady:', embeddingsManager.isReady());
+            const aiResults = await embeddingsManager.findSimilarProducts(productName, products, 5);
+            console.log('[AI] Found', aiResults.length, 'results');
+
+            if (aiResults.length > 0 && aiResults[0].confidence >= 95) {
+              console.log('[AI] Very high confidence match:', aiResults[0].product.name, aiResults[0].confidence);
+              items.push({
+                productName: aiResults[0].product.name,
+                quantity,
+                unit,
+                productIndex: aiResults[0].product.index,
+                productId: aiResults[0].product.id,
+                matched: true,
+                confidence: aiResults[0].confidence,
+                aiMatched: true,
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? normalizedName : undefined,
+              });
+            } else if (aiResults.length > 1 && aiResults[0].confidence >= 85) {
+              const topResults = aiResults.slice(0, Math.min(5, aiResults.length));
+              const confidenceDiff = topResults[0].confidence - topResults[topResults.length - 1].confidence;
+
+              if (confidenceDiff <= 10) {
+                console.log('[AI] Multiple similar confidence matches:', topResults.map(r => `${r.product.name} (${r.confidence}%)`));
+                items.push({
+                  productName,
+                  quantity,
+                  unit,
+                  matched: 'ambiguous',
+                  suggestions: topResults.map(r => r.product),
+                  confidence: topResults[0].confidence,
+                  aiMatched: true,
+                  matchCount: topResults.length,
+                  phraseMapped,
+                  originalPhrase: phraseMapped ? originalPhrase : undefined,
+                  mappedPhrase: phraseMapped ? normalizedName : undefined,
+                });
+              } else {
+                console.log('[AI] High confidence match with gap:', aiResults[0].product.name, aiResults[0].confidence);
+                items.push({
+                  productName: aiResults[0].product.name,
+                  quantity,
+                  unit,
+                  productIndex: aiResults[0].product.index,
+                  productId: aiResults[0].product.id,
+                  matched: true,
+                  confidence: aiResults[0].confidence,
+                  aiMatched: true,
+                  phraseMapped,
+                  originalPhrase: phraseMapped ? originalPhrase : undefined,
+                  mappedPhrase: phraseMapped ? normalizedName : undefined,
+                });
+              }
+            } else if (aiResults.length > 0) {
+              console.log('[AI] Found suggestions:', aiResults.length);
+
+              // Use AI suggestions
+              const suggestions = aiResults.map(r => r.product);
+
+              items.push({
+                productName,
+                quantity,
+                unit,
+                matched: false,
+                suggestions: suggestions,
+                confidence: aiResults[0]?.confidence,
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? normalizedName : undefined,
+              });
+            } else {
+              // No AI results
+              const suggestions: Product[] = [];
+              items.push({
+                productName,
+                quantity,
+                unit,
+                matched: false,
+                suggestions: suggestions,
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? normalizedName : undefined,
+              });
+            }
+          } catch (error) {
+            console.error('[AI] Error during similarity search:', error);
+            const fallbackSuggestions = findSimilarProducts(productName, products);
+
+            items.push({
+              productName,
+              quantity,
+              unit,
+              matched: false,
+              suggestions: fallbackSuggestions,
+              phraseMapped,
+              originalPhrase: phraseMapped ? originalPhrase : undefined,
+              mappedPhrase: phraseMapped ? normalizedName : undefined,
+            });
+          }
         } else {
-          console.log('Product not found, finding suggestions');
+          console.log('[Fallback] Using text matching for:', productName);
+          console.log('[Fallback] useAI:', useAI, 'aiReady:', aiReady);
           const suggestions = findSimilarProducts(productName, products);
+
+          console.log('[Fallback] Found', suggestions.length, 'suggestions');
           if (suggestions.length > 0) {
             items.push({
               productName,
@@ -269,6 +658,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               unit,
               matched: false,
               suggestions,
+              phraseMapped,
+              originalPhrase: phraseMapped ? originalPhrase : undefined,
+              mappedPhrase: phraseMapped ? normalizedName : undefined,
             });
           } else {
             items.push({
@@ -277,6 +669,9 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               unit,
               matched: false,
               suggestions: [],
+              phraseMapped,
+              originalPhrase: phraseMapped ? originalPhrase : undefined,
+              mappedPhrase: phraseMapped ? normalizedName : undefined,
             });
           }
         }
@@ -293,19 +688,34 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         return newList;
       });
 
-      const unmatchedCount = items.filter(item => !item.matched).length;
-      if (unmatchedCount > 0) {
-        const unmatchedItems = items.filter(item => !item.matched);
-        const unmatchedNames = unmatchedItems.map(item => item.productName).join(', ');
+      const ambiguousCount = items.filter(item => item.matched === 'ambiguous').length;
+      const unmatchedCount = items.filter(item => item.matched === false).length;
+      const matchedCount = items.filter(item => item.matched === true).length;
 
-        const hasSuggestions = unmatchedItems.some(item => item.suggestions && item.suggestions.length > 0);
+      if (ambiguousCount > 0 || unmatchedCount > 0) {
+        let message = '';
 
-        if (hasSuggestions) {
-          setNotification(`⚠️ Nie znaleziono w cenniku: ${unmatchedNames}. Zobacz sugestie poniżej lub podyktuj ponownie.`);
-        } else {
-          setNotification(`⚠️ Nie znaleziono w cenniku: ${unmatchedNames}. Proszę podyktować ponownie lub sprawdzić nazwę produktu.`);
+        if (ambiguousCount > 0) {
+          const ambiguousItems = items.filter(item => item.matched === 'ambiguous');
+          const ambiguousNames = ambiguousItems.map(item => item.productName).join(', ');
+          message += `🔶 Doprecyzuj: ${ambiguousNames} (${ambiguousCount} opcji)`;
         }
-        setTimeout(() => setNotification(''), 7000);
+
+        if (unmatchedCount > 0) {
+          const unmatchedItems = items.filter(item => item.matched === false);
+          const unmatchedNames = unmatchedItems.map(item => item.productName).join(', ');
+          if (message) message += '\n';
+          message += `⚠️ Nie znaleziono: ${unmatchedNames}`;
+        }
+
+        if (matchedCount > 0) {
+          const matchedNames = items.filter(item => item.matched === true).map(item => item.productName).join(', ');
+          if (message) message += '\n';
+          message += `✓ Dodano: ${matchedNames}`;
+        }
+
+        setNotification(message);
+        setTimeout(() => setNotification(''), 8000);
       } else {
         const addedNames = items.map(item => item.productName).join(', ');
         setNotification(`✓ Dodano: ${addedNames}`);
@@ -344,7 +754,92 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     setOrderItems(updated);
   };
 
-  const selectSuggestion = (itemIndex: number, product: Product) => {
+  const browseAllProducts = (itemIndex: number) => {
+    setSearchingItemIndex(itemIndex);
+    setInlineSearchQuery('');
+  };
+
+  const selectProductFromInlineSearch = async (itemIndex: number, product: Product) => {
+    const originalItem = orderItems[itemIndex];
+    const spokenPhrase = originalItem.productName;
+
+    // Record the learning correction
+    try {
+      await supabase.from('voice_learning_corrections').insert({
+        user_id: userId,
+        store_id: storeId,
+        spoken_phrase: spokenPhrase,
+        selected_product_id: product.id,
+      });
+      console.log(`[Learning] Recorded from inline search: "${spokenPhrase}" -> "${product.name}"`);
+    } catch (error) {
+      console.error('[Learning] Failed to record correction:', error);
+    }
+
+    const updated = [...orderItems];
+    updated[itemIndex] = {
+      ...updated[itemIndex],
+      productName: product.name,
+      productId: product.id,
+      matched: true,
+      suggestions: [],
+    };
+    setOrderItems(updated);
+    setSearchingItemIndex(null);
+    setInlineSearchQuery('');
+  };
+
+  const selectProductFromBrowser = async (product: Product) => {
+    if (browsingItemIndex === null) return;
+
+    const originalItem = orderItems[browsingItemIndex];
+    const spokenPhrase = originalItem.productName;
+
+    // Record the learning correction
+    try {
+      await supabase.from('voice_learning_corrections').insert({
+        user_id: userId,
+        store_id: storeId,
+        spoken_phrase: spokenPhrase,
+        selected_product_id: product.id,
+      });
+      console.log(`[Learning] Recorded from browser: "${spokenPhrase}" -> "${product.name}"`);
+    } catch (error) {
+      console.error('[Learning] Failed to record correction:', error);
+    }
+
+    const updated = [...orderItems];
+    updated[browsingItemIndex] = {
+      ...updated[browsingItemIndex],
+      productName: product.name,
+      productId: product.id,
+      productIndex: product.index,
+      matched: true,
+      suggestions: [],
+    };
+    setOrderItems(updated);
+    setShowProductBrowser(false);
+    setBrowsingItemIndex(null);
+  };
+
+  const selectSuggestion = async (itemIndex: number, product: Product) => {
+    const originalItem = orderItems[itemIndex];
+    const spokenPhrase = originalItem.productName;
+
+    // Record the learning correction
+    try {
+      await supabase.from('voice_learning_corrections').insert({
+        user_id: userId,
+        store_id: storeId,
+        spoken_phrase: spokenPhrase,
+        selected_product_id: product.id,
+      });
+      console.log(`[Learning] Recorded: "${spokenPhrase}" -> "${product.name}"`);
+    } catch (error) {
+      console.error('[Learning] Failed to record correction:', error);
+      // Don't block the user if learning fails
+    }
+
     const updated = [...orderItems];
     updated[itemIndex] = {
       ...updated[itemIndex],
@@ -363,30 +858,45 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       return;
     }
 
-    const unmatchedItems = orderItems.filter(item => !item.matched);
+    const unmatchedItems = orderItems.filter(item => item.matched !== true);
     if (unmatchedItems.length > 0) {
-      alert(`Nie wszystkie produkty zostały dopasowane. Wybierz sugestie lub usuń niedopasowane pozycje (${unmatchedItems.length} pozycji).`);
-      return;
+      const ambiguousCount = unmatchedItems.filter(item => item.matched === 'ambiguous').length;
+      const notFoundCount = unmatchedItems.filter(item => !item.matched).length;
+      const matchedCount = orderItems.length - unmatchedItems.length;
+
+      if (matchedCount === 0) {
+        alert('Nie dopasowano żadnego produktu. Wybierz produkty z listy sugestii lub usuń niedopasowane pozycje.');
+        return;
+      }
+
+      let message = `Niektóre produkty nie zostały dopasowane i zostaną pominięte:\n`;
+      if (ambiguousCount > 0) {
+        message += `\n• ${ambiguousCount} wymaga doprecyzowania`;
+      }
+      if (notFoundCount > 0) {
+        message += `\n• ${notFoundCount} nie znaleziono w cenniku`;
+      }
+      message += `\n\nZapisać szkic z ${matchedCount} dopasowanymi produktami?`;
+
+      if (!confirm(message)) {
+        return;
+      }
     }
 
     setSending(true);
     try {
       const matchedItems = orderItems
-        .filter(item => item.matched && item.productId)
+        .filter(item => item.matched === true && item.productId)
         .map(item => {
           const product = allProducts.find(p => p.id === item.productId);
           if (!product) return null;
-
-          const unitPrice = Number(product.base_price);
-          const totalPrice = Number((item.quantity * unitPrice).toFixed(2));
 
           return {
             product_id: product.id,
             quantity: item.quantity,
             unit: item.unit,
-            unit_price: unitPrice,
-            total_price: totalPrice,
-            productIndex: product.index,
+            unit_price: 0,
+            total_price: 0,
           };
         })
         .filter(Boolean);
@@ -397,7 +907,6 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         return;
       }
 
-      const totalAmount = matchedItems.reduce((sum, item) => sum + (item?.total_price || 0), 0);
       const orderNumber = `RO-${Date.now()}`;
 
       const { data: order, error: orderError } = await supabase
@@ -408,9 +917,10 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           created_by: userId,
           status: 'draft',
           requires_confirmation: requiresConfirmation,
-          total_amount: totalAmount,
+          total_amount: 0,
           voice_transcript: JSON.stringify(orderItems),
           notes: notes,
+          source_type: 'voice',
         })
         .select()
         .single();
@@ -453,57 +963,173 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   };
 
   if (stage === 'confirmation') {
+    const itemsWithConversion = orderItems.map(item => {
+      const product = item.productId ? allProducts.find(p => p.id === item.productId) : null;
+
+      if (item.unit === 'szt' && product?.average_weight && product.average_weight > 0) {
+        const estimatedKg = item.quantity * product.average_weight;
+        const convertedKg = Math.ceil(estimatedKg);
+        return {
+          ...item,
+          convertedQuantity: convertedKg,
+          convertedUnit: 'kg',
+          originalQuantity: item.quantity,
+          originalUnit: item.unit
+        };
+      }
+
+      return item;
+    });
+
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         <div className="p-6">
           <div className="bg-white rounded-xl shadow-lg p-6 space-y-4">
-            {orderItems.length === 0 ? (
+            {itemsWithConversion.length === 0 ? (
               <p className="text-gray-500 text-center py-8">Brak pozycji w zamówieniu</p>
             ) : (
-              orderItems.map((item, index) => (
-                <div key={index} className={`p-4 rounded-lg ${item.matched ? 'bg-gray-50' : 'bg-yellow-50 border-2 border-yellow-300'}`}>
+              itemsWithConversion.map((item, index) => (
+                <div key={index} className={`p-4 rounded-lg ${
+                  item.matched === 'ambiguous' ? 'bg-orange-50 border-2 border-orange-300' :
+                  item.matched === true ? 'bg-gray-50' :
+                  'bg-yellow-50 border-2 border-yellow-300'
+                }`}>
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-lg">{item.productName}</p>
+                        {item.phraseMapped && item.originalPhrase && (
+                          <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded flex items-center gap-1 font-medium">
+                            🔄 "{item.originalPhrase}" → "{item.mappedPhrase}"
+                          </span>
+                        )}
+                        {item.matched === 'ambiguous' && (
+                          <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded font-medium">
+                            ⚠️ Doprecyzuj ({item.matchCount} opcji)
+                          </span>
+                        )}
                         {!item.matched && (
                           <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">
                             Nie znaleziono
                           </span>
                         )}
-                        {item.matched && (
+                        {item.matched === true && !item.aiMatched && (
                           <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">
                             ✓ Dopasowano
                           </span>
                         )}
+                        {item.matched === true && item.aiMatched && (
+                          <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            AI {item.confidence}%
+                          </span>
+                        )}
+                        {item.confidence && !item.matched && (
+                          <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                            {item.confidence}% pewności
+                          </span>
+                        )}
                       </div>
-                      <p className="text-gray-600">
-                        {item.quantity} {item.unit}
-                      </p>
-                      {item.productIndex && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <svg className="w-28 h-12" viewBox="0 0 140 50">
-                            {item.productIndex.split('').map((digit, i) => (
-                              <rect
-                                key={i}
-                                x={i * 10.5}
-                                y="8"
-                                width={i % 2 === 0 ? "3.5" : "5"}
-                                height="30"
-                                fill="#000"
-                              />
+                      <div className="text-gray-600">
+                        {item.convertedQuantity && item.convertedUnit ? (
+                          <div>
+                            <p className="font-semibold text-amber-700">
+                              {item.convertedQuantity}{item.convertedUnit && item.convertedUnit !== 'kg' ? ` ${item.convertedUnit}` : ''}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              (z {item.originalQuantity}{item.originalUnit && item.originalUnit !== 'kg' ? ` ${item.originalUnit}` : ''})
+                            </p>
+                          </div>
+                        ) : (
+                          <p>{item.quantity}{item.unit && item.unit !== 'kg' ? ` ${item.unit}` : ''}</p>
+                        )}
+                      </div>
+
+                      {item.matched === 'ambiguous' && item.suggestions && item.suggestions.length > 0 && searchingItemIndex !== index && (
+                        <div className="mt-3 p-3 bg-white rounded-lg border-2 border-orange-300">
+                          <p className="text-sm font-semibold text-orange-800 mb-2">Znaleziono {item.matchCount} produktów pasujących do '{item.productName}'. Którą chcesz zamówić?</p>
+                          <div className="space-y-1 mb-3">
+                            {item.suggestions.map((suggestion) => (
+                              <button
+                                key={suggestion.id}
+                                onClick={() => selectSuggestion(index, suggestion)}
+                                className="w-full text-left p-3 text-sm bg-orange-50 hover:bg-orange-100 rounded-lg border-2 border-orange-200 hover:border-orange-400 transition-all"
+                              >
+                                <span className="font-semibold text-orange-900">{suggestion.name}</span>
+                                <span className="text-gray-600 ml-2 text-xs">({suggestion.index})</span>
+                              </button>
                             ))}
-                          </svg>
-                          <span className="font-mono text-xs text-gray-600">{item.productIndex}</span>
+                          </div>
+                          <button
+                            onClick={() => browseAllProducts(index)}
+                            className="w-full py-2 px-3 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Search className="w-4 h-4" />
+                            Żadna z powyższych - szukaj ręcznie
+                          </button>
                         </div>
                       )}
-
-                      {!item.matched && (
+                      {searchingItemIndex === index && (
+                        <div className="mt-3 p-3 bg-blue-50 rounded-lg border-2 border-blue-300">
+                          <div className="mb-3">
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                              <input
+                                type="text"
+                                placeholder="Wpisz nazwę lub indeks produktu..."
+                                value={inlineSearchQuery}
+                                onChange={(e) => setInlineSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border-2 border-blue-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                autoFocus
+                              />
+                            </div>
+                          </div>
+                          {inlineSearchQuery.length >= 2 && (
+                            <div className="max-h-60 overflow-y-auto space-y-1">
+                              {allProducts
+                                .filter(p =>
+                                  p.name.toLowerCase().includes(inlineSearchQuery.toLowerCase()) ||
+                                  p.index.toLowerCase().includes(inlineSearchQuery.toLowerCase())
+                                )
+                                .slice(0, 10)
+                                .map((product) => (
+                                  <button
+                                    key={product.id}
+                                    onClick={() => selectProductFromInlineSearch(index, product)}
+                                    className="w-full text-left p-2 text-sm bg-white hover:bg-blue-100 rounded border border-blue-200 hover:border-blue-400 transition"
+                                  >
+                                    <span className="font-medium text-blue-700">{product.name}</span>
+                                    <span className="text-gray-500 ml-2 text-xs">({product.index})</span>
+                                  </button>
+                                ))}
+                              {allProducts.filter(p =>
+                                p.name.toLowerCase().includes(inlineSearchQuery.toLowerCase()) ||
+                                p.index.toLowerCase().includes(inlineSearchQuery.toLowerCase())
+                              ).length === 0 && (
+                                <p className="text-sm text-gray-500 py-2 text-center">Brak wyników</p>
+                              )}
+                            </div>
+                          )}
+                          {inlineSearchQuery.length < 2 && (
+                            <p className="text-xs text-gray-600 text-center py-2">Wpisz minimum 2 znaki aby wyszukać</p>
+                          )}
+                          <button
+                            onClick={() => {
+                              setSearchingItemIndex(null);
+                              setInlineSearchQuery('');
+                            }}
+                            className="w-full mt-3 py-2 px-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Anuluj
+                          </button>
+                        </div>
+                      )}
+                      {item.matched === false && searchingItemIndex !== index && (
                         <div className="mt-3 p-3 bg-white rounded-lg border border-yellow-200">
                           {item.suggestions && item.suggestions.length > 0 ? (
                             <>
                               <p className="text-sm font-medium text-gray-700 mb-2">Czy chodziło o:</p>
-                              <div className="space-y-1">
+                              <div className="space-y-1 mb-3">
                                 {item.suggestions.map((suggestion) => (
                                   <button
                                     key={suggestion.id}
@@ -515,11 +1141,25 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                                   </button>
                                 ))}
                               </div>
+                              <button
+                                onClick={() => browseAllProducts(index)}
+                                className="w-full py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Search className="w-4 h-4" />
+                                Żadna z powyższych - szukaj ręcznie
+                              </button>
                             </>
                           ) : (
-                            <div className="text-sm text-red-600">
-                              <p className="font-medium mb-1">⚠️ Produkt nie istnieje w cenniku</p>
-                              <p className="text-xs text-gray-600">Proszę podyktować ponownie używając prawidłowej nazwy lub usuń tę pozycję</p>
+                            <div className="text-sm">
+                              <p className="font-medium mb-2 text-amber-700">⚠️ Nie znaleziono pasującego produktu</p>
+                              <p className="text-xs text-gray-600 mb-3">Wyszukaj produkt wpisując jego nazwę lub indeks:</p>
+                              <button
+                                onClick={() => browseAllProducts(index)}
+                                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Search className="w-4 h-4" />
+                                Szukaj produktu
+                              </button>
                             </div>
                           )}
                         </div>
@@ -548,7 +1188,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           <div className="mt-6 flex gap-3">
             <button
               onClick={addMoreItems}
-              className="flex-1 py-4 bg-white border-2 border-amber-500 text-amber-600 rounded-xl font-medium hover:bg-amber-50 transition flex items-center justify-center gap-2 shadow"
+              className="flex-1 py-2.5 px-4 bg-white border-2 border-amber-500 text-amber-600 rounded-xl font-medium hover:bg-amber-50 transition flex items-center justify-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Dodaj więcej
@@ -556,7 +1196,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             <button
               onClick={sendOrder}
               disabled={sending}
-              className="flex-1 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+              className="flex-1 py-5 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check className="w-5 h-5" />
               {sending ? 'Zapisuję...' : 'Zapisz jako szkic'}
@@ -570,6 +1210,31 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="p-4 space-y-4">
+        {aiInitializing && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div>
+                <p className="font-semibold text-blue-900 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Ładowanie AI...
+                </p>
+                <p className="text-xs text-blue-700">Przygotowuję inteligentne dopasowywanie produktów</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {aiReady && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-sm text-green-800 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              <span className="font-medium">AI gotowe</span>
+              <span className="text-xs">- inteligentne dopasowywanie produktów włączone</span>
+            </p>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex flex-col items-center">
             <div className="relative">
@@ -653,25 +1318,8 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{item.productName}</p>
                       <p className="text-xs text-gray-600">
-                        {item.quantity} {item.unit}
+                        {item.quantity}{item.unit && item.unit !== 'kg' ? ` ${item.unit}` : ''}
                       </p>
-                      {item.productIndex && (
-                        <div className="mt-1 flex items-center gap-1">
-                          <svg className="w-16 h-6" viewBox="0 0 80 25">
-                            {item.productIndex.split('').map((digit, i) => (
-                              <rect
-                                key={i}
-                                x={i * 6}
-                                y="3"
-                                width={i % 2 === 0 ? "2" : "3"}
-                                height="18"
-                                fill="#000"
-                              />
-                            ))}
-                          </svg>
-                          <span className="font-mono text-[10px] text-gray-500">{item.productIndex}</span>
-                        </div>
-                      )}
                     </div>
                     <div className="flex items-center gap-1">
                       <button
@@ -694,19 +1342,21 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                       >
                         <Plus className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => removeItem(index)}
-                        className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {showDeleteIcons && (
+                        <button
+                          onClick={() => removeItem(index)}
+                          className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition ml-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
               <button
                 onClick={() => setStage('confirmation')}
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
+                className="w-full py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95"
               >
                 <Check className="w-5 h-5" />
                 Zapisz jako szkic
@@ -715,6 +1365,70 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
           </>
         )}
       </div>
+
+      {/* Product Browser Modal */}
+      {showProductBrowser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Wybierz produkt z cennika</h2>
+                <button
+                  onClick={() => setShowProductBrowser(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <X className="w-6 h-6 text-gray-600" />
+                </button>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Szukaj produktu..."
+                  value={productSearchQuery}
+                  onChange={(e) => setProductSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {allProducts
+                  .filter(p =>
+                    productSearchQuery === '' ||
+                    p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                    p.index.toLowerCase().includes(productSearchQuery.toLowerCase())
+                  )
+                  .map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => selectProductFromBrowser(product)}
+                      className="text-left p-3 bg-gray-50 hover:bg-blue-50 rounded-lg border-2 border-gray-200 hover:border-blue-400 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800">{product.name}</p>
+                          <p className="text-xs text-gray-500 mt-1">Indeks: {product.index}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+              {allProducts.filter(p =>
+                productSearchQuery === '' ||
+                p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                p.index.toLowerCase().includes(productSearchQuery.toLowerCase())
+              ).length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <Search className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>Nie znaleziono produktów</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

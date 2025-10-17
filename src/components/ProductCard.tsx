@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 interface ProductCardProps {
   product: {
     id: string;
@@ -13,6 +15,7 @@ interface ProductCardProps {
     quantity_step: number;
     index?: string;
     tags?: string[];
+    promo_10_plus_1?: boolean;
   };
   onSelect?: () => void;
   children?: React.ReactNode;
@@ -23,13 +26,47 @@ interface ProductCardProps {
 export default function ProductCard({ product, onSelect, children, priceLayout = 'horizontal', positionNumber }: ProductCardProps) {
   const hasPromo = product.promo_price && product.promo_price > 0;
   const finalPrice = product.promo_price || product.your_price || product.base_price;
+  const is10Plus1 = product.promo_10_plus_1;
+
+  const touchStartY = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!onSelect || !touchStartY.current) return;
+
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaY = Math.abs(touchEndY - touchStartY.current);
+    const deltaTime = Date.now() - touchStartTime.current;
+
+    // Jeśli przesunięcie jest małe (<10px) i czas jest krótki (<300ms), to kliknięcie
+    if (deltaY < 10 && deltaTime < 300) {
+      onSelect();
+    }
+
+    touchStartY.current = null;
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Kliknięcie myszą (desktop)
+    if (onSelect) {
+      onSelect();
+    }
+  };
 
   return (
     <div
-      onClick={onSelect}
-      className={`bg-white rounded-lg shadow p-3 transition ${hasPromo ? 'bg-yellow-50' : ''} ${
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
+      className={`bg-white rounded-lg shadow p-3 transition ${hasPromo || is10Plus1 ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${
         onSelect ? 'cursor-pointer hover:shadow-lg' : ''
       }`}
+      style={{ touchAction: 'pan-y' }}
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
@@ -41,85 +78,48 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
                 </span>
               )}
               <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
+                  {is10Plus1 && (
+                    <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">10+1 GRATIS</span>
+                  )}
+                </div>
                 <span className="text-xs text-gray-500">{product.code}</span>
               </div>
             </div>
           </div>
         {priceLayout === 'horizontal' ? (
           <div className="flex items-center gap-2 flex-shrink-0">
-            {!product.your_price && !product.promo_price && (
-              <div className="flex items-center gap-1">
-                <span className="text-base font-bold text-amber-600">
-                  {product.base_price.toFixed(2)}
-                </span>
-                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
-              </div>
-            )}
-            {(product.your_price || product.promo_price) && (
+            {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
               <>
-                <div className="flex flex-col items-end">
-                  <span className="text-[9px] text-gray-400 uppercase leading-none">Norm.</span>
-                  <span className="text-xs line-through text-gray-400">
-                    {product.base_price.toFixed(2)}
-                  </span>
-                </div>
-                {product.your_price && product.your_price > 0 && (
-                  <div className="flex flex-col items-end">
-                    <span className="text-[9px] text-blue-600 uppercase font-medium leading-none">Twoja</span>
-                    <span className={`text-sm font-bold ${product.promo_price ? 'line-through text-gray-400' : 'text-blue-600'}`}>
-                      {product.your_price.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                {product.promo_price && product.promo_price > 0 && (
-                  <div className="flex flex-col items-end animate-pulse">
-                    <span className="text-[9px] text-red-600 uppercase font-bold leading-none">Specj.</span>
-                    <span className="text-base font-bold text-red-600">
-                      {product.promo_price.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                <span className="text-xs line-through text-gray-400">
+                  {(product.your_price || product.base_price).toFixed(2)}
+                </span>
+                <span className="text-base font-bold text-red-600 animate-pulse">
+                  {product.promo_price.toFixed(2)}
+                </span>
               </>
+            ) : (
+              <span className="text-base font-bold text-amber-600">
+                {(product.your_price || product.base_price).toFixed(2)}
+              </span>
             )}
           </div>
         ) : (
           <div className="flex flex-col items-end gap-1 flex-shrink-0">
-            {!product.your_price && !product.promo_price && (
-              <div className="flex items-baseline gap-1">
-                <span className="text-base font-bold text-amber-600">
-                  {product.base_price.toFixed(2)}
-                </span>
-                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
-              </div>
-            )}
-            {(product.your_price || product.promo_price) && (
+            {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
               <>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[10px] text-gray-400 uppercase">Normalna</span>
-                  <span className="text-sm line-through text-gray-400">
-                    {product.base_price.toFixed(2)}
-                  </span>
-                </div>
-                {product.your_price && product.your_price > 0 && (
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[10px] text-blue-600 uppercase font-medium">Twoja</span>
-                    <span className={`text-sm ${product.promo_price ? 'line-through text-gray-400' : 'font-bold text-blue-600'}`}>
-                      {product.your_price.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                {product.promo_price && product.promo_price > 0 && (
-                  <div className="flex items-baseline gap-1 animate-pulse">
-                    <span className="text-[10px] text-red-600 uppercase font-bold">Specjalna</span>
-                    <span className="text-base font-bold text-red-600">
-                      {product.promo_price.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                <span className="text-sm line-through text-gray-400">
+                  {(product.your_price || product.base_price).toFixed(2)}
+                </span>
+                <span className="text-base font-bold text-red-600 animate-pulse">
+                  {product.promo_price.toFixed(2)}
+                </span>
               </>
+            ) : (
+              <span className="text-base font-bold text-amber-600">
+                {(product.your_price || product.base_price).toFixed(2)}
+              </span>
             )}
           </div>
         )}
