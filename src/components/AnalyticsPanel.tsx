@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { processRecentSessions, clusterPaths, UserPath, PathCluster } from '../lib/pathClustering';
-import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download, LogOut, Brain } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Clock, Activity, RefreshCw, Filter, Download, LogOut, Brain, Award, Monitor } from 'lucide-react';
 import AIMetricsPanel from './AIMetricsPanel';
+import LoginRankingsPanel from './LoginRankingsPanel';
+import SessionsBrowserPanel from './SessionsBrowserPanel';
 
 interface AnalyticsSummary {
   totalUsers: number;
@@ -14,14 +16,6 @@ interface AnalyticsSummary {
   topEvents: Array<{ event_type: string; count: number }>;
 }
 
-interface SessionReplay {
-  session_id: string;
-  user_name: string;
-  user_role: string;
-  session_start: string;
-  total_events: number;
-  path_sequence: string[];
-}
 
 export default function AnalyticsPanel() {
   const [loading, setLoading] = useState(true);
@@ -29,11 +23,9 @@ export default function AnalyticsPanel() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [topPaths, setTopPaths] = useState<UserPath[]>([]);
   const [clusters, setClusters] = useState<PathCluster[]>([]);
-  const [recentSessions, setRecentSessions] = useState<SessionReplay[]>([]);
-  const [selectedSession, setSelectedSession] = useState<SessionReplay | null>(null);
   const [timeFilter, setTimeFilter] = useState<'today' | 'week' | 'month' | 'all'>('week');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'analytics' | 'ai-metrics'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'ai-metrics' | 'rankings' | 'sessions'>('analytics');
 
   useEffect(() => {
     loadAnalytics();
@@ -46,7 +38,6 @@ export default function AnalyticsPanel() {
         loadSummary(),
         loadTopPaths(),
         loadClusters(),
-        loadRecentSessions(),
       ]);
     } catch (error) {
       console.error('Failed to load analytics:', error);
@@ -157,55 +148,6 @@ export default function AnalyticsPanel() {
     }
   };
 
-  const loadRecentSessions = async () => {
-    const cutoffDate = getDateCutoff(timeFilter);
-
-    let query = supabase
-      .from('user_sessions')
-      .select(`
-        id,
-        user_id,
-        session_start,
-        total_events,
-        users!inner(full_name, role)
-      `)
-      .gte('session_start', cutoffDate)
-      .order('session_start', { ascending: false })
-      .limit(20);
-
-    if (roleFilter !== 'all') {
-      query = query.eq('users.role', roleFilter);
-    }
-
-    const { data: sessions } = await query;
-
-    if (!sessions) return;
-
-    // Get path sequences for each session
-    const sessionsWithPaths: SessionReplay[] = [];
-
-    for (const session of sessions) {
-      const { data: events } = await supabase
-        .from('user_events')
-        .select('screen_name')
-        .eq('session_id', session.id)
-        .eq('event_type', 'navigation')
-        .order('timestamp', { ascending: true });
-
-      const path_sequence = events?.map(e => e.screen_name) || [];
-
-      sessionsWithPaths.push({
-        session_id: session.id,
-        user_name: (session.users as any).full_name,
-        user_role: (session.users as any).role,
-        session_start: session.session_start,
-        total_events: session.total_events,
-        path_sequence,
-      });
-    }
-
-    setRecentSessions(sessionsWithPaths);
-  };
 
   const handleProcessSessions = async () => {
     setProcessing(true);
@@ -262,6 +204,55 @@ export default function AnalyticsPanel() {
     );
   }
 
+  const renderTabs = () => (
+    <div className="flex gap-2 border-b border-gray-200 mb-6">
+      <button
+        onClick={() => setActiveTab('analytics')}
+        className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+          activeTab === 'analytics'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-600 hover:text-gray-900'
+        }`}
+      >
+        <Activity className="w-5 h-5" />
+        Analityka
+      </button>
+      <button
+        onClick={() => setActiveTab('rankings')}
+        className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+          activeTab === 'rankings'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-600 hover:text-gray-900'
+        }`}
+      >
+        <Award className="w-5 h-5" />
+        Rankingi
+      </button>
+      <button
+        onClick={() => setActiveTab('sessions')}
+        className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+          activeTab === 'sessions'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-600 hover:text-gray-900'
+        }`}
+      >
+        <Monitor className="w-5 h-5" />
+        Sesje
+      </button>
+      <button
+        onClick={() => setActiveTab('ai-metrics')}
+        className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+          activeTab === 'ai-metrics'
+            ? 'text-blue-600 border-b-2 border-blue-600'
+            : 'text-gray-600 hover:text-gray-900'
+        }`}
+      >
+        <Brain className="w-5 h-5" />
+        Metryki AI
+      </button>
+    </div>
+  );
+
   if (activeTab === 'ai-metrics') {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
@@ -280,26 +271,61 @@ export default function AnalyticsPanel() {
                 Wyloguj
               </button>
             </div>
-
-            {/* Tabs */}
-            <div className="flex gap-2 border-b border-gray-200">
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className="flex items-center gap-2 px-4 py-2 font-medium transition-colors text-gray-600 hover:text-gray-900"
-              >
-                <Activity className="w-5 h-5" />
-                Analityka użytkowników
-              </button>
-              <button
-                onClick={() => setActiveTab('ai-metrics')}
-                className="flex items-center gap-2 px-4 py-2 font-medium transition-colors text-blue-600 border-b-2 border-blue-600"
-              >
-                <Brain className="w-5 h-5" />
-                Metryki AI
-              </button>
-            </div>
+            {renderTabs()}
           </div>
           <AIMetricsPanel />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'rankings') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Panel Analityczny</h1>
+                <p className="text-gray-600 mt-1">Analiza zachowań użytkowników systemu RODEO</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-base"
+              >
+                <LogOut className="w-5 h-5" />
+                Wyloguj
+              </button>
+            </div>
+            {renderTabs()}
+          </div>
+          <LoginRankingsPanel />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'sessions') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Panel Analityczny</h1>
+                <p className="text-gray-600 mt-1">Analiza zachowań użytkowników systemu RODEO</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-base"
+              >
+                <LogOut className="w-5 h-5" />
+                Wyloguj
+              </button>
+            </div>
+            {renderTabs()}
+          </div>
+          <SessionsBrowserPanel />
         </div>
       </div>
     );
@@ -324,23 +350,7 @@ export default function AnalyticsPanel() {
             </button>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2 border-b border-gray-200 mb-6">
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className="flex items-center gap-2 px-4 py-2 font-medium transition-colors text-blue-600 border-b-2 border-blue-600"
-            >
-              <Activity className="w-5 h-5" />
-              Analityka użytkowników
-            </button>
-            <button
-              onClick={() => setActiveTab('ai-metrics')}
-              className="flex items-center gap-2 px-4 py-2 font-medium transition-colors text-gray-600 hover:text-gray-900"
-            >
-              <Brain className="w-5 h-5" />
-              Metryki AI
-            </button>
-          </div>
+          {renderTabs()}
 
           <div className="flex gap-3">
             <button
@@ -559,51 +569,6 @@ export default function AnalyticsPanel() {
           </div>
         )}
 
-        {/* Recent Sessions */}
-        {recentSessions.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Ostatnie sesje użytkowników</h2>
-            <div className="space-y-3">
-              {recentSessions.map((session) => (
-                <div
-                  key={session.session_id}
-                  onClick={() => setSelectedSession(selectedSession?.session_id === session.session_id ? null : session)}
-                  className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-500 transition"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-base text-gray-900">{session.user_name}</p>
-                      <p className="text-sm text-gray-600">
-                        {session.user_role} • {new Date(session.session_start).toLocaleString('pl-PL')}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">{session.total_events} zdarzeń</p>
-                      <p className="text-xs text-gray-500">{session.path_sequence.length} ekranów</p>
-                    </div>
-                  </div>
-                  {selectedSession?.session_id === session.session_id && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Ścieżka nawigacji:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {session.path_sequence.map((screen, idx) => (
-                          <div key={idx} className="flex items-center">
-                            <span className="px-3 py-2 bg-blue-100 text-blue-800 rounded text-sm font-mono">
-                              {screen}
-                            </span>
-                            {idx < session.path_sequence.length - 1 && (
-                              <span className="mx-2 text-gray-400">→</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -43,6 +43,9 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
       const sessionId = crypto.randomUUID();
 
       try {
+        const ua = navigator.userAgent;
+        const deviceInfo = parseUserAgent(ua);
+
         const { error } = await supabase
           .from('user_sessions')
           .insert({
@@ -50,7 +53,15 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
             user_id: userId,
             session_start: new Date().toISOString(),
             device_type: getDeviceType(),
-            user_agent: navigator.userAgent,
+            os_name: deviceInfo.os_name,
+            os_version: deviceInfo.os_version,
+            browser_name: deviceInfo.browser_name,
+            browser_version: deviceInfo.browser_version,
+            device_vendor: deviceInfo.device_vendor,
+            device_model: deviceInfo.device_model,
+            is_pwa: isPWA(),
+            screen_resolution: getScreenResolution(),
+            user_agent: ua,
           });
 
         if (!error) {
@@ -243,7 +254,6 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
   };
 }
 
-// Helper function to determine device type
 function getDeviceType(): string {
   const ua = navigator.userAgent;
   if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
@@ -253,4 +263,100 @@ function getDeviceType(): string {
     return 'mobile';
   }
   return 'desktop';
+}
+
+function parseUserAgent(ua: string) {
+  const result = {
+    os_name: 'Unknown',
+    os_version: '',
+    browser_name: 'Unknown',
+    browser_version: '',
+    device_vendor: '',
+    device_model: '',
+  };
+
+  if (/Windows NT 10/i.test(ua)) {
+    result.os_name = 'Windows';
+    result.os_version = '10';
+  } else if (/Windows NT 6.3/i.test(ua)) {
+    result.os_name = 'Windows';
+    result.os_version = '8.1';
+  } else if (/Windows NT 6.2/i.test(ua)) {
+    result.os_name = 'Windows';
+    result.os_version = '8';
+  } else if (/Windows NT 6.1/i.test(ua)) {
+    result.os_name = 'Windows';
+    result.os_version = '7';
+  } else if (/Mac OS X (\d+[._]\d+)/i.test(ua)) {
+    result.os_name = 'macOS';
+    const match = ua.match(/Mac OS X (\d+[._]\d+)/i);
+    if (match) result.os_version = match[1].replace('_', '.');
+  } else if (/Android (\d+(\.\d+)?)/i.test(ua)) {
+    result.os_name = 'Android';
+    const match = ua.match(/Android (\d+(\.\d+)?)/i);
+    if (match) result.os_version = match[1];
+  } else if (/iPhone OS (\d+[._]\d+)/i.test(ua)) {
+    result.os_name = 'iOS';
+    const match = ua.match(/iPhone OS (\d+[._]\d+)/i);
+    if (match) result.os_version = match[1].replace('_', '.');
+  } else if (/iPad.*OS (\d+[._]\d+)/i.test(ua)) {
+    result.os_name = 'iPadOS';
+    const match = ua.match(/OS (\d+[._]\d+)/i);
+    if (match) result.os_version = match[1].replace('_', '.');
+  } else if (/Linux/i.test(ua)) {
+    result.os_name = 'Linux';
+  }
+
+  if (/Edg\/(\d+)/i.test(ua)) {
+    result.browser_name = 'Edge';
+    const match = ua.match(/Edg\/(\d+)/i);
+    if (match) result.browser_version = match[1];
+  } else if (/Chrome\/(\d+)/i.test(ua) && !/Edg/i.test(ua)) {
+    result.browser_name = 'Chrome';
+    const match = ua.match(/Chrome\/(\d+)/i);
+    if (match) result.browser_version = match[1];
+  } else if (/Safari\/(\d+)/i.test(ua) && !/Chrome/i.test(ua)) {
+    result.browser_name = 'Safari';
+    const match = ua.match(/Version\/(\d+)/i);
+    if (match) result.browser_version = match[1];
+  } else if (/Firefox\/(\d+)/i.test(ua)) {
+    result.browser_name = 'Firefox';
+    const match = ua.match(/Firefox\/(\d+)/i);
+    if (match) result.browser_version = match[1];
+  } else if (/OPR\/(\d+)/i.test(ua) || /Opera\/(\d+)/i.test(ua)) {
+    result.browser_name = 'Opera';
+    const match = ua.match(/(?:OPR|Opera)\/(\d+)/i);
+    if (match) result.browser_version = match[1];
+  }
+
+  if (/iPhone/i.test(ua)) {
+    result.device_vendor = 'Apple';
+    result.device_model = 'iPhone';
+  } else if (/iPad/i.test(ua)) {
+    result.device_vendor = 'Apple';
+    result.device_model = 'iPad';
+  } else if (/Macintosh/i.test(ua)) {
+    result.device_vendor = 'Apple';
+    result.device_model = 'Mac';
+  } else if (/Samsung/i.test(ua)) {
+    result.device_vendor = 'Samsung';
+    const match = ua.match(/SM-[A-Z0-9]+/i);
+    if (match) result.device_model = match[0];
+  } else if (/Huawei/i.test(ua)) {
+    result.device_vendor = 'Huawei';
+  } else if (/Xiaomi/i.test(ua)) {
+    result.device_vendor = 'Xiaomi';
+  }
+
+  return result;
+}
+
+function isPWA(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes('android-app://');
+}
+
+function getScreenResolution(): string {
+  return `${window.screen.width}x${window.screen.height}`;
 }
