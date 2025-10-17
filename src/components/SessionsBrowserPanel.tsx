@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Monitor, Smartphone, Tablet, Chrome, Filter, ChevronDown, ChevronUp, MousePointer, Hand } from 'lucide-react';
+import { closeInactiveSessions } from '../lib/sessionCleanup';
+import { Monitor, Smartphone, Tablet, Chrome, Filter, ChevronDown, ChevronUp, MousePointer, Hand, RefreshCw } from 'lucide-react';
 
 interface Session {
   id: string;
@@ -39,6 +40,7 @@ export default function SessionsBrowserPanel() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cleaning, setCleaning] = useState(false);
   const [groupBy, setGroupBy] = useState<'none' | 'device' | 'os' | 'browser' | 'pwa' | 'role'>('none');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<FilterOptions>({
@@ -128,6 +130,24 @@ export default function SessionsBrowserPanel() {
       setSessions([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCleanup = async () => {
+    setCleaning(true);
+    try {
+      const result = await closeInactiveSessions();
+      if (result.success) {
+        await loadSessions();
+        alert('✅ Zamknięto nieaktywne sesje');
+      } else {
+        alert('❌ Błąd: ' + (result.error || 'Nieznany błąd'));
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      alert('❌ Wystąpił błąd podczas czyszczenia sesji');
+    } finally {
+      setCleaning(false);
     }
   };
 
@@ -276,6 +296,7 @@ export default function SessionsBrowserPanel() {
 
     let totalDuration = 0;
     let sessionsWithDuration = 0;
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
     filteredSessions.forEach(session => {
       if (session.device_type) {
@@ -310,7 +331,10 @@ export default function SessionsBrowserPanel() {
         totalDuration += end.getTime() - start.getTime();
         sessionsWithDuration++;
       } else {
-        stats.activeSessions++;
+        const sessionStart = new Date(session.session_start);
+        if (sessionStart > thirtyMinutesAgo) {
+          stats.activeSessions++;
+        }
       }
     });
 
@@ -327,6 +351,14 @@ export default function SessionsBrowserPanel() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Przeglądarka sesji</h2>
+        <button
+          onClick={handleCleanup}
+          disabled={cleaning}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw className={`w-4 h-4 ${cleaning ? 'animate-spin' : ''}`} />
+          {cleaning ? 'Czyszczenie...' : 'Zamknij nieaktywne sesje'}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

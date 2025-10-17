@@ -77,6 +77,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      if (user?.id) {
+        await supabase.rpc('close_user_sessions', { p_user_id: user.id });
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
