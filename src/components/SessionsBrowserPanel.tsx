@@ -66,20 +66,45 @@ export default function SessionsBrowserPanel() {
           users!inner (
             full_name,
             role,
-            stores (name)
+            store_id
           )
         `)
         .order('session_start', { ascending: false })
         .limit(500);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading sessions:', error);
+        throw error;
+      }
 
-      const formattedSessions: Session[] = (data || []).map((session: any) => ({
+      if (!data || data.length === 0) {
+        console.log('No sessions found');
+        setSessions([]);
+        return;
+      }
+
+      const storeIds = [...new Set(data.map((s: any) => s.users.store_id).filter(Boolean))];
+
+      const storesMap: Record<string, string> = {};
+      if (storeIds.length > 0) {
+        const { data: storesData } = await supabase
+          .from('stores')
+          .select('id, name')
+          .in('id', storeIds);
+
+        if (storesData) {
+          storesData.forEach(store => {
+            storesMap[store.id] = store.name;
+          });
+        }
+      }
+
+      const formattedSessions: Session[] = data.map((session: any) => ({
         id: session.id,
         user_id: session.user_id,
         user_name: session.users.full_name,
         user_role: session.users.role,
-        store_name: session.users.stores?.name || 'N/A',
+        store_name: session.users.store_id ? (storesMap[session.users.store_id] || 'N/A') : 'N/A',
         session_start: session.session_start,
         session_end: session.session_end,
         device_type: session.device_type,
@@ -94,9 +119,11 @@ export default function SessionsBrowserPanel() {
         event_count: 0
       }));
 
+      console.log('Loaded sessions:', formattedSessions.length);
       setSessions(formattedSessions);
     } catch (error) {
       console.error('Error loading sessions:', error);
+      setSessions([]);
     } finally {
       setLoading(false);
     }
