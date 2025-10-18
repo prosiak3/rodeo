@@ -2,13 +2,16 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   Store, Calendar, TrendingUp, Package, DollarSign,
-  ChevronDown, ChevronRight, Filter, BarChart3
+  ChevronDown, ChevronRight, Filter, BarChart3, Map
 } from 'lucide-react';
+import StoresMap from './StoresMap';
 
 interface StoreData {
   id: string;
   name: string;
   address: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface OrderSummary {
@@ -47,6 +50,7 @@ export default function StoreAnalyticsPanel() {
   const [timeStats, setTimeStats] = useState<TimeStats[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
+  const [showMap, setShowMap] = useState(true);
 
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year' | 'all'>('month');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -66,7 +70,7 @@ export default function StoreAnalyticsPanel() {
     setLoading(true);
     const { data, error } = await supabase
       .from('stores')
-      .select('id, name, address')
+      .select('id, name, address, latitude, longitude')
       .eq('active', true)
       .order('name');
 
@@ -359,14 +363,45 @@ export default function StoreAnalyticsPanel() {
     );
   }
 
+  const storesWithCoordinates = stores.filter(s => s.latitude && s.longitude).map(s => ({
+    id: s.id,
+    name: s.name,
+    address: s.address,
+    latitude: s.latitude!,
+    longitude: s.longitude!,
+  }));
+
   return (
     <div className="space-y-6">
-      {/* Store Selector */}
+      {/* Store Selector with Map Toggle */}
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center gap-4 mb-4">
-          <Store className="w-6 h-6 text-blue-600" />
-          <h2 className="text-xl font-bold text-gray-900">Analiza Placówki</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <Store className="w-6 h-6 text-blue-600" />
+            <h2 className="text-xl font-bold text-gray-900">Analiza Placówki</h2>
+          </div>
+          <button
+            onClick={() => setShowMap(!showMap)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+              showMap
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            <Map className="w-5 h-5" />
+            {showMap ? 'Ukryj mapę' : 'Pokaż mapę'}
+          </button>
         </div>
+
+        {showMap && storesWithCoordinates.length > 0 && (
+          <div className="mb-6">
+            <StoresMap
+              stores={storesWithCoordinates}
+              selectedStoreId={selectedStore}
+              onStoreSelect={setSelectedStore}
+            />
+          </div>
+        )}
 
         <select
           value={selectedStore}
