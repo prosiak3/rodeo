@@ -55,6 +55,7 @@ export default function StoreAnalyticsPanel() {
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year' | 'all'>('month');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [topLimit, setTopLimit] = useState<10 | 20 | 50 | 100>(20);
+  const [seasonalData, setSeasonalData] = useState<any[]>([]);
 
   useEffect(() => {
     loadStores();
@@ -87,6 +88,7 @@ export default function StoreAnalyticsPanel() {
         loadOrders(),
         loadTopProducts(),
         loadTimeStats(),
+        loadSeasonalData(),
       ]);
     } catch (error) {
       console.error('Failed to load store data:', error);
@@ -100,7 +102,15 @@ export default function StoreAnalyticsPanel() {
 
     let query = supabase
       .from('orders')
-      .select('id, order_number, status, created_at, source_type')
+      .select(`
+        id,
+        order_number,
+        status,
+        created_at,
+        sent_at,
+        source_type,
+        created_by_user:users!created_by(full_name, email)
+      `)
       .eq('store_id', selectedStore)
       .gte('created_at', cutoffDate)
       .order('created_at', { ascending: false });
@@ -329,6 +339,17 @@ export default function StoreAnalyticsPanel() {
     if (data) {
       setOrderItems(prev => ({ ...prev, [orderId]: data }));
       setExpandedOrder(orderId);
+    }
+  };
+
+  const loadSeasonalData = async () => {
+    const { data: monthlyData } = await supabase.rpc('get_seasonal_trends', {
+      p_store_id: selectedStore,
+      p_months: 12
+    });
+
+    if (monthlyData) {
+      setSeasonalData(monthlyData);
     }
   };
 
@@ -580,6 +601,38 @@ export default function StoreAnalyticsPanel() {
                 ))}
               </tbody>
             </table>
+
+            {/* Visual Timeline Chart */}
+            <div className="mt-8">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">Wizualizacja zamówień w czasie</h4>
+              <div className="space-y-3">
+                {timeStats.map((stat, idx) => {
+                  const maxValue = Math.max(...timeStats.map(s => s.total_value));
+                  const widthPercent = (stat.total_value / maxValue) * 100;
+
+                  return (
+                    <div key={idx} className="flex items-center gap-3">
+                      <div className="w-24 text-sm font-mono text-gray-700 text-right">
+                        {stat.period}
+                      </div>
+                      <div className="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-3"
+                          style={{ width: `${widthPercent}%` }}
+                        >
+                          <span className="text-white text-xs font-semibold">
+                            {stat.order_count} zamówień
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-32 text-sm font-semibold text-gray-900 text-right">
+                        {stat.total_value.toFixed(2)} zł
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -634,6 +687,23 @@ export default function StoreAnalyticsPanel() {
 
                 {expandedOrder === order.id && orderItems[order.id] && (
                   <div className="border-t border-gray-200 p-4 bg-gray-50">
+                    <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-semibold text-gray-700">Utworzone przez:</span>
+                        <p className="text-gray-900 mt-1">
+                          {order.created_by_user?.full_name || 'Nieznany użytkownik'}
+                        </p>
+                        <p className="text-gray-600 text-xs">
+                          {order.created_by_user?.email || ''}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Wysłane:</span>
+                        <p className="text-gray-900 mt-1">
+                          {order.sent_at ? new Date(order.sent_at).toLocaleString('pl-PL') : 'Nie wysłano'}
+                        </p>
+                      </div>
+                    </div>
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-gray-300">
@@ -677,6 +747,102 @@ export default function StoreAnalyticsPanel() {
           </div>
         )}
       </div>
+
+      {/* Seasonal Trends Analysis */}
+      {selectedStore && seasonalData.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <TrendingUp className="w-6 h-6 text-blue-600" />
+            <h3 className="text-xl font-bold text-gray-900">Analiza Sezonowości Produktów (12 miesięcy)</h3>
+          </div>
+
+          <p className="text-sm text-gray-600 mb-6">
+            Analiza pokazuje trendy w zamawianych kategoriach produktów w ciągu roku.
+            Pomaga zidentyfikować wzorce jak np. więcej mięsa latem (grillowanie) czy więcej wędlin przed świętami.
+          </p>
+
+          {(() => {
+            const monthNames = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'];
+            const categories = [...new Set(seasonalData.map(d => d.category))];
+            const colors = {
+              'Mięso': 'bg-red-500',
+              'Drób': 'bg-yellow-500',
+              'Wołowina': 'bg-orange-500',
+              'Indyk': 'bg-amber-600',
+              'Inne': 'bg-gray-500'
+            };
+
+            const monthlyTotals = new Map();
+            seasonalData.forEach(item => {
+              const current = monthlyTotals.get(item.month) || 0;
+              monthlyTotals.set(item.month, current + parseFloat(item.total_quantity));
+            });
+
+            const maxTotal = Math.max(...Array.from(monthlyTotals.values()));
+
+            return (
+              <div className="space-y-6">
+                {/* Stacked Bar Chart */}
+                <div className="space-y-2">
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(month => {
+                    const monthData = seasonalData.filter(d => d.month === month);
+                    const total = monthlyTotals.get(month) || 0;
+                    const heightPercent = (total / maxTotal) * 100;
+
+                    return (
+                      <div key={month} className="flex items-center gap-3">
+                        <div className="w-16 text-sm font-semibold text-gray-700 text-right">
+                          {monthNames[month - 1]}
+                        </div>
+                        <div className="flex-1 h-12 bg-gray-100 rounded-lg overflow-hidden flex relative">
+                          {monthData.map((item, idx) => {
+                            const percent = (parseFloat(item.total_quantity) / total) * 100;
+                            const color = colors[item.category as keyof typeof colors] || colors['Inne'];
+
+                            return (
+                              <div
+                                key={idx}
+                                className={`${color} h-full flex items-center justify-center text-white text-xs font-semibold transition-all duration-300 hover:opacity-80`}
+                                style={{ width: `${percent}%` }}
+                                title={`${item.category}: ${parseFloat(item.total_quantity).toFixed(0)} kg`}
+                              >
+                                {percent > 15 && item.category}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="w-24 text-sm text-gray-900 text-right">
+                          {total.toFixed(0)} kg
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Legend */}
+                <div className="flex flex-wrap gap-4 justify-center pt-4 border-t">
+                  {categories.map(category => (
+                    <div key={category} className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded ${colors[category as keyof typeof colors] || colors['Inne']}`}></div>
+                      <span className="text-sm text-gray-700">{category}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Insights */}
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-semibold text-blue-900 mb-2">💡 Wnioski z analizy:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Szczyt zamówień: {monthNames[Array.from(monthlyTotals.entries()).sort((a, b) => b[1] - a[1])[0][0] - 1]} ({Array.from(monthlyTotals.entries()).sort((a, b) => b[1] - a[1])[0][1].toFixed(0)} kg)</li>
+                    <li>• Najniższy okres: {monthNames[Array.from(monthlyTotals.entries()).sort((a, b) => a[1] - b[1])[0][0] - 1]} ({Array.from(monthlyTotals.entries()).sort((a, b) => a[1] - b[1])[0][1].toFixed(0)} kg)</li>
+                    <li>• Dane te mogą być wykorzystane do automatycznego sugerowania zamówień w systemie AI</li>
+                  </ul>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 }
