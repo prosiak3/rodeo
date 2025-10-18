@@ -48,6 +48,7 @@ export default function AIMetricsPanel() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedEmbedding, setEditedEmbedding] = useState<ProductEmbedding | null>(null);
   const [failedAttempts, setFailedAttempts] = useState<any[]>([]);
+  const [expandedAttempts, setExpandedAttempts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (activeTab === 'metrics') {
@@ -143,6 +144,27 @@ export default function AIMetricsPanel() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const formatFullDate = (date: string) => {
+    return new Date(date).toLocaleString('pl-PL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  const toggleAttemptDetails = (id: string) => {
+    const newExpanded = new Set(expandedAttempts);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedAttempts(newExpanded);
   };
 
   const loadFailedAttempts = async () => {
@@ -373,27 +395,32 @@ export default function AIMetricsPanel() {
               </div>
             ) : (
               <div className="space-y-3">
-                {failedAttempts.map((attempt) => (
-                  <div
-                    key={attempt.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            attempt.confidence_score === 0
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                          }`}>
-                            {attempt.confidence_score === 0 ? 'Nie rozpoznano' : 'Poprawiono'}
-                          </span>
-                          {attempt.user?.full_name && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {attempt.user.full_name}
+                {failedAttempts.map((attempt) => {
+                  const isExpanded = expandedAttempts.has(attempt.id);
+                  return (
+                    <div
+                      key={attempt.id}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              attempt.confidence_score === 0
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            }`}>
+                              {attempt.confidence_score === 0 ? 'Nie rozpoznano' : 'Poprawiono'}
                             </span>
-                          )}
-                        </div>
+                            {attempt.user?.full_name && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {attempt.user.full_name}
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                              {formatDate(attempt.timestamp)}
+                            </span>
+                          </div>
 
                         <div className="space-y-1">
                           <div className="flex items-start gap-2">
@@ -456,19 +483,177 @@ export default function AIMetricsPanel() {
                           )}
                         </div>
                       </div>
-
-                      <div className="text-right ml-4">
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatDate(attempt.timestamp)}
-                        </div>
-                      </div>
                     </div>
+
+                    {/* Przycisk rozwinięcia szczegółów */}
+                    <button
+                      onClick={() => toggleAttemptDetails(attempt.id)}
+                      className="mt-3 px-3 py-1 text-xs bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-lg transition-colors"
+                    >
+                      {isExpanded ? '▼ Ukryj szczegóły' : '▶ Pokaż pełne szczegóły'}
+                    </button>
+
+                    {/* Rozwinięte szczegóły */}
+                    {isExpanded && (
+                          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <h4 className="font-semibold text-sm text-gray-800 dark:text-white mb-3">
+                              Szczegółowe informacje diagnostyczne
+                            </h4>
+
+                            <div className="space-y-2 text-xs">
+                              {/* ID próby */}
+                              <div className="grid grid-cols-3 gap-2">
+                                <span className="font-medium text-gray-600 dark:text-gray-400">ID próby:</span>
+                                <span className="col-span-2 font-mono text-gray-900 dark:text-white">{attempt.id}</span>
+                              </div>
+
+                              {/* Dokładna data i godzina */}
+                              <div className="grid grid-cols-3 gap-2">
+                                <span className="font-medium text-gray-600 dark:text-gray-400">Data i godzina:</span>
+                                <span className="col-span-2 text-gray-900 dark:text-white">{formatFullDate(attempt.timestamp)}</span>
+                              </div>
+
+                              {/* Użytkownik */}
+                              <div className="grid grid-cols-3 gap-2">
+                                <span className="font-medium text-gray-600 dark:text-gray-400">Użytkownik:</span>
+                                <span className="col-span-2 text-gray-900 dark:text-white">
+                                  {attempt.user?.full_name || 'Brak danych'} (ID: {attempt.user_id})
+                                </span>
+                              </div>
+
+                              {/* Fraza rozpoznana */}
+                              <div className="grid grid-cols-3 gap-2">
+                                <span className="font-medium text-gray-600 dark:text-gray-400">Fraza rozpoznana:</span>
+                                <span className="col-span-2 font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-800 px-2 py-1 rounded">
+                                  {attempt.recognized_phrase || attempt.original_phrase}
+                                </span>
+                              </div>
+
+                              {/* Metadane - oryginalna fraza */}
+                              {attempt.metadata?.original_text && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  <span className="font-medium text-gray-600 dark:text-gray-400">Oryginalny tekst:</span>
+                                  <span className="col-span-2 font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-800 px-2 py-1 rounded">
+                                    {attempt.metadata.original_text}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Metadane - przetworzony tekst */}
+                              {attempt.metadata?.processed_text && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  <span className="font-medium text-gray-600 dark:text-gray-400">Tekst przetworzony:</span>
+                                  <span className="col-span-2 font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-800 px-2 py-1 rounded">
+                                    {attempt.metadata.processed_text}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Metoda dopasowania */}
+                              <div className="grid grid-cols-3 gap-2">
+                                <span className="font-medium text-gray-600 dark:text-gray-400">Metoda:</span>
+                                <span className="col-span-2 text-gray-900 dark:text-white">
+                                  {attempt.metadata?.method || 'Brak danych'}
+                                </span>
+                              </div>
+
+                              {/* Czy AI było dostępne */}
+                              {attempt.metadata?.ai_available !== undefined && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  <span className="font-medium text-gray-600 dark:text-gray-400">AI dostępne:</span>
+                                  <span className="col-span-2">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                      attempt.metadata.ai_available
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                    }`}>
+                                      {attempt.metadata.ai_available ? 'Tak' : 'Nie'}
+                                    </span>
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Czy używano AI */}
+                              {attempt.metadata?.ai_matched !== undefined && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  <span className="font-medium text-gray-600 dark:text-gray-400">Użyto AI:</span>
+                                  <span className="col-span-2">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                      attempt.metadata.ai_matched
+                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                                    }`}>
+                                      {attempt.metadata.ai_matched ? 'Tak' : 'Nie'}
+                                    </span>
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Confidence score */}
+                              <div className="grid grid-cols-3 gap-2">
+                                <span className="font-medium text-gray-600 dark:text-gray-400">Pewność AI:</span>
+                                <span className="col-span-2 text-gray-900 dark:text-white">
+                                  {attempt.confidence_score}%
+                                  {attempt.confidence_score === 0 && (
+                                    <span className="ml-2 text-red-600 dark:text-red-400">(brak dopasowania)</span>
+                                  )}
+                                </span>
+                              </div>
+
+                              {/* Czy była korekta */}
+                              <div className="grid grid-cols-3 gap-2">
+                                <span className="font-medium text-gray-600 dark:text-gray-400">Poprawiono:</span>
+                                <span className="col-span-2">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                    attempt.was_corrected
+                                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400'
+                                  }`}>
+                                    {attempt.was_corrected ? 'Tak' : 'Nie'}
+                                  </span>
+                                </span>
+                              </div>
+
+                              {/* ID produktów */}
+                              {attempt.initial_product_id && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  <span className="font-medium text-gray-600 dark:text-gray-400">ID początkowego produktu:</span>
+                                  <span className="col-span-2 font-mono text-gray-900 dark:text-white">{attempt.initial_product_id}</span>
+                                </div>
+                              )}
+
+                              {attempt.final_product_id && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  <span className="font-medium text-gray-600 dark:text-gray-400">ID finalnego produktu:</span>
+                                  <span className="col-span-2 font-mono text-gray-900 dark:text-white">{attempt.final_product_id}</span>
+                                </div>
+                              )}
+
+                              {/* Pełne metadane JSON */}
+                              {attempt.metadata && (
+                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                  <details>
+                                    <summary className="cursor-pointer font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white">
+                                      Pełne metadane (JSON)
+                                    </summary>
+                                    <pre className="mt-2 p-2 bg-white dark:bg-gray-800 rounded text-[10px] overflow-x-auto">
+                                      {JSON.stringify(attempt.metadata, null, 2)}
+                                    </pre>
+                                  </details>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                    )}
                   </div>
-                ))}
+                );
+              })}
               </div>
             )}
           </div>
         </div>
+      ) : activeTab === 'learning' ? (
+        <VoiceLearningPanel />
       ) : activeTab === 'metrics' ? (
         <>
 

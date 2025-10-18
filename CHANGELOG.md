@@ -1,5 +1,48 @@
 # Historia zmian RODEO
 
+## [1.1.2] - 2025-10-19 (noc)
+
+### ✨ Nowe funkcje
+
+#### Rozszerzone szczegóły nierozpoznanych prób
+- **Przycisk "Pokaż pełne szczegóły"** dla każdej próby rozpoznawania
+  - ID próby (UUID)
+  - Dokładna data i godzina (rok, miesiąc, dzień, godzina, minuta, sekunda)
+  - Pełne dane użytkownika (imię, nazwisko, ID)
+  - Fraza oryginalna vs przetworzona
+  - Oryginalny tekst vs tekst po konwersji liczb
+  - Metoda dopasowania użyta przez system
+  - Czy AI było dostępne (Tak/Nie z kolorowymi badge'ami)
+  - Czy użyto AI do dopasowania
+  - Pewność AI (0-100%)
+  - Czy była korekta użytkownika
+  - ID początkowego i finalnego produktu
+  - **Pełne metadane JSON** w rozwijalnej sekcji dla zaawansowanej diagnostyki
+
+#### Kontrola logowania w System Settings
+- **Nowe kolumny w `system_settings`**:
+  - `enable_voice_recognition_logging` - włącz/wyłącz logowanie prób rozpoznawania
+  - `enable_user_tracking` - włącz/wyłącz tracking sesji użytkowników
+  - `enable_ai_metrics_logging` - włącz/wyłącz logowanie metryk AI
+  - `enable_learning_corrections` - włącz/wyłącz zapisywanie korekt dla uczenia się
+- **Wszystkie domyślnie włączone** (true)
+- Możliwość wyłączenia gdy system osiągnie wysoką dokładność
+- Zmniejsza obciążenie bazy danych i poprawia wydajność
+
+### 📝 Komentarze w kodzie
+- **VoiceOrderScreen.tsx**: Dodano obszerne komentarze dokumentacyjne
+  - Opis głównych funkcji i przepływu danych
+  - Wyjaśnienie procesu rozpoznawania (smart_match → AI → fallback)
+  - Dokumentacja trackingu i analityki
+  - Opisy interfejsów (Product, OrderItem)
+  - Komentarze do funkcji `startListening()` i `parseTranscript()`
+
+### 🗄️ Migracje bazy danych
+
+- `add_logging_control_settings` - dodanie kontroli logowania do system_settings
+
+---
+
 ## [1.1.1] - 2025-10-19 (wieczór)
 
 ### ✨ Nowe funkcje

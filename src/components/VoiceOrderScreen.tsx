@@ -1,14 +1,60 @@
+/**
+ * VoiceOrderScreen - Komponent do składania zamówień głosowych
+ *
+ * Główne funkcje:
+ * - Rozpoznawanie mowy w czasie rzeczywistym (Web Speech API)
+ * - Konwersja polskich liczb słownie na cyfry (trzy → 3, pół → 0.5)
+ * - Inteligentne dopasowywanie produktów przez:
+ *   1. smart_product_match (funkcja SQL w Supabase) - najlepsza metoda
+ *   2. AI similarity search (embeddings + transformers.js) - fallback
+ *   3. Text matching (indexOf, includes) - ostatnia deska ratunku
+ * - Automatyczny dobór jednostek z cennika (kg vs szt)
+ * - Tracking wszystkich nieudanych prób do analityki
+ * - Learning system - zapamiętywanie korekt użytkownika
+ *
+ * Przepływ danych:
+ * 1. Użytkownik mówi → Web Speech API → transkrypt
+ * 2. Konwersja liczb słownie → regex patterns → wyodrębnienie produktów
+ * 3. Dla każdego produktu:
+ *    - Próba smart_match (SQL) → jeśli confidence >= 90% → automatyczna akceptacja
+ *    - Jeśli nie → próba AI matching → jeśli confidence >= 70% → sugestie
+ *    - Jeśli nie → fallback text matching → sugestie
+ *    - Jeśli nic → logowanie do voice_recognition_attempts z przyczyną błędu
+ * 4. Użytkownik potwierdza/koryguje → zapis do voice_learning_corrections
+ * 5. Wysłanie zamówienia → draft order w bazie danych
+ *
+ * Tracking i analityka:
+ * - voice_recognition_attempts - każda próba (udana i nieudana)
+ * - voice_learning_corrections - korekty użytkownika dla uczenia się systemu
+ * - metadata zawiera: metoda, przyczyna błędu, dostępność AI, czas przetwarzania
+ */
 import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+/**
+ * Produkt z bazy danych
+ */
 interface Product {
   id: string;
   name: string;
-  index: string;
-  unit: string;
+  index: string;      // Indeks katalogowy produktu
+  unit: string;       // Jednostka: 'kg' lub 'szt'
 }
 
+/**
+ * Pozycja zamówienia podczas składania
+ *
+ * matched:
+ * - true = znaleziono dokładne dopasowanie (auto-akceptacja)
+ * - false = nie znaleziono, pokazujemy sugestie
+ * - 'ambiguous' = znaleziono kilka podobnych produktów (wymaga wyboru)
+ *
+ * suggestions: produkty do wyboru gdy matched === false lub 'ambiguous'
+ * confidence: % pewności dopasowania AI (0-100)
+ * aiMatched: czy użyto AI do dopasowania
+ * phraseMapped: czy fraza została zmapowana przez phrase_mapping
+ */
 interface OrderItem {
   productName: string;
   quantity: number;
@@ -246,18 +292,41 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     }
   };
 
+  /**
+   * Rozpoczyna nagrywanie głosu i rozpoznawanie mowy
+   *
+   * Proces:
+   * 1. Sprawdza czy AI jest gotowe, jeśli nie - inicjalizuje w tle
+   * 2. Tworzy instancję Web Speech API (SpeechRecognition)
+   * 3. Konfiguruje:
+   *    - lang: 'pl-PL' - rozpoznawanie polskiego
+   *    - continuous: false - zatrzymuje się po zakończeniu wypowiedzi
+   *    - interimResults: true - pokazuje częściowe wyniki w czasie rzeczywistym
+   * 4. Ustawia timer nieaktywności (5 sekund bez mowy = auto stop)
+   * 5. Na każdy wynik aktualizuje transkrypt i resetuje timer
+   * 6. Po zakończeniu przetwarza transkrypt przez parseTranscript()
+   *
+   * Obsługa błędów:
+   * - 'no-speech' - po 5 sekundach ciszy automatycznie kończy
+   * - 'not-allowed' - brak uprawnień do mikrofonu
+   * - inne błędy - loguje i kończy nagrywanie
+   */
   const startListening = () => {
+    // Inicjalizacja AI w tle jeśli jeszcze nie gotowe
     if (!aiReady && !aiInitializing && useAI) {
       initializeAI();
     }
 
+    // Web Speech API - obsługa różnych prefiksów przeglądarek
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
-    recognition.lang = 'pl-PL';
-    recognition.continuous = false;
-    recognition.interimResults = true;
+    // Konfiguracja rozpoznawania
+    recognition.lang = 'pl-PL';              // Polski język
+    recognition.continuous = false;           // Zatrzymaj po zakończeniu wypowiedzi
+    recognition.interimResults = true;        // Pokazuj częściowe wyniki
 
+    // Flaga do kontynuowania nasłuchiwania
     setShouldContinueListening(true);
     (window as any).shouldContinueListening = true;
 
