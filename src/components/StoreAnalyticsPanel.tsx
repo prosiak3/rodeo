@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   Store, Calendar, TrendingUp, Package, DollarSign,
-  ChevronDown, ChevronRight, Filter, BarChart3, Map
+  ChevronDown, ChevronRight, Filter, BarChart3, Map as MapIcon
 } from 'lucide-react';
 import StoresMap from './StoresMap';
 
@@ -477,7 +477,7 @@ export default function StoreAnalyticsPanel() {
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            <Map className="w-5 h-5" />
+            <MapIcon className="w-5 h-5" />
             {showMap ? 'Ukryj mapę' : 'Pokaż mapę'}
           </button>
         </div>
