@@ -52,7 +52,7 @@ export default function StoreAnalyticsPanel() {
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [showMap, setShowMap] = useState(true);
 
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year' | 'all' | '30' | '90' | '180' | '270' | '365' | 'holidays' | 'no-holidays' | 'custom'>('all');
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year' | 'all' | '30' | '90' | '180' | '270' | '365' | 'holidays' | 'no-holidays' | 'weekend' | 'custom'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [topLimit, setTopLimit] = useState<10 | 20 | 50 | 100>(20);
   const [seasonalData, setSeasonalData] = useState<any[]>([]);
@@ -140,6 +140,10 @@ export default function StoreAnalyticsPanel() {
         filteredOrders = ordersData.filter(order =>
           !isHolidayPeriod(new Date(order.created_at))
         );
+      } else if (timeFilter === 'weekend') {
+        filteredOrders = ordersData.filter(order =>
+          isWeekend(new Date(order.created_at))
+        );
       }
 
       const ordersWithStats = await Promise.all(
@@ -202,6 +206,10 @@ export default function StoreAnalyticsPanel() {
     } else if (timeFilter === 'no-holidays') {
       filteredOrders = ordersData.filter(order =>
         !isHolidayPeriod(new Date(order.created_at))
+      );
+    } else if (timeFilter === 'weekend') {
+      filteredOrders = ordersData.filter(order =>
+        isWeekend(new Date(order.created_at))
       );
     }
 
@@ -302,6 +310,10 @@ export default function StoreAnalyticsPanel() {
     } else if (timeFilter === 'no-holidays') {
       filteredOrders = ordersData.filter(order =>
         !isHolidayPeriod(new Date(order.created_at))
+      );
+    } else if (timeFilter === 'weekend') {
+      filteredOrders = ordersData.filter(order =>
+        isWeekend(new Date(order.created_at))
       );
     }
 
@@ -509,6 +521,7 @@ export default function StoreAnalyticsPanel() {
               <option value="all">Wszystko (cały okres współpracy)</option>
               <option value="holidays">Tylko święta</option>
               <option value="no-holidays">Bez świąt</option>
+              <option value="weekend">Weekendy (Pt-Nd)</option>
               <option value="30">Ostatnie 30 dni</option>
               <option value="90">Ostatnie 90 dni</option>
               <option value="180">Ostatnie 180 dni</option>
@@ -946,11 +959,15 @@ function isHolidayPeriod(date: Date): boolean {
 
   const holidays = [
     { month: 12, startDay: 20, endDay: 27 },
+    { month: 12, startDay: 31, endDay: 31 },
     { month: 4, startDay: 1, endDay: 8 },
     { month: 11, startDay: 1, endDay: 2 },
+    { month: 11, startDay: 11, endDay: 11 },
     { month: 1, startDay: 1, endDay: 6 },
     { month: 5, startDay: 1, endDay: 3 },
+    { month: 6, startDay: 8, endDay: 8 },
     { month: 8, startDay: 15, endDay: 15 },
+    { month: 3, startDay: 1, endDay: 1 },
   ];
 
   return holidays.some(h =>
@@ -958,7 +975,12 @@ function isHolidayPeriod(date: Date): boolean {
   );
 }
 
-function getDateCutoff(filter: 'week' | 'month' | 'quarter' | 'year' | 'all' | '30' | '90' | '180' | '270' | '365' | 'holidays' | 'no-holidays' | 'custom', customFrom?: string): string {
+function isWeekend(date: Date): boolean {
+  const dayOfWeek = date.getDay();
+  return dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0;
+}
+
+function getDateCutoff(filter: 'week' | 'month' | 'quarter' | 'year' | 'all' | '30' | '90' | '180' | '270' | '365' | 'holidays' | 'no-holidays' | 'weekend' | 'custom', customFrom?: string): string {
   const now = new Date();
   switch (filter) {
     case '30':
@@ -992,6 +1014,7 @@ function getDateCutoff(filter: 'week' | 'month' | 'quarter' | 'year' | 'all' | '
       return customFrom ? new Date(customFrom).toISOString() : new Date('2020-01-01').toISOString();
     case 'holidays':
     case 'no-holidays':
+    case 'weekend':
     case 'all':
       return new Date('2020-01-01').toISOString();
   }
