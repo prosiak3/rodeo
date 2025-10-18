@@ -51,6 +51,9 @@ export default function StoreAnalyticsPanel() {
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [storeSearch, setStoreSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [productTimeline, setProductTimeline] = useState<any[]>([]);
+  const [productStores, setProductStores] = useState<any[]>([]);
 
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year' | 'all' | '30' | '90' | '180' | '270' | '365' | 'holidays' | 'no-holidays' | 'weekend' | 'custom'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -456,6 +459,106 @@ export default function StoreAnalyticsPanel() {
     }
   };
 
+  const loadProductDetails = async (productId: string) => {
+    setSelectedProduct(productId);
+
+    const dateCutoff = getDateCutoff(timeFilter, customDateFrom);
+
+    const { data: ordersData } = await supabase
+      .from('orders')
+      .select('id, created_at, store_id, stores(name)')
+      .eq('store_id', selectedStore)
+      .gte('created_at', dateCutoff)
+      .in('status', statusFilter === 'all'
+        ? ['pending', 'confirmed', 'in_progress', 'completed', 'delivered']
+        : [statusFilter]);
+
+    if (!ordersData) return;
+
+    const { data: itemsData } = await supabase
+      .from('order_items')
+      .select('order_id, quantity, price, orders(created_at, stores(name))')
+      .eq('product_id', productId)
+      .in('order_id', ordersData.map(o => o.id));
+
+    if (!itemsData) return;
+
+    const timelineMap = new Map<string, { quantity: number; value: number; count: number }>();
+
+    itemsData.forEach(item => {
+      const date = new Date((item.orders as any).created_at);
+      const period = getPeriodKey(date, timeFilter);
+
+      const current = timelineMap.get(period) || { quantity: 0, value: 0, count: 0 };
+      current.quantity += parseFloat(item.quantity);
+      current.value += parseFloat(item.quantity) * parseFloat(item.price);
+      current.count += 1;
+      timelineMap.set(period, current);
+    });
+
+    const timeline = Array.from(timelineMap.entries())
+      .map(([period, data]) => ({ period, ...data }))
+      .sort((a, b) => a.period.localeCompare(b.period));
+
+    setProductTimeline(timeline);
+
+    const allStoresData = await supabase
+      .from('orders')
+      .select('id, created_at, store_id, stores(name)')
+      .gte('created_at', dateCutoff)
+      .in('status', statusFilter === 'all'
+        ? ['pending', 'confirmed', 'in_progress', 'completed', 'delivered']
+        : [statusFilter]);
+
+    if (!allStoresData.data) return;
+
+    const { data: allItemsData } = await supabase
+      .from('order_items')
+      .select('order_id, quantity, price, orders(created_at, store_id, stores(name))')
+      .eq('product_id', productId)
+      .in('order_id', allStoresData.data.map(o => o.id));
+
+    if (!allItemsData) return;
+
+    const storesMap = new Map<string, {
+      storeName: string;
+      quantity: number;
+      value: number;
+      count: number;
+      lastOrder: string;
+    }>();
+
+    allItemsData.forEach(item => {
+      const order = item.orders as any;
+      const storeId = order.store_id;
+      const storeName = order.stores.name;
+
+      const current = storesMap.get(storeId) || {
+        storeName,
+        quantity: 0,
+        value: 0,
+        count: 0,
+        lastOrder: order.created_at
+      };
+
+      current.quantity += parseFloat(item.quantity);
+      current.value += parseFloat(item.quantity) * parseFloat(item.price);
+      current.count += 1;
+
+      if (new Date(order.created_at) > new Date(current.lastOrder)) {
+        current.lastOrder = order.created_at;
+      }
+
+      storesMap.set(storeId, current);
+    });
+
+    const storesStats = Array.from(storesMap.entries())
+      .map(([storeId, data]) => ({ storeId, ...data }))
+      .sort((a, b) => b.quantity - a.quantity);
+
+    setProductStores(storesStats);
+  };
+
   if (loading && stores.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -674,10 +777,14 @@ export default function StoreAnalyticsPanel() {
               </thead>
               <tbody>
                 {topProducts.map((product, idx) => (
-                  <tr key={product.product_id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr
+                    key={product.product_id}
+                    className="border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition"
+                    onClick={() => loadProductDetails(product.product_id)}
+                  >
                     <td className="py-3 px-4 text-sm font-bold text-gray-900">{idx + 1}</td>
                     <td className="py-3 px-4 text-sm font-mono text-gray-700">{product.product_index}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{product.product_name}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900 font-medium">{product.product_name}</td>
                     <td className="py-3 px-4 text-sm text-gray-600">{product.category}</td>
                     <td className="py-3 px-4 text-sm text-right font-semibold text-gray-900">
                       {product.total_quantity}
@@ -969,6 +1076,177 @@ export default function StoreAnalyticsPanel() {
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {topProducts.find(p => p.product_id === selectedProduct)?.product_name || 'Produkt'}
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Indeks: {topProducts.find(p => p.product_id === selectedProduct)?.product_index} •
+                  {topProducts.find(p => p.product_id === selectedProduct)?.category}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Timeline Chart */}
+              {productTimeline.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                    Historia Zamówień w Wybranej Placówce
+                  </h3>
+
+                  <div className="space-y-2">
+                    {productTimeline.map((item, idx) => {
+                      const maxQty = Math.max(...productTimeline.map(p => p.quantity));
+                      const widthPercent = (item.quantity / maxQty) * 100;
+
+                      return (
+                        <div key={idx} className="flex items-center gap-4">
+                          <div className="w-24 text-sm font-medium text-gray-700">
+                            {item.period}
+                          </div>
+                          <div className="flex-1">
+                            <div className="relative h-10 bg-gray-200 rounded">
+                              <div
+                                className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-end pr-3 text-white font-semibold text-sm transition-all duration-500"
+                                style={{ width: `${widthPercent}%` }}
+                              >
+                                {widthPercent > 20 && `${item.quantity.toFixed(1)} kg`}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="w-32 text-right">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {item.quantity.toFixed(1)} kg
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {item.value.toFixed(2)} zł
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {item.count} {item.count === 1 ? 'zamówienie' : 'zamówień'}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-300 grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">Łącznie</div>
+                      <div className="text-xl font-bold text-blue-600">
+                        {productTimeline.reduce((sum, p) => sum + p.quantity, 0).toFixed(1)} kg
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">Wartość</div>
+                      <div className="text-xl font-bold text-green-600">
+                        {productTimeline.reduce((sum, p) => sum + p.value, 0).toFixed(2)} zł
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">Zamówienia</div>
+                      <div className="text-xl font-bold text-gray-900">
+                        {productTimeline.reduce((sum, p) => sum + p.count, 0)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Stores Ranking */}
+              {productStores.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Store className="w-5 h-5 text-blue-600" />
+                    Ranking Placówek - Kto Zamawiał Ten Produkt
+                  </h3>
+
+                  <div className="space-y-3">
+                    {productStores.map((store, idx) => {
+                      const maxQty = Math.max(...productStores.map(s => s.quantity));
+                      const widthPercent = (store.quantity / maxQty) * 100;
+
+                      return (
+                        <div key={idx} className="bg-white rounded-lg p-4 shadow-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div className="text-2xl font-bold text-gray-400">#{idx + 1}</div>
+                              <div>
+                                <div className="font-semibold text-gray-900">{store.storeName}</div>
+                                <div className="text-xs text-gray-500">
+                                  Ostatnie zamówienie: {new Date(store.lastOrder).toLocaleDateString('pl-PL')}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-blue-600">
+                                {store.quantity.toFixed(1)} kg
+                              </div>
+                              <div className="text-sm text-green-600">
+                                {store.value.toFixed(2)} zł
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {store.count} {store.count === 1 ? 'zamówienie' : 'zamówień'}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500"
+                              style={{ width: `${widthPercent}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-300 grid grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">Placówek</div>
+                      <div className="text-xl font-bold text-blue-600">
+                        {productStores.length}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">Łącznie</div>
+                      <div className="text-xl font-bold text-blue-600">
+                        {productStores.reduce((sum, s) => sum + s.quantity, 0).toFixed(1)} kg
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">Wartość</div>
+                      <div className="text-xl font-bold text-green-600">
+                        {productStores.reduce((sum, s) => sum + s.value, 0).toFixed(2)} zł
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600">Zamówienia</div>
+                      <div className="text-xl font-bold text-gray-900">
+                        {productStores.reduce((sum, s) => sum + s.count, 0)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
