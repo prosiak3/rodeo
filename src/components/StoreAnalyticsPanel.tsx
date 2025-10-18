@@ -52,10 +52,12 @@ export default function StoreAnalyticsPanel() {
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [showMap, setShowMap] = useState(true);
 
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year' | 'all'>('month');
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year' | 'all' | '30' | '90' | '180' | '270' | '365' | 'custom'>('30');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [topLimit, setTopLimit] = useState<10 | 20 | 50 | 100>(20);
   const [seasonalData, setSeasonalData] = useState<any[]>([]);
+  const [customDateFrom, setCustomDateFrom] = useState<string>('');
+  const [customDateTo, setCustomDateTo] = useState<string>('');
 
   useEffect(() => {
     loadStores();
@@ -98,7 +100,7 @@ export default function StoreAnalyticsPanel() {
   };
 
   const loadOrders = async () => {
-    const cutoffDate = getDateCutoff(timeFilter);
+    const cutoffDate = getDateCutoff(timeFilter, customDateFrom);
 
     let query = supabase
       .from('orders')
@@ -114,6 +116,10 @@ export default function StoreAnalyticsPanel() {
       .eq('store_id', selectedStore)
       .gte('created_at', cutoffDate)
       .order('created_at', { ascending: false });
+
+    if (timeFilter === 'custom' && customDateTo) {
+      query = query.lte('created_at', new Date(customDateTo + 'T23:59:59').toISOString());
+    }
 
     if (statusFilter !== 'all') {
       query = query.eq('status', statusFilter);
@@ -151,7 +157,7 @@ export default function StoreAnalyticsPanel() {
   };
 
   const loadTopProducts = async () => {
-    const cutoffDate = getDateCutoff(timeFilter);
+    const cutoffDate = getDateCutoff(timeFilter, customDateFrom);
 
     let ordersQuery = supabase
       .from('orders')
@@ -159,6 +165,10 @@ export default function StoreAnalyticsPanel() {
       .eq('store_id', selectedStore)
       .in('status', ['sent', 'confirmed', 'partially_confirmed'])
       .gte('created_at', cutoffDate);
+
+    if (timeFilter === 'custom' && customDateTo) {
+      ordersQuery = ordersQuery.lte('created_at', new Date(customDateTo + 'T23:59:59').toISOString());
+    }
 
     if (statusFilter !== 'all') {
       ordersQuery = ordersQuery.eq('status', statusFilter);
@@ -230,7 +240,7 @@ export default function StoreAnalyticsPanel() {
   };
 
   const loadTimeStats = async () => {
-    const cutoffDate = getDateCutoff(timeFilter);
+    const cutoffDate = getDateCutoff(timeFilter, customDateFrom);
 
     let ordersQuery = supabase
       .from('orders')
@@ -238,6 +248,10 @@ export default function StoreAnalyticsPanel() {
       .eq('store_id', selectedStore)
       .in('status', ['sent', 'confirmed', 'partially_confirmed'])
       .gte('created_at', cutoffDate);
+
+    if (timeFilter === 'custom' && customDateTo) {
+      ordersQuery = ordersQuery.lte('created_at', new Date(customDateTo + 'T23:59:59').toISOString());
+    }
 
     if (statusFilter !== 'all') {
       ordersQuery = ordersQuery.eq('status', statusFilter);
@@ -439,19 +453,50 @@ export default function StoreAnalyticsPanel() {
         <div className="flex flex-wrap gap-4 items-center">
           <Filter className="w-5 h-5 text-gray-500" />
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center flex-wrap">
             <label className="text-sm font-medium text-gray-700">Okres:</label>
             <select
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value as any)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
             >
+              <option value="30">Ostatnie 30 dni</option>
+              <option value="90">Ostatnie 90 dni</option>
+              <option value="180">Ostatnie 180 dni</option>
+              <option value="270">Ostatnie 270 dni</option>
+              <option value="365">Ostatnie 365 dni</option>
               <option value="week">Ostatni tydzień</option>
               <option value="month">Ostatni miesiąc</option>
               <option value="quarter">Ostatni kwartał</option>
               <option value="year">Ostatni rok</option>
               <option value="all">Wszystko</option>
+              <option value="custom">Zakres dat (niestandardowy)</option>
             </select>
+
+            {timeFilter === 'custom' && (
+              <div className="flex gap-2 items-center">
+                <label className="text-sm text-gray-600">Od:</label>
+                <input
+                  type="date"
+                  value={customDateFrom}
+                  onChange={(e) => setCustomDateFrom(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+                <label className="text-sm text-gray-600">Do:</label>
+                <input
+                  type="date"
+                  value={customDateTo}
+                  onChange={(e) => setCustomDateTo(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+                <button
+                  onClick={() => loadStoreData()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                >
+                  Zastosuj
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 items-center">
@@ -847,9 +892,24 @@ export default function StoreAnalyticsPanel() {
   );
 }
 
-function getDateCutoff(filter: 'week' | 'month' | 'quarter' | 'year' | 'all'): string {
+function getDateCutoff(filter: 'week' | 'month' | 'quarter' | 'year' | 'all' | '30' | '90' | '180' | '270' | '365' | 'custom', customFrom?: string): string {
   const now = new Date();
   switch (filter) {
+    case '30':
+      now.setDate(now.getDate() - 30);
+      return now.toISOString();
+    case '90':
+      now.setDate(now.getDate() - 90);
+      return now.toISOString();
+    case '180':
+      now.setDate(now.getDate() - 180);
+      return now.toISOString();
+    case '270':
+      now.setDate(now.getDate() - 270);
+      return now.toISOString();
+    case '365':
+      now.setDate(now.getDate() - 365);
+      return now.toISOString();
     case 'week':
       now.setDate(now.getDate() - 7);
       return now.toISOString();
@@ -862,6 +922,8 @@ function getDateCutoff(filter: 'week' | 'month' | 'quarter' | 'year' | 'all'): s
     case 'year':
       now.setFullYear(now.getFullYear() - 1);
       return now.toISOString();
+    case 'custom':
+      return customFrom ? new Date(customFrom).toISOString() : new Date('2020-01-01').toISOString();
     case 'all':
       return new Date('2020-01-01').toISOString();
   }
