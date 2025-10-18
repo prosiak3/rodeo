@@ -57,9 +57,9 @@ export default function TopProductsPanel() {
         .from('orders')
         .select(`
           id,
-          user_id,
+          created_by,
           store_id,
-          users!inner (
+          users!orders_created_by_fkey (
             full_name,
             store_id
           )
@@ -72,7 +72,7 @@ export default function TopProductsPanel() {
       }
 
       if (userFilter !== 'all') {
-        ordersQuery = ordersQuery.eq('user_id', userFilter);
+        ordersQuery = ordersQuery.eq('created_by', userFilter);
       }
 
       const { data: orders, error: ordersError } = await ordersQuery;
@@ -142,7 +142,7 @@ export default function TopProductsPanel() {
         if (order.store_id) {
           existing.store_ids.add(order.store_id);
         }
-        existing.user_ids.add(order.user_id);
+        existing.user_ids.add(order.created_by);
 
         productMap.set(item.product_id, existing);
       });
