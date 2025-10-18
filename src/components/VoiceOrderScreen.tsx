@@ -370,12 +370,27 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     setTranscript('');
   };
 
+  /**
+   * Przetwarza transkrypt głosowy i dopasowuje produkty
+   *
+   * Proces:
+   * 1. Konwertuje polskie liczby słownie na cyfry (trzy → 3)
+   * 2. Wyodrębnia ilości, jednostki i nazwy produktów za pomocą regex
+   * 3. Dopasowuje produkty używając smart_match (baza danych)
+   * 4. Używa jednostki produktu z cennika zamiast domyślnej
+   * 5. Fallback do AI matching jeśli smart_match nie znalazł produktu
+   * 6. Loguje nieudane próby do analityki
+   *
+   * @param text - Transkrypt głosowy od użytkownika
+   * @param products - Lista wszystkich aktywnych produktów
+   */
   const parseTranscript = async (text: string, products: Product[]) => {
     console.log('Parsing transcript:', text);
     console.log('Available products:', products.length);
     const items: OrderItem[] = [];
 
-    // Polish number words to digits
+    // Słownik konwersji polskich liczb na cyfry
+    // Obsługuje liczby 1-30 oraz "pół" (0.5)
     const numberWords: Record<string, string> = {
       'jeden': '1', 'jedna': '1', 'jedno': '1',
       'dwa': '2', 'dwie': '2',
@@ -398,18 +413,21 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       'pół': '0.5', 'pol': '0.5'
     };
 
-    // Convert number words to digits
+    // Konwersja słownych liczb na cyfry w całym tekście
     let processedText = text;
     Object.keys(numberWords).forEach(word => {
       const regex = new RegExp(`\\b${word}\\b`, 'gi');
       processedText = processedText.replace(regex, numberWords[word]);
     });
 
-    // Patterns with units
+    // Pattern 1: Ilość + jednostka + nazwa ("3 kg schab")
     const pattern1 = /(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)\s+([a-ząćęłńóśźż\s]+)/gi;
+
+    // Pattern 2: Nazwa + ilość + jednostka ("schab 3 kg")
     const pattern2 = /([a-ząćęłńóśźż\s]+?)\s+(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)/gi;
 
-    // Patterns without units - number followed by product name
+    // Pattern 3: Ilość + nazwa BEZ jednostki ("3 karkówki")
+    // Dopasowuje polskie końcówki liczby mnogiej: -ki, -ek, -ów, -y, -i, -e
     const pattern3 = /(\d+(?:[.,]\d+)?)\s+([a-ząćęłńóśźż]+(?:ki|ek|ów|y|i|e)?(?:\s+[a-ząćęłńóśźż]+)*)/gi;
 
     const matches = [];
@@ -475,11 +493,13 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               phraseMapped = true;
             }
 
-            // If we have a single high-confidence match (>= 90%), use it directly
+            // Wysokie dopasowanie (>= 90%) - automatyczna akceptacja
             if (smartMatches.length === 1 || topMatch.confidence >= 90) {
               console.log(`[SmartMatch] Auto-matching with ${topMatch.confidence}% confidence (${topMatch.match_method})`);
 
-              // Use product's unit from database instead of user's spoken unit
+              //WAŻNE: Używamy jednostki z cennika, nie tej podanej przez użytkownika
+              // Przykład: użytkownik mówi "3 jajka" (bez jednostki, domyślnie kg)
+              // ale w cenniku "Jajka L" ma unit='szt', więc użyjemy 'szt'
               const productUnit = (topMatch as any).product_unit || unit;
 
               items.push({
@@ -526,10 +546,11 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             }
           }
 
-          // If smart match didn't find anything, continue with fallback
+          // Smart match nie znalazł produktu - próbujemy fallback
           console.log('[SmartMatch] No matches found, trying fallback methods');
 
-          // Track failed recognition attempt
+          // Logowanie nieudanej próby rozpoznania do analityki
+          // Te dane są używane do identyfikacji problematycznych fraz i produktów
           try {
             await supabase.from('voice_recognition_attempts').insert({
               user_id: userId,

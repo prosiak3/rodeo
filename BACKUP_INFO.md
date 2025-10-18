@@ -2,8 +2,15 @@
 
 ## Informacje o backupie
 
-**Data utworzenia:** 2025-10-17
-**Wersja:** Produkcyjna z systemem analityki AI i nauki głosowej
+**Data ostatniej aktualizacji:** 2025-10-19
+**Wersja:** v1.1 - Ulepszone rozpoznawanie głosowe z polskimi liczbami i automatycznymi jednostkami
+
+### Nowe funkcje w tej wersji:
+- ✅ Rozpoznawanie polskich liczb słownie (trzy, pięć, dwadzieścia)
+- ✅ Automatyczny dobór jednostek z cennika (kg/szt)
+- ✅ Obsługa zamówień bez jawnej jednostki ("3 karkówki")
+- ✅ Tracking nieudanych rozpoznań do analityki
+- ✅ Sortowanie w panelu Top Products
 
 ## Zawartość backupu
 
@@ -21,12 +28,14 @@ Backup zawiera kompletny kod źródłowy aplikacji:
 - PWA support
 
 ### Baza danych (Supabase)
-- Migracje SQL w folderze `supabase/migrations/`
+- Migracje SQL w folderze `supabase/migrations/` (136 plików)
 - Wszystkie tabele z RLS policies
 - Views analityczne
 - Funkcje automatycznych sugestii
 - System trackingu sesji użytkowników
 - Tabele voice recognition attempts
+- **NOWOŚĆ v1.1:** Funkcja `smart_product_match` zwraca jednostki produktów
+- **NOWOŚĆ v1.1:** Widoki do analizy problemów z rozpoznawaniem głosowym
 
 ### Edge Functions (Supabase)
 - auto-order-suggestion
@@ -124,9 +133,12 @@ project/
 ### AI & Machine Learning
 - Embeddings dla produktów (IndexedDB)
 - Similarity search (Transformers.js)
-- Voice recognition tracking
+- Voice recognition tracking z metrykami dokładności
 - Phrase mapping i konflikty
 - Problem products analysis
+- **NOWOŚĆ v1.1:** Konwersja polskich liczb słownie (trzy → 3)
+- **NOWOŚĆ v1.1:** Inteligentny dobór jednostek z bazy danych
+- **NOWOŚĆ v1.1:** Pattern matching dla zamówień bez jednostek
 
 ## Ważne uwagi
 

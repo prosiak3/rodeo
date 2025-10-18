@@ -2,7 +2,11 @@
 
 ## Przegląd
 
-Aplikacja RODEO została rozszerzona o lokalny silnik AI, który znacząco poprawia dopasowywanie nazw produktów podczas dyktowania zamówień głosowych.
+Aplikacja RODEO została rozszerzona o zaawansowany system rozpoznawania głosowego z lokalnym silnikiem AI, który:
+- Rozpoznaje polskie liczby słownie (trzy, pięć, dwadzieścia)
+- Automatycznie dobiera prawidłowe jednostki z cennika (kg/szt)
+- Obsługuje zamówienia bez jawnej jednostki ("3 karkówki")
+- Śledzi nieudane próby rozpoznawania dla analizy i poprawy systemu
 
 ## Jak to działa?
 
@@ -226,15 +230,58 @@ W razie problemów:
 3. Odśwież aplikację (F5)
 4. Sprawdź wolną pamięć na telefonie (min. 100 MB)
 
+## Nowe funkcje (od wersji 1.1)
+
+### Rozpoznawanie polskich liczb słownie
+
+System konwertuje polskie liczby na cyfry:
+- "trzy karkówki" → "3 karkówki" ✅
+- "pięć kiełbas" → "5 kiełbas" ✅
+- "dwadzieścia schabu" → "20 schabu" ✅
+- "pół kilo" → "0.5 kg" ✅
+
+Obsługiwane liczby: 1-30, pół (0.5)
+
+### Inteligentny dobór jednostek
+
+**Stary system:**
+- "trzy jajka" → dopasowanie → przypisuje **kg** ❌
+
+**Nowy system:**
+- "trzy jajka" → dopasowanie do "Jajka L" → sprawdza cennik → przypisuje **szt** ✅
+
+System automatycznie pobiera jednostkę produktu z bazy danych i używa jej zamiast domyślnej.
+
+### Zamówienia bez jednostki
+
+Możesz teraz podyktować bez mówienia "kg" lub "sztuk":
+- "3 karkówki" → automatycznie kg
+- "5 jajek" → automatycznie szt (bo w cenniku na sztuki)
+- "2 kiełbasy" → automatycznie kg
+
+### Tracking nieudanych rozpoznań
+
+System śledzi wszystkie próby rozpoznawania w tabeli `voice_recognition_attempts`:
+- Nieudane dopasowania (confidence: 0)
+- Korekty użytkownika (was_corrected: true)
+- Metodę wyboru (suggestion, inline_search, product_browser)
+
+**Dane dostępne w analityce:**
+- `problem_products_view` - produkty z najczęstszymi korektami
+- `phrase_mapping_view` - mapowanie fraz na produkty
+- `phrase_conflicts_view` - frazy mapowane do różnych produktów
+
 ## Przyszłe ulepszenia (planowane)
 
-- 📊 Uczenie się z wyborów użytkowników
+- 📊 ✅ Uczenie się z wyborów użytkowników (zaimplementowane)
 - 🔄 Automatyczna aktualizacja embeddingów przy zmianach cennika
-- 📈 Dashboard z metrykami dokładności AI
+- 📈 ✅ Dashboard z metrykami dokładności AI (zaimplementowane)
 - 🎯 Personalizowane sugestie dla każdego ekspedienta
 - 🌐 Synchronizacja "uczenia" między użytkownikami
+- 🎤 ✅ Rozpoznawanie liczb słownie (zaimplementowane)
+- 📊 ✅ Tracking nieudanych rozpoznań (zaimplementowane)
 
 ---
 
-**Wersja dokumentacji:** 1.0
-**Data ostatniej aktualizacji:** 2025-10-14
+**Wersja dokumentacji:** 1.1
+**Data ostatniej aktualizacji:** 2025-10-19

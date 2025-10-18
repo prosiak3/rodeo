@@ -193,6 +193,59 @@ ORDER BY success_rate DESC
 LIMIT 10;
 ```
 
+## Nowe funkcje analityczne (v1.1)
+
+### Tracking rozpoznawania głosowego
+
+**Tabela: voice_recognition_attempts**
+
+System śledzi wszystkie próby rozpoznawania głosowego:
+- Oryginalna fraza wypowiedziana przez użytkownika
+- Początkowe dopasowanie AI
+- Finalne dopasowanie wybrane przez użytkownika
+- Czy użytkownik dokonał korekty (`was_corrected`)
+- Poziom pewności AI (`confidence_score`)
+- Metadata: metoda wyboru, użycie AI, liczba sugestii
+
+**Dostępne widoki:**
+- `problem_products_view` - Produkty wymagające najczęstszych korekt
+- `phrase_mapping_view` - Mapowanie popularnych fraz na produkty
+- `phrase_conflicts_view` - Frazy prowadzące do różnych produktów
+
+**Przykładowe zapytania:**
+
+```sql
+-- Top 10 produktów z najwyższym wskaźnikiem korekt
+SELECT
+  product_name,
+  total_attempts,
+  corrections_count,
+  correction_rate_percent
+FROM problem_products_view
+ORDER BY correction_rate_percent DESC
+LIMIT 10;
+
+-- Najczęściej używane frazy głosowe
+SELECT
+  original_phrase,
+  COUNT(*) as use_count,
+  COUNT(DISTINCT final_product_id) as unique_products,
+  AVG(confidence_score) as avg_confidence
+FROM voice_recognition_attempts
+WHERE timestamp >= now() - interval '7 days'
+GROUP BY original_phrase
+ORDER BY use_count DESC
+LIMIT 20;
+```
+
+### Panel Top Products z sortowaniem
+
+Panel topowych produktów został ulepszony o:
+- Sortowanie po nazwie, kategorii, ilości, wartości, liczbie zamówień
+- Kliknięcie nagłówka kolumny zmienia sortowanie
+- Wizualne wskaźniki kierunku sortowania (↑/↓)
+- Kolorowe etykiety kategorii
+
 ## Dalszy Rozwój
 
 ### Planowane funkcje:
@@ -202,6 +255,7 @@ LIMIT 10;
 - Predykcja zachowań użytkowników (ML)
 - Alerty o anomaliach w zachowaniach
 - Integracja z narzędziami zewnętrznymi (Google Analytics, Mixpanel)
+- ✅ **Tracking rozpoznawania głosowego** (zaimplementowane v1.1)
 
 ### Optymalizacje:
 - Partycjonowanie tabel user_events po dacie
@@ -220,5 +274,6 @@ W razie pytań lub problemów:
 ---
 
 **Data utworzenia:** 2025-10-16
-**Wersja:** 1.0
+**Ostatnia aktualizacja:** 2025-10-19
+**Wersja:** 1.1
 **Autor:** System RODEO Development Team
