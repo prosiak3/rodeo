@@ -1,5 +1,38 @@
 # Historia zmian RODEO
 
+## [1.1.1] - 2025-10-19 (wieczór)
+
+### ✨ Nowe funkcje
+
+#### Panel "Nierozpoznane próby" w AI Metrics
+- **Nowa zakładka w AI Metrics**: Dedykowany widok nierozpoznanych prób głosowych
+  - Wyświetla wszystkie próby z `confidence_score = 0` lub `was_corrected = true`
+  - Pokazuje oryginalną frazę, sugestie AI i finalne wybory użytkownika
+  - Widoczna przyczyna błędu rozpoznawania dla każdej próby
+  - Sposób wyboru produktu (sugestia/wyszukiwanie/przeglądarka)
+  - Filtrowanie po okresie czasu (1h/24h/7d/30d)
+  - **Krytyczne dla analityków** - natychmiastowa widoczność problemów
+
+#### Ulepszone logowanie prób rozpoznawania
+- **Tracking wszystkich przypadków nierozpoznania**:
+  - `smart_match_failed` - Smart match nie znalazł produktu
+  - `no_matches_found` - Brak jakichkolwiek dopasowań (smart_match, AI, fallback)
+  - `fallback_no_matches` - Fallback text matching nie znalazł podobnych produktów
+  - Szczegółowe metadane: metoda, przyczyna, przetworzony tekst, dostępność AI
+
+### 🔧 Poprawki
+
+- Utworzono brakującą tabelę `user_session_gaps`
+- Naprawiono błąd 404 przy próbie zapisu przerw w sesjach użytkowników
+- Dodano RLS policies dla `user_session_gaps` (users, analysts, admins)
+- Dodano tracking do wszystkich ścieżek nierozpoznania w VoiceOrderScreen
+
+### 🗄️ Migracje bazy danych
+
+- `fix_missing_user_session_gaps_table` - utworzenie tabeli user_session_gaps z RLS
+
+---
+
 ## [1.1.0] - 2025-10-19
 
 ### ✨ Nowe funkcje

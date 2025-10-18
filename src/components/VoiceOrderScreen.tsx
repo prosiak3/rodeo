@@ -712,7 +712,29 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 mappedPhrase: phraseMapped ? normalizedName : undefined,
               });
             } else {
-              // No AI results
+              // No AI results - logujemy nieudaną próbę
+              console.log('[Tracking] No products found at all for:', normalizedName);
+              try {
+                await supabase.from('voice_recognition_attempts').insert({
+                  user_id: userId,
+                  original_phrase: normalizedName,
+                  recognized_phrase: normalizedName,
+                  initial_product_id: null,
+                  final_product_id: null,
+                  was_corrected: false,
+                  confidence_score: 0,
+                  metadata: {
+                    method: 'no_matches_found',
+                    reason: 'Brak jakichkolwiek dopasowań - ani smart_match, ani AI, ani fallback',
+                    processed_text: processedText,
+                    original_text: text,
+                    ai_available: useAI && aiReady
+                  }
+                });
+              } catch (trackError) {
+                console.error('[Tracking] Failed to log no matches:', trackError);
+              }
+
               const suggestions: Product[] = [];
               items.push({
                 productName,
@@ -758,6 +780,28 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               mappedPhrase: phraseMapped ? normalizedName : undefined,
             });
           } else {
+            // Fallback też nie znalazł produktów - logujemy
+            console.log('[Tracking] Fallback found no products for:', normalizedName);
+            try {
+              await supabase.from('voice_recognition_attempts').insert({
+                user_id: userId,
+                original_phrase: normalizedName,
+                recognized_phrase: normalizedName,
+                initial_product_id: null,
+                final_product_id: null,
+                was_corrected: false,
+                confidence_score: 0,
+                metadata: {
+                  method: 'fallback_no_matches',
+                  reason: 'Fallback text matching nie znalazł podobnych produktów',
+                  processed_text: processedText,
+                  original_text: text
+                }
+              });
+            } catch (trackError) {
+              console.error('[Tracking] Failed to log fallback failure:', trackError);
+            }
+
             items.push({
               productName,
               quantity,

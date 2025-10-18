@@ -43,15 +43,18 @@ export default function AIMetricsPanel() {
   });
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
-  const [activeTab, setActiveTab] = useState<'metrics' | 'cache' | 'learning'>('metrics');
+  const [activeTab, setActiveTab] = useState<'metrics' | 'cache' | 'learning' | 'failures'>('metrics');
   const [cacheData, setCacheData] = useState<ProductEmbedding[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedEmbedding, setEditedEmbedding] = useState<ProductEmbedding | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState<any[]>([]);
 
   useEffect(() => {
     if (activeTab === 'metrics') {
       loadMetrics();
-    } else {
+    } else if (activeTab === 'failures') {
+      loadFailedAttempts();
+    } else if (activeTab === 'cache') {
       loadCache();
     }
   }, [timeRange, activeTab]);
@@ -140,6 +143,50 @@ export default function AIMetricsPanel() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const loadFailedAttempts = async () => {
+    setLoading(true);
+    try {
+      const now = new Date();
+      let startDate = new Date();
+
+      switch (timeRange) {
+        case '1h':
+          startDate.setHours(now.getHours() - 1);
+          break;
+        case '24h':
+          startDate.setDate(now.getDate() - 1);
+          break;
+        case '7d':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(now.getDate() - 30);
+          break;
+      }
+
+      const { data, error } = await supabase
+        .from('voice_recognition_attempts')
+        .select(`
+          *,
+          user:users(full_name),
+          initial_product:products!voice_recognition_attempts_initial_product_id_fkey(name),
+          final_product:products!voice_recognition_attempts_final_product_id_fkey(name)
+        `)
+        .or('confidence_score.eq.0,was_corrected.eq.true')
+        .gte('timestamp', startDate.toISOString())
+        .order('timestamp', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setFailedAttempts(data || []);
+    } catch (error) {
+      console.error('Error loading failed attempts:', error);
+      setFailedAttempts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadCache = async () => {
@@ -289,6 +336,17 @@ export default function AIMetricsPanel() {
           Nauka głosowa
         </button>
         <button
+          onClick={() => setActiveTab('failures')}
+          className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+            activeTab === 'failures'
+              ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+          }`}
+        >
+          <AlertCircle className="w-5 h-5" />
+          Nierozpoznane próby
+        </button>
+        <button
           onClick={() => setActiveTab('cache')}
           className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
             activeTab === 'cache'
@@ -301,7 +359,117 @@ export default function AIMetricsPanel() {
         </button>
       </div>
 
-      {activeTab === 'metrics' ? (
+      {activeTab === 'failures' ? (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+              Nierozpoznane próby i korekty użytkowników
+            </h3>
+
+            {failedAttempts.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Brak nierozpoznanych prób w wybranym okresie</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {failedAttempts.map((attempt) => (
+                  <div
+                    key={attempt.id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            attempt.confidence_score === 0
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          }`}>
+                            {attempt.confidence_score === 0 ? 'Nie rozpoznano' : 'Poprawiono'}
+                          </span>
+                          {attempt.user?.full_name && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {attempt.user.full_name}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex items-start gap-2">
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[120px]">
+                              Fraza oryginalna:
+                            </span>
+                            <span className="text-sm text-gray-900 dark:text-white font-mono bg-gray-100 dark:bg-gray-900 px-2 py-1 rounded">
+                              "{attempt.original_phrase}"
+                            </span>
+                          </div>
+
+                          {attempt.initial_product?.name && (
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[120px]">
+                                AI zasugerował:
+                              </span>
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {attempt.initial_product.name}
+                                <span className="ml-2 text-xs text-gray-500">
+                                  ({attempt.confidence_score}% pewności)
+                                </span>
+                              </span>
+                            </div>
+                          )}
+
+                          {attempt.final_product?.name && (
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[120px]">
+                                Użytkownik wybrał:
+                              </span>
+                              <span className="text-sm text-green-700 dark:text-green-400 font-medium">
+                                {attempt.final_product.name}
+                              </span>
+                            </div>
+                          )}
+
+                          {attempt.metadata?.method && (
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[120px]">
+                                Sposób wyboru:
+                              </span>
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {attempt.metadata.method === 'suggestion' && 'Z listy sugestii'}
+                                {attempt.metadata.method === 'inline_search' && 'Przez wyszukiwanie'}
+                                {attempt.metadata.method === 'product_browser' && 'Przez przeglądarkę produktów'}
+                                {attempt.metadata.method === 'smart_match_failed' && 'Brak dopasowania'}
+                              </span>
+                            </div>
+                          )}
+
+                          {attempt.metadata?.reason && (
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[120px]">
+                                Przyczyna błędu:
+                              </span>
+                              <span className="text-sm text-red-600 dark:text-red-400">
+                                {attempt.metadata.reason}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-right ml-4">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(attempt.timestamp)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : activeTab === 'metrics' ? (
         <>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
