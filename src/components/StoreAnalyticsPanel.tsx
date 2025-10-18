@@ -76,9 +76,6 @@ export default function StoreAnalyticsPanel() {
 
     if (!error && data) {
       setStores(data);
-      if (data.length > 0) {
-        setSelectedStore(data[0].id);
-      }
     }
     setLoading(false);
   };
@@ -408,6 +405,7 @@ export default function StoreAnalyticsPanel() {
           onChange={(e) => setSelectedStore(e.target.value)}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500"
         >
+          <option value="">-- Wybierz placówkę do analizy --</option>
           {stores.map(store => (
             <option key={store.id} value={store.id}>
               {store.name} - {store.address}

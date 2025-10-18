@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -17,28 +17,28 @@ interface StoresMapProps {
   onStoreSelect: (storeId: string) => void;
 }
 
-function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
+function MapBoundsHandler({ stores, selectedStoreId }: { stores: StoreLocation[], selectedStoreId: string }) {
   const map = useMap();
+
   useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
+    if (stores.length === 0) return;
+
+    const selectedStore = stores.find(s => s.id === selectedStoreId);
+
+    if (selectedStore && selectedStoreId) {
+      map.setView([selectedStore.latitude, selectedStore.longitude], 12, { animate: true });
+    } else {
+      const bounds = L.latLngBounds(
+        stores.map(store => [store.latitude, store.longitude] as [number, number])
+      );
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 7 });
+    }
+  }, [stores, selectedStoreId, map]);
+
   return null;
 }
 
 export default function StoresMap({ stores, selectedStoreId, onStoreSelect }: StoresMapProps) {
-  const [mapCenter, setMapCenter] = useState<[number, number]>([52.0, 19.0]);
-  const [mapZoom, setMapZoom] = useState(6);
-
-  useEffect(() => {
-    const selectedStore = stores.find(s => s.id === selectedStoreId);
-    if (selectedStore && selectedStore.latitude && selectedStore.longitude) {
-      setMapCenter([selectedStore.latitude, selectedStore.longitude]);
-      setMapZoom(12);
-    } else {
-      setMapCenter([52.0, 19.0]);
-      setMapZoom(6);
-    }
-  }, [selectedStoreId, stores]);
 
   const createCustomIcon = (isSelected: boolean) => {
     return L.divIcon({
@@ -75,12 +75,12 @@ export default function StoresMap({ stores, selectedStoreId, onStoreSelect }: St
   return (
     <div className="w-full h-[500px] rounded-lg overflow-hidden shadow-lg border-2 border-gray-200">
       <MapContainer
-        center={mapCenter}
-        zoom={mapZoom}
+        center={[52.0, 19.0]}
+        zoom={6}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
       >
-        <MapUpdater center={mapCenter} zoom={mapZoom} />
+        <MapBoundsHandler stores={stores} selectedStoreId={selectedStoreId} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
