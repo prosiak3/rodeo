@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   Store, Calendar, TrendingUp, Package, DollarSign,
-  ChevronDown, ChevronRight, Filter, BarChart3, Map as MapIcon
+  ChevronDown, ChevronRight, Filter, BarChart3
 } from 'lucide-react';
-import StoresMap from './StoresMap';
 
 interface StoreData {
   id: string;
@@ -50,7 +49,8 @@ export default function StoreAnalyticsPanel() {
   const [timeStats, setTimeStats] = useState<TimeStats[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
-  const [showMap, setShowMap] = useState(true);
+  const [storeSearch, setStoreSearch] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year' | 'all' | '30' | '90' | '180' | '270' | '365' | 'holidays' | 'no-holidays' | 'weekend' | 'custom'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -68,6 +68,18 @@ export default function StoreAnalyticsPanel() {
       loadStoreData();
     }
   }, [selectedStore, timeFilter, statusFilter, topLimit]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.store-search-container')) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadStores = async () => {
     setLoading(true);
@@ -452,58 +464,68 @@ export default function StoreAnalyticsPanel() {
     );
   }
 
-  const storesWithCoordinates = stores.filter(s => s.latitude && s.longitude).map(s => ({
-    id: s.id,
-    name: s.name,
-    address: s.address,
-    latitude: s.latitude!,
-    longitude: s.longitude!,
-  }));
-
   return (
     <div className="space-y-6">
-      {/* Store Selector with Map Toggle */}
+      {/* Store Selector with Search */}
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <Store className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900">Analiza Placówki</h2>
-          </div>
-          <button
-            onClick={() => setShowMap(!showMap)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
-              showMap
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <MapIcon className="w-5 h-5" />
-            {showMap ? 'Ukryj mapę' : 'Pokaż mapę'}
-          </button>
+        <div className="flex items-center gap-4 mb-4">
+          <Store className="w-6 h-6 text-blue-600" />
+          <h2 className="text-xl font-bold text-gray-900">Analiza Placówki</h2>
         </div>
 
-        {showMap && storesWithCoordinates.length > 0 && (
-          <div className="mb-6">
-            <StoresMap
-              stores={storesWithCoordinates}
-              selectedStoreId={selectedStore}
-              onStoreSelect={setSelectedStore}
-            />
-          </div>
-        )}
+        <div className="relative store-search-container">
+          <input
+            type="text"
+            value={storeSearch}
+            onChange={(e) => {
+              setStoreSearch(e.target.value);
+              setShowDropdown(true);
+            }}
+            onFocus={() => setShowDropdown(true)}
+            placeholder="Wpisz nazwę lub adres placówki..."
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
 
-        <select
-          value={selectedStore}
-          onChange={(e) => setSelectedStore(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">-- Wybierz placówkę do analizy --</option>
-          {stores.map(store => (
-            <option key={store.id} value={store.id}>
-              {store.name} - {store.address}
-            </option>
-          ))}
-        </select>
+          {showDropdown && (
+            <div className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+              {stores
+                .filter(store => {
+                  const searchLower = storeSearch.toLowerCase();
+                  return (
+                    store.name.toLowerCase().includes(searchLower) ||
+                    store.address.toLowerCase().includes(searchLower)
+                  );
+                })
+                .map(store => (
+                  <button
+                    key={store.id}
+                    onClick={() => {
+                      setSelectedStore(store.id);
+                      setStoreSearch(`${store.name} - ${store.address}`);
+                      setShowDropdown(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition ${
+                      selectedStore === store.id ? 'bg-blue-100' : ''
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{store.name}</div>
+                    <div className="text-sm text-gray-600">{store.address}</div>
+                  </button>
+                ))}
+              {stores.filter(store => {
+                const searchLower = storeSearch.toLowerCase();
+                return (
+                  store.name.toLowerCase().includes(searchLower) ||
+                  store.address.toLowerCase().includes(searchLower)
+                );
+              }).length === 0 && (
+                <div className="px-4 py-3 text-gray-500 text-center">
+                  Nie znaleziono placówki
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
