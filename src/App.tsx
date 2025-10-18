@@ -15,6 +15,7 @@ import EditDraftOrderScreen from './components/EditDraftOrderScreen';
 import ProfileScreen from './components/ProfileScreen';
 import AdminPanel from './components/AdminPanel';
 import AnalyticsPanel from './components/AnalyticsPanel';
+import SalesAnalyticsPanel from './components/SalesAnalyticsPanel';
 import PriceList from './components/PriceList';
 import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
@@ -350,9 +351,40 @@ function AppContent() {
   }
 
   if (user.role === 'analyst') {
+    const [analystView, setAnalystView] = useState<'behavior' | 'sales'>('behavior');
+
     return (
       <div className="min-h-screen bg-gray-50">
-        <AnalyticsPanel />
+        <div className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold text-gray-900">System Analityczny RODEO</h1>
+              <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setAnalystView('behavior')}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                    analystView === 'behavior'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Analiza Użytkowników
+                </button>
+                <button
+                  onClick={() => setAnalystView('sales')}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                    analystView === 'sales'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Analiza Sprzedaży
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {analystView === 'behavior' ? <AnalyticsPanel /> : <SalesAnalyticsPanel />}
       </div>
     );
   }
