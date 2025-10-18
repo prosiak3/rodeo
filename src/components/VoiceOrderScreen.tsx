@@ -478,10 +478,14 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             // If we have a single high-confidence match (>= 90%), use it directly
             if (smartMatches.length === 1 || topMatch.confidence >= 90) {
               console.log(`[SmartMatch] Auto-matching with ${topMatch.confidence}% confidence (${topMatch.match_method})`);
+
+              // Use product's unit from database instead of user's spoken unit
+              const productUnit = (topMatch as any).product_unit || unit;
+
               items.push({
                 productName: topMatch.product_name,
                 quantity,
-                unit,
+                unit: productUnit,
                 productIndex: topMatch.product_index,
                 productId: topMatch.product_id,
                 matched: true,
@@ -500,7 +504,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 id: m.product_id,
                 name: m.product_name,
                 index: m.product_index,
-                unit: 'kg',
+                unit: (m as any).product_unit || 'kg',
                 store_id: storeId
               }));
 
@@ -572,10 +576,13 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
 
         if (allMatches.length === 1) {
           console.log('Found exact match:', allMatches[0].name);
+          // Use product's unit from database
+          const productUnit = allMatches[0].unit || unit;
+
           items.push({
             productName: allMatches[0].name,
             quantity,
-            unit,
+            unit: productUnit,
             productIndex: allMatches[0].index,
             productId: allMatches[0].id,
             matched: true,
@@ -612,10 +619,13 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
 
             if (aiResults.length > 0 && aiResults[0].confidence >= 95) {
               console.log('[AI] Very high confidence match:', aiResults[0].product.name, aiResults[0].confidence);
+              // Use product's unit from database
+              const productUnit = aiResults[0].product.unit || unit;
+
               items.push({
                 productName: aiResults[0].product.name,
                 quantity,
-                unit,
+                unit: productUnit,
                 productIndex: aiResults[0].product.index,
                 productId: aiResults[0].product.id,
                 matched: true,
@@ -646,10 +656,13 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 });
               } else {
                 console.log('[AI] High confidence match with gap:', aiResults[0].product.name, aiResults[0].confidence);
+                // Use product's unit from database
+                const productUnit = aiResults[0].product.unit || unit;
+
                 items.push({
                   productName: aiResults[0].product.name,
                   quantity,
-                  unit,
+                  unit: productUnit,
                   productIndex: aiResults[0].product.index,
                   productId: aiResults[0].product.id,
                   matched: true,
