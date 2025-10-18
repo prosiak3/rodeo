@@ -375,18 +375,59 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     console.log('Available products:', products.length);
     const items: OrderItem[] = [];
 
+    // Polish number words to digits
+    const numberWords: Record<string, string> = {
+      'jeden': '1', 'jedna': '1', 'jedno': '1',
+      'dwa': '2', 'dwie': '2',
+      'trzy': '3',
+      'cztery': '4',
+      'pięć': '5', 'piec': '5',
+      'sześć': '6', 'szesc': '6',
+      'siedem': '7',
+      'osiem': '8',
+      'dziewięć': '9', 'dziewiec': '9',
+      'dziesięć': '10', 'dziesiec': '10',
+      'jedenaście': '11', 'jedenascie': '11',
+      'dwanaście': '12', 'dwanascie': '12',
+      'trzynaście': '13', 'trzynascie': '13',
+      'czternaście': '14', 'czternascie': '14',
+      'piętnaście': '15', 'pietnascie': '15',
+      'szesnaście': '16', 'szesnascie': '16',
+      'dwadzieścia': '20', 'dwadziescia': '20',
+      'trzydzieści': '30', 'trzydziesci': '30',
+      'pół': '0.5', 'pol': '0.5'
+    };
+
+    // Convert number words to digits
+    let processedText = text;
+    Object.keys(numberWords).forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      processedText = processedText.replace(regex, numberWords[word]);
+    });
+
+    // Patterns with units
     const pattern1 = /(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)\s+([a-ząćęłńóśźż\s]+)/gi;
     const pattern2 = /([a-ząćęłńóśźż\s]+?)\s+(\d+(?:[.,]\d+)?)\s*(kg|kilo|kilogram|kilograma|kilogramów|szt|sztuk|sztuki)/gi;
+
+    // Patterns without units - number followed by product name
+    const pattern3 = /(\d+(?:[.,]\d+)?)\s+([a-ząćęłńóśźż]+(?:ki|ek|ów|y|i|e)?(?:\s+[a-ząćęłńóśźż]+)*)/gi;
 
     const matches = [];
     let match;
 
-    while ((match = pattern1.exec(text)) !== null) {
+    while ((match = pattern1.exec(processedText)) !== null) {
       matches.push({ quantity: match[1], unit: match[2], productName: match[3] });
     }
 
-    while ((match = pattern2.exec(text)) !== null) {
+    while ((match = pattern2.exec(processedText)) !== null) {
       matches.push({ productName: match[1], quantity: match[2], unit: match[3] });
+    }
+
+    // Try pattern without explicit unit
+    if (matches.length === 0) {
+      while ((match = pattern3.exec(processedText)) !== null) {
+        matches.push({ quantity: match[1], unit: 'kg', productName: match[2] });
+      }
     }
 
     console.log('All matches found:', matches);
@@ -483,6 +524,26 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
 
           // If smart match didn't find anything, continue with fallback
           console.log('[SmartMatch] No matches found, trying fallback methods');
+
+          // Track failed recognition attempt
+          try {
+            await supabase.from('voice_recognition_attempts').insert({
+              user_id: userId,
+              original_phrase: normalizedName,
+              recognized_phrase: normalizedName,
+              initial_product_id: null,
+              final_product_id: null,
+              was_corrected: false,
+              confidence_score: 0,
+              metadata: {
+                method: 'smart_match_failed',
+                processed_text: processedText,
+                original_text: text
+              }
+            });
+          } catch (trackError) {
+            console.error('[Tracking] Failed to log recognition attempt:', trackError);
+          }
         } catch (error) {
           console.error('[SmartMatch] Unexpected error:', error);
         }
@@ -776,6 +837,25 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       console.error('[Learning] Failed to record correction:', error);
     }
 
+    // Track voice recognition attempt
+    try {
+      await supabase.from('voice_recognition_attempts').insert({
+        user_id: userId,
+        original_phrase: spokenPhrase,
+        recognized_phrase: spokenPhrase,
+        initial_product_id: originalItem.productId || null,
+        final_product_id: product.id,
+        was_corrected: true,
+        confidence_score: originalItem.confidence || 0,
+        metadata: {
+          selection_method: 'inline_search',
+          ai_matched: originalItem.aiMatched || false
+        }
+      });
+    } catch (trackError) {
+      console.error('[Tracking] Failed to log recognition attempt:', trackError);
+    }
+
     const updated = [...orderItems];
     updated[itemIndex] = {
       ...updated[itemIndex],
@@ -808,6 +888,25 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       console.error('[Learning] Failed to record correction:', error);
     }
 
+    // Track voice recognition attempt
+    try {
+      await supabase.from('voice_recognition_attempts').insert({
+        user_id: userId,
+        original_phrase: spokenPhrase,
+        recognized_phrase: spokenPhrase,
+        initial_product_id: originalItem.productId || null,
+        final_product_id: product.id,
+        was_corrected: true,
+        confidence_score: originalItem.confidence || 0,
+        metadata: {
+          selection_method: 'product_browser',
+          ai_matched: originalItem.aiMatched || false
+        }
+      });
+    } catch (trackError) {
+      console.error('[Tracking] Failed to log recognition attempt:', trackError);
+    }
+
     const updated = [...orderItems];
     updated[browsingItemIndex] = {
       ...updated[browsingItemIndex],
@@ -837,7 +936,25 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       console.log(`[Learning] Recorded: "${spokenPhrase}" -> "${product.name}"`);
     } catch (error) {
       console.error('[Learning] Failed to record correction:', error);
-      // Don't block the user if learning fails
+    }
+
+    // Track voice recognition attempt with correction
+    try {
+      await supabase.from('voice_recognition_attempts').insert({
+        user_id: userId,
+        original_phrase: spokenPhrase,
+        recognized_phrase: spokenPhrase,
+        initial_product_id: originalItem.productId || null,
+        final_product_id: product.id,
+        was_corrected: true,
+        confidence_score: originalItem.confidence || 0,
+        metadata: {
+          ai_matched: originalItem.aiMatched || false,
+          match_count: originalItem.matchCount || (originalItem.suggestions?.length || 0)
+        }
+      });
+    } catch (trackError) {
+      console.error('[Tracking] Failed to log recognition attempt:', trackError);
     }
 
     const updated = [...orderItems];
