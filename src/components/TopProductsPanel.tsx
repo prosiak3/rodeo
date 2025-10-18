@@ -58,17 +58,17 @@ export default function TopProductsPanel() {
         .select(`
           id,
           user_id,
+          store_id,
           users!inner (
             full_name,
-            store_id,
-            stores (name)
+            store_id
           )
         `)
         .in('status', ['sent', 'confirmed', 'partially_confirmed'])
         .gte('created_at', cutoffDate);
 
       if (storeFilter !== 'all') {
-        ordersQuery = ordersQuery.eq('users.store_id', storeFilter);
+        ordersQuery = ordersQuery.eq('store_id', storeFilter);
       }
 
       if (userFilter !== 'all') {
@@ -77,12 +77,18 @@ export default function TopProductsPanel() {
 
       const { data: orders, error: ordersError } = await ordersQuery;
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error('[TopProducts] Orders query error:', ordersError);
+        throw ordersError;
+      }
 
       if (!orders || orders.length === 0) {
+        console.log('[TopProducts] No orders found for filters');
         setProducts([]);
         return;
       }
+
+      console.log('[TopProducts] Found', orders.length, 'orders');
 
       const orderIds = orders.map(o => o.id);
 
@@ -97,7 +103,12 @@ export default function TopProductsPanel() {
         `)
         .in('order_id', orderIds);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('[TopProducts] Order items query error:', itemsError);
+        throw itemsError;
+      }
+
+      console.log('[TopProducts] Found', orderItems?.length || 0, 'order items');
 
       const productMap = new Map<string, {
         product_id: string;
@@ -128,7 +139,9 @@ export default function TopProductsPanel() {
         existing.total_quantity += item.quantity;
         existing.total_value += item.quantity * item.unit_price;
         existing.order_ids.add(item.order_id);
-        existing.store_ids.add((order.users as any).store_id);
+        if (order.store_id) {
+          existing.store_ids.add(order.store_id);
+        }
         existing.user_ids.add(order.user_id);
 
         productMap.set(item.product_id, existing);
