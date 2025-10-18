@@ -118,13 +118,13 @@ export default function StoreAnalyticsPanel() {
         ordersData.map(async (order) => {
           const { data: items } = await supabase
             .from('order_items')
-            .select('quantity, special_price, your_price, products(name, price)')
+            .select('quantity, unit_price, total_price, products(name, base_price)')
             .eq('order_id', order.id);
 
           const totalItems = items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
           const totalValue = items?.reduce((sum, item) => {
             const product = item.products as any;
-            const price = item.special_price || item.your_price || product?.price || 0;
+            const price = item.unit_price > 0 ? item.unit_price : (product?.base_price || 0);
             return sum + (item.quantity * price);
           }, 0) || 0;
 
@@ -168,13 +168,13 @@ export default function StoreAnalyticsPanel() {
       .select(`
         product_id,
         quantity,
-        special_price,
-        your_price,
+        unit_price,
         products (
           name,
-          product_index,
-          price,
-          category
+          index,
+          base_price,
+          display_category,
+          original_category
         )
       `)
       .in('order_id', orderIds);
@@ -191,7 +191,7 @@ export default function StoreAnalyticsPanel() {
       if (!product) return;
 
       const key = item.product_id;
-      const price = item.special_price || item.your_price || product.price || 0;
+      const price = item.unit_price > 0 ? item.unit_price : (product.base_price || 0);
       const value = item.quantity * price;
 
       if (productMap.has(key)) {
@@ -203,11 +203,11 @@ export default function StoreAnalyticsPanel() {
         productMap.set(key, {
           product_id: item.product_id,
           product_name: product.name,
-          product_index: product.product_index || '',
+          product_index: product.index || '',
           total_quantity: item.quantity,
           total_value: value,
           order_count: 1,
-          category: product.category || 'Inne',
+          category: product.display_category || product.original_category || 'Inne',
         });
       }
     });
@@ -247,11 +247,11 @@ export default function StoreAnalyticsPanel() {
       .select(`
         order_id,
         quantity,
-        special_price,
-        your_price,
+        unit_price,
         products (
-          price,
-          category
+          base_price,
+          display_category,
+          original_category
         )
       `)
       .in('order_id', orderIds);
@@ -280,10 +280,10 @@ export default function StoreAnalyticsPanel() {
       const orderItems = items?.filter(i => i.order_id === order.id) || [];
       orderItems.forEach(item => {
         const product = item.products as any;
-        const price = item.special_price || item.your_price || product?.price || 0;
+        const price = item.unit_price > 0 ? item.unit_price : (product?.base_price || 0);
         periodData.value += item.quantity * price;
 
-        const category = product?.category || 'Inne';
+        const category = product?.display_category || product?.original_category || 'Inne';
         periodData.categories.set(
           category,
           (periodData.categories.get(category) || 0) + item.quantity
@@ -316,12 +316,11 @@ export default function StoreAnalyticsPanel() {
       .from('order_items')
       .select(`
         quantity,
-        special_price,
-        your_price,
+        unit_price,
         products (
           name,
-          product_index,
-          price,
+          index,
+          base_price,
           unit
         )
       `)
@@ -647,12 +646,12 @@ export default function StoreAnalyticsPanel() {
                       </thead>
                       <tbody>
                         {orderItems[order.id].map((item, idx) => {
-                          const price = item.special_price || item.your_price || item.products?.price || 0;
+                          const price = item.unit_price > 0 ? item.unit_price : (item.products?.base_price || 0);
                           const value = item.quantity * price;
                           return (
                             <tr key={idx} className="border-b border-gray-200">
                               <td className="py-2 px-2 text-sm font-mono text-gray-700">
-                                {item.products?.product_index}
+                                {item.products?.index}
                               </td>
                               <td className="py-2 px-2 text-sm text-gray-900">
                                 {item.products?.name}
