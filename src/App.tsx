@@ -37,6 +37,7 @@ function AppContent() {
   const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
   const [ordersListFilter, setOrdersListFilter] = useState<OrderStatus | 'all' | null>(null);
   const [aiPreloaded, setAiPreloaded] = useState(false);
+  const [analystView, setAnalystView] = useState<'behavior' | 'sales'>('behavior');
 
   // Initialize user tracking
   useUserTracking(
@@ -351,8 +352,6 @@ function AppContent() {
   }
 
   if (user.role === 'analyst') {
-    const [analystView, setAnalystView] = useState<'behavior' | 'sales'>('behavior');
-
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white shadow-sm border-b border-gray-200">
