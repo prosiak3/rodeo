@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2 } from 'lucide-react';
 import { User, supabase } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
+import { ThemeStyle, THEME_CONFIGS } from '../types/themes';
 import { showAlert } from '../lib/alerts';
 
 interface ProfileScreenProps {
@@ -18,7 +19,7 @@ const roleLabels: Record<string, string> = {
 };
 
 export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, uiTheme, setUiTheme } = useTheme();
   const [showAllFilters, setShowAllFilters] = useState<boolean>(user.show_all_order_filters || false);
   const [allowCollaboration, setAllowCollaboration] = useState<boolean>((user as any).allow_collaborative_editing ?? true);
   const [showDescription, setShowDescription] = useState<boolean>((user as any).show_product_description ?? true);
@@ -311,6 +312,16 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     purple: 'Fioletowy',
   };
 
+  const handleUiThemeChange = async (newTheme: ThemeStyle | null) => {
+    if (confirm(newTheme
+      ? `Czy na pewno chcesz zmienić styl interfejsu na "${THEME_CONFIGS[newTheme].name}"? Aplikacja zostanie przeładowana.`
+      : 'Czy na pewno chcesz wrócić do domyślnego stylu interfejsu? Aplikacja zostanie przeładowana.'
+    )) {
+      setSaving(true);
+      await setUiTheme(newTheme);
+    }
+  };
+
   const handleClearAICache = async () => {
     if (!confirm('Czy na pewno chcesz wyczyścić pamięć podręczną AI? Model zostanie ponownie pobrany przy następnym użyciu.')) {
       return;
@@ -529,10 +540,77 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex items-center gap-2 mb-4">
+            <Wand2 className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Styl interfejsu</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-3">
+            Wybierz styl wizualny aplikacji. Dostępnych jest 7 różnych stylów:
+          </p>
+          {uiTheme && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-green-800">Aktywny: {THEME_CONFIGS[uiTheme].name}</div>
+                  <div className="text-sm text-green-600">{THEME_CONFIGS[uiTheme].description}</div>
+                </div>
+                <button
+                  onClick={() => handleUiThemeChange(null)}
+                  disabled={saving}
+                  className="text-sm text-green-700 hover:text-green-900 underline disabled:opacity-50"
+                >
+                  Przywróć domyślny
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-3">
+            {(Object.entries(THEME_CONFIGS) as [ThemeStyle, typeof THEME_CONFIGS[ThemeStyle]][]).map(([key, config]) => (
+              <button
+                key={key}
+                onClick={() => handleUiThemeChange(key)}
+                disabled={saving || uiTheme === key}
+                className={`p-4 rounded-lg border-2 transition text-left ${
+                  uiTheme === key
+                    ? 'border-green-500 bg-green-50 cursor-default'
+                    : 'border-gray-200 hover:border-amber-400 hover:bg-amber-50'
+                } disabled:opacity-50`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800 mb-1">{config.name}</div>
+                    <div className="text-sm text-gray-600 mb-2">{config.description}</div>
+                    <div className="flex gap-1 flex-wrap">
+                      {config.characteristics.map((char) => (
+                        <span key={char} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                          {char}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full border border-gray-300" style={{ backgroundColor: config.primaryColor }}></div>
+                    <div className="w-6 h-6 rounded-full border border-gray-300" style={{ backgroundColor: config.secondaryColor }}></div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="mt-4">
+            <a
+              href="#styles-demo"
+              className="block text-center text-sm text-blue-600 hover:text-blue-800 underline font-medium"
+            >
+              🎨 Zobacz podgląd wszystkich stylów w demo
+            </a>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
             <Palette className="w-5 h-5 text-amber-600" />
             <h3 className="font-semibold text-lg">Motyw kolorystyczny</h3>
           </div>
-          <p className="text-sm text-gray-600 mb-3">Wybierz swój ulubiony motyw:</p>
+          <p className="text-sm text-gray-600 mb-3">Wybierz swój ulubiony kolor akcentu:</p>
           <div className="grid grid-cols-2 gap-3">
             {(['amber', 'blue', 'green', 'red', 'purple'] as Theme[]).map((themeOption) => (
               <button

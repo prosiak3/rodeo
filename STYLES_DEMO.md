@@ -23,15 +23,28 @@ http://localhost:5173/#styles-demo
 
 ## 🎯 Jak przełączać motywy
 
-### Sposób 1: Przez Styles Demo (zalecany)
+### Sposób 1: Przez Profil (NAJŁATWIEJSZY) ⭐
 1. Zaloguj się do aplikacji
-2. Otwórz **Styles Demo** (`#styles-demo`)
+2. Wejdź w zakładkę **"Profil"** (dolne menu)
+3. Znajdź sekcję **"Styl interfejsu"** (ikona różdżki ✨)
+4. Kliknij na wybrany styl - zobaczysz:
+   - Nazwę stylu (np. "Glassmorphism")
+   - Opis (np. "Nowoczesny, futurystyczny wygląd...")
+   - Charakterystyki (tagi: Transparency, Blur effects...)
+   - Kolory (2 kolorowe kropki pokazujące paletę)
+5. Potwierdź wybór w oknie dialogowym
+6. Aplikacja automatycznie się przeładuje z nowym motywem
+
+### Sposób 2: Przez Styles Demo (dla porównania)
+1. Zaloguj się do aplikacji
+2. Otwórz **Styles Demo** (`#styles-demo` lub link z ekranu logowania)
 3. W widoku siatki lub pojedynczym kliknij przycisk **"Zastosuj motyw"**
 4. Potwierdź wybór w oknie dialogowym
 5. Aplikacja automatycznie się przeładuje z nowym motywem
 
-### Sposób 2: Powrót do domyślnego motywu
-- W Styles Demo, gdy masz aktywny motyw, kliknij **"Przywróć domyślny"** w nagłówku
+### Powrót do domyślnego motywu
+- **W Profilu**: W zielonej ramce aktywnego motywu kliknij "Przywróć domyślny"
+- **W Styles Demo**: W nagłówku kliknij "Przywróć domyślny"
 - Aplikacja przeładuje się z oryginalnym interfejsem
 
 ### Jak to działa
