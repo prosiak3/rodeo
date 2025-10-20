@@ -2,15 +2,36 @@
 
 ## Informacje o backupie
 
-**Data ostatniej aktualizacji:** 2025-10-19
-**Wersja:** v1.1 - Ulepszone rozpoznawanie głosowe z polskimi liczbami i automatycznymi jednostkami
+**Data ostatniej aktualizacji:** 2025-10-20 10:57:51
+**Wersja:** v1.2 - System uczenia AI i rozszerzone metryki
+**Plik backup:** `rodeo-backup-20251020-105751.tar.gz` (292 KB skompresowany)
 
 ### Nowe funkcje w tej wersji:
-- ✅ Rozpoznawanie polskich liczb słownie (trzy, pięć, dwadzieścia)
-- ✅ Automatyczny dobór jednostek z cennika (kg/szt)
-- ✅ Obsługa zamówień bez jawnej jednostki ("3 karkówki")
-- ✅ Tracking nieudanych rozpoznań do analityki
-- ✅ Sortowanie w panelu Top Products
+- ✅ **System uczenia się AI z ręcznych dopasowań**
+  - Tabela `voice_learning_corrections` - zapisuje korekty użytkowników
+  - Automatyczne tworzenie mapowań fraz (`voice_phrase_mappings`)
+  - Funkcja `smart_product_match` - wykorzystuje historię korekt
+  - Funkcja `get_learned_product_match` - znajduje najczęściej wybierane produkty
+  - Automatyczne triggery analizujące wzorce co 10 korekt
+
+- ✅ **Rozbudowane panele analityczne**
+  - AIMetricsPanel z 4 zakładkami (Metryki, Nauka głosowa, Nierozpoznane próby, Cache)
+  - VoiceLearningPanel - analiza produktów problemowych, mapowań fraz i konfliktów
+  - Szczegółowe widoki: `problem_products_view`, `phrase_mapping_view`, `phrase_conflicts_view`
+  - Tracking nieudanych rozpoznań w `voice_recognition_attempts`
+
+- ✅ **Pamięć podręczna AI (Embeddings Cache)**
+  - IndexedDB storage dla embeddingów produktów (384-wymiarowe wektory)
+  - Import/Export cache do pliku JSON
+  - Zarządzanie pojedynczymi embeddingami (edycja, usuwanie)
+  - Metryki użycia cache i wydajności
+
+- ✅ **Poprzednie funkcje (v1.1)**
+  - Rozpoznawanie polskich liczb słownie (trzy, pięć, dwadzieścia)
+  - Automatyczny dobór jednostek z cennika (kg/szt)
+  - Obsługa zamówień bez jawnej jednostki ("3 karkówki")
+  - Tracking nieudanych rozpoznań do analityki
+  - Sortowanie w panelu Top Products
 
 ## Zawartość backupu
 
@@ -28,14 +49,18 @@ Backup zawiera kompletny kod źródłowy aplikacji:
 - PWA support
 
 ### Baza danych (Supabase)
-- Migracje SQL w folderze `supabase/migrations/` (136 plików)
-- Wszystkie tabele z RLS policies
-- Views analityczne
-- Funkcje automatycznych sugestii
-- System trackingu sesji użytkowników
-- Tabele voice recognition attempts
-- **NOWOŚĆ v1.1:** Funkcja `smart_product_match` zwraca jednostki produktów
-- **NOWOŚĆ v1.1:** Widoki do analizy problemów z rozpoznawaniem głosowym
+- Migracje SQL w folderze `supabase/migrations/` (**107 plików migracji**)
+- Wszystkie tabele z RLS policies (bezpieczny dostęp do danych)
+- Views analityczne (problem_products_view, phrase_mapping_view, phrase_conflicts_view)
+- Funkcje automatycznych sugestii (auto_order_suggestions)
+- System trackingu sesji użytkowników (user_sessions, session_cleanup)
+- **NOWOŚĆ v1.2:** Tabela `voice_learning_corrections` - korekty użytkowników
+- **NOWOŚĆ v1.2:** Tabela `voice_phrase_mappings` - automatyczne mapowania fraz
+- **NOWOŚĆ v1.2:** Tabela `voice_recognition_attempts` - tracking prób rozpoznawania
+- **NOWOŚĆ v1.2:** Funkcja `smart_product_match` - inteligentne dopasowanie z uczeniem
+- **NOWOŚĆ v1.2:** Funkcja `get_learned_product_match` - matching oparty o historię
+- **NOWOŚĆ v1.2:** Funkcja `analyze_and_create_phrase_mappings` - auto-analiza wzorców
+- **NOWOŚĆ v1.2:** Triggery automatycznej analizy mapowań
 
 ### Edge Functions (Supabase)
 - auto-order-suggestion
@@ -131,14 +156,43 @@ project/
 - SessionCleanupService - automatyczne czyszczenie w tle
 
 ### AI & Machine Learning
-- Embeddings dla produktów (IndexedDB)
-- Similarity search (Transformers.js)
-- Voice recognition tracking z metrykami dokładności
-- Phrase mapping i konflikty
-- Problem products analysis
-- **NOWOŚĆ v1.1:** Konwersja polskich liczb słownie (trzy → 3)
-- **NOWOŚĆ v1.1:** Inteligentny dobór jednostek z bazy danych
-- **NOWOŚĆ v1.1:** Pattern matching dla zamówień bez jednostek
+- **Embeddings System:**
+  - 384-wymiarowe wektory dla każdego produktu (model: Xenova/all-MiniLM-L6-v2)
+  - Lokalny cache w IndexedDB (rodeo-embeddings)
+  - Import/Export cache do pliku JSON
+  - Automatyczna regeneracja przy braku cache
+
+- **Similarity Search:**
+  - Cosine similarity dla porównywania produktów
+  - Threshold 30% dla filtrowania wyników
+  - Ranking confidence score (0-100%)
+  - Fallback do text matching gdy AI niedostępne
+
+- **Voice Recognition System:**
+  - Web Speech API (Chrome/Edge)
+  - Konwersja polskich liczb słownie (trzy → 3, pół → 0.5)
+  - Smart product matching z trzema poziomami:
+    1. Learned matches (z historii korekt) - najwyższy priorytet
+    2. Exact matches (dokładne dopasowanie nazwy)
+    3. Fuzzy matches (częściowe dopasowanie)
+  - Automatyczny dobór jednostek z bazy danych (kg/szt)
+  - Pattern matching dla zamówień bez jednostek
+  - Profanity filter i auto-cenzura
+
+- **Learning System:**
+  - Automatyczne zapisywanie korekt użytkowników
+  - Phrase mapping - mapowanie synonimów i wariantów
+  - Analiza wzorców co 10 korekt (trigger)
+  - Confidence scoring dla mapowań (50-100%)
+  - Problem products detection
+  - Phrase conflicts analysis
+
+- **Metryki i Analytics:**
+  - Tabela ai_metrics - wszystkie operacje AI
+  - Widok ai_model_performance - agregacje wydajności
+  - Tracking accuracy rate dla rozpoznawania głosowego
+  - Szczegółowe logi nieudanych prób
+  - Metadata z kontekstem (metoda, przyczyna, czas)
 
 ## Ważne uwagi
 
