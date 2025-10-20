@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import { ThemeStyle } from '../types/themes';
 
 export type Theme = 'amber' | 'blue' | 'green' | 'red' | 'purple';
 
@@ -95,12 +96,15 @@ interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   colors: ThemeColors;
+  uiTheme: ThemeStyle | null;
+  setUiTheme: (theme: ThemeStyle | null) => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('amber');
+  const [uiTheme, setUiThemeState] = useState<ThemeStyle | null>(null);
 
   useEffect(() => {
     loadTheme();
@@ -113,13 +117,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
       const { data } = await supabase
         .from('users')
-        .select('theme')
+        .select('theme, ui_theme')
         .eq('id', user.id)
         .single();
 
       if (data?.theme) {
         setThemeState(data.theme as Theme);
         applyTheme(data.theme as Theme);
+      }
+
+      if (data?.ui_theme) {
+        setUiThemeState(data.ui_theme as ThemeStyle);
       }
     } catch (error) {
       console.error('Error loading theme:', error);
@@ -143,6 +151,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setUiTheme = async (newUiTheme: ThemeStyle | null) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from('users')
+        .update({ ui_theme: newUiTheme })
+        .eq('id', user.id);
+
+      setUiThemeState(newUiTheme);
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Error saving UI theme:', error);
+    }
+  };
+
   const applyTheme = (theme: Theme) => {
     const colors = themeColors[theme];
     document.documentElement.style.setProperty('--color-primary', colors.primary);
@@ -158,7 +184,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, colors: themeColors[theme] }}>
+    <ThemeContext.Provider value={{ theme, setTheme, colors: themeColors[theme], uiTheme, setUiTheme }}>
       {children}
     </ThemeContext.Provider>
   );

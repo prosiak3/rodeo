@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import LoginScreen from './components/LoginScreen';
 import StylesDemo from './components/StylesDemo';
 import HomeScreen from './components/HomeScreen';
+
+import HomeScreen_Glassmorphism from './components/themes/HomeScreen_Glassmorphism';
+import HomeScreen_Minimalist from './components/themes/HomeScreen_Minimalist';
+import HomeScreen_Colorful from './components/themes/HomeScreen_Colorful';
+import HomeScreen_Corporate from './components/themes/HomeScreen_Corporate';
+import HomeScreen_DarkNeon from './components/themes/HomeScreen_DarkNeon';
+import HomeScreen_Material from './components/themes/HomeScreen_Material';
+import HomeScreen_Fluent from './components/themes/HomeScreen_Fluent';
 import VoiceOrderScreen from './components/VoiceOrderScreen';
 import ManualOrderScreen from './components/ManualOrderScreen';
 import CopyOrderScreen from './components/CopyOrderScreen';
@@ -27,12 +35,30 @@ import { useUserTracking } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import { Grid3x3, List } from 'lucide-react';
 
+const THEME_COMPONENTS = {
+  glassmorphism: HomeScreen_Glassmorphism,
+  minimalist: HomeScreen_Minimalist,
+  colorful: HomeScreen_Colorful,
+  corporate: HomeScreen_Corporate,
+  'dark-neon': HomeScreen_DarkNeon,
+  material: HomeScreen_Material,
+  fluent: HomeScreen_Fluent,
+};
+
 function AppContent() {
   const { session, user, loading, signIn, signOut, savedLocation } = useAuth();
+  const { uiTheme } = useTheme();
   const [showStylesDemo, setShowStylesDemo] = useState(() => {
     return window.location.hash === '#styles-demo';
   });
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
+
+  const getHomeScreenComponent = () => {
+    if (uiTheme && THEME_COMPONENTS[uiTheme]) {
+      return THEME_COMPONENTS[uiTheme];
+    }
+    return HomeScreen;
+  };
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
@@ -496,16 +522,19 @@ function AppContent() {
           showProfile={activeTab !== 'profile'}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
-          {activeTab === 'home' && (
-            <HomeScreen
-              onNavigate={setActiveTab}
-              onVoiceOrder={() => {
-                setActiveTab('new-order');
-                setOrderMode('voice');
-              }}
-              userRole={user.role}
-            />
-          )}
+          {activeTab === 'home' && (() => {
+            const HomeScreenComponent = getHomeScreenComponent();
+            return (
+              <HomeScreenComponent
+                onNavigate={setActiveTab}
+                onVoiceOrder={() => {
+                  setActiveTab('new-order');
+                  setOrderMode('voice');
+                }}
+                userRole={user.role}
+              />
+            );
+          })()}
           {activeTab === 'orders' && (
             <div className="p-6">
               <OrdersList
@@ -576,16 +605,19 @@ function AppContent() {
         showProfile={activeTab !== 'profile'}
       />
       <div className="flex-1 overflow-y-auto pt-20 pb-16">
-        {activeTab === 'home' && (
-          <HomeScreen
-            onNavigate={setActiveTab}
-            onVoiceOrder={() => {
-              setActiveTab('new-order');
-              setOrderMode('voice');
-            }}
-            userRole={user.role}
-          />
-        )}
+        {activeTab === 'home' && (() => {
+          const HomeScreenComponent = getHomeScreenComponent();
+          return (
+            <HomeScreenComponent
+              onNavigate={setActiveTab}
+              onVoiceOrder={() => {
+                setActiveTab('new-order');
+                setOrderMode('voice');
+              }}
+              userRole={user.role}
+            />
+          );
+        })()}
 
         {activeTab === 'admin' && user.role === 'admin' && (
           <AdminPanel

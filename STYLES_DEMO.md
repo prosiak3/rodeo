@@ -21,6 +21,33 @@ http://localhost:5173/#styles-demo
 
 ---
 
+## 🎯 Jak przełączać motywy
+
+### Sposób 1: Przez Styles Demo (zalecany)
+1. Zaloguj się do aplikacji
+2. Otwórz **Styles Demo** (`#styles-demo`)
+3. W widoku siatki lub pojedynczym kliknij przycisk **"Zastosuj motyw"**
+4. Potwierdź wybór w oknie dialogowym
+5. Aplikacja automatycznie się przeładuje z nowym motywem
+
+### Sposób 2: Powrót do domyślnego motywu
+- W Styles Demo, gdy masz aktywny motyw, kliknij **"Przywróć domyślny"** w nagłówku
+- Aplikacja przeładuje się z oryginalnym interfejsem
+
+### Jak to działa
+- Wybór motywu jest **zapisywany w bazie danych** (Supabase - tabela `users.ui_theme`)
+- Motyw jest **powiązany z kontem użytkownika**
+- Po zalogowaniu motyw automatycznie się wczytuje z bazy
+- Zmiana motywu wymaga przeładowania aplikacji (automatyczne)
+- Każdy użytkownik może mieć swój własny motyw
+
+### Status aktywnego motywu
+- W Styles Demo na górze strony zobaczysz **zieloną gwiazdkę** z nazwą aktywnego motywu
+- Karty z aktywnym motywem mają **zielony przycisk** "Aktywny motyw"
+- Pozostałe motywy mają **niebieski przycisk** "Zastosuj motyw"
+
+---
+
 ## 📋 Dostępne style
 
 ### 1. **Glassmorphism** 🔮
