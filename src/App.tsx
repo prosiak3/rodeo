@@ -54,9 +54,12 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
 
   const getHomeScreenComponent = () => {
+    console.log('[App] Current UI theme:', uiTheme);
     if (uiTheme && THEME_COMPONENTS[uiTheme]) {
+      console.log('[App] Using themed component:', uiTheme);
       return THEME_COMPONENTS[uiTheme];
     }
+    console.log('[App] Using default HomeScreen');
     return HomeScreen;
   };
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);

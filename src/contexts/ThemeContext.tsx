@@ -121,13 +121,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id)
         .single();
 
+      console.log('[ThemeContext] Loaded theme data:', data);
+
       if (data?.theme) {
         setThemeState(data.theme as Theme);
         applyTheme(data.theme as Theme);
       }
 
       if (data?.ui_theme) {
+        console.log('[ThemeContext] Setting UI theme to:', data.ui_theme);
         setUiThemeState(data.ui_theme as ThemeStyle);
+      } else {
+        console.log('[ThemeContext] No UI theme set, using default');
       }
     } catch (error) {
       console.error('Error loading theme:', error);
@@ -153,14 +158,25 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setUiTheme = async (newUiTheme: ThemeStyle | null) => {
     try {
+      console.log('[ThemeContext] Attempting to set UI theme to:', newUiTheme);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.error('[ThemeContext] No user found');
+        return;
+      }
 
-      await supabase
+      console.log('[ThemeContext] Updating user:', user.id);
+      const { error } = await supabase
         .from('users')
         .update({ ui_theme: newUiTheme })
         .eq('id', user.id);
 
+      if (error) {
+        console.error('[ThemeContext] Error updating theme:', error);
+        throw error;
+      }
+
+      console.log('[ThemeContext] UI theme saved successfully, reloading...');
       setUiThemeState(newUiTheme);
 
       window.location.reload();
