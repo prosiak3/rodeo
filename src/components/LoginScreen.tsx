@@ -167,7 +167,13 @@ export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenP
             )}
           </div>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-2">
+            <a
+              href="#styles-demo"
+              className="block text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline"
+            >
+              🎨 Zobacz demo stylów interfejsu
+            </a>
             <p className="text-xs text-gray-500">Wersja prototypowa</p>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import LoginScreen from './components/LoginScreen';
+import StylesDemo from './components/StylesDemo';
 import HomeScreen from './components/HomeScreen';
 import VoiceOrderScreen from './components/VoiceOrderScreen';
 import ManualOrderScreen from './components/ManualOrderScreen';
@@ -28,6 +29,9 @@ import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
   const { session, user, loading, signIn, signOut, savedLocation } = useAuth();
+  const [showStylesDemo, setShowStylesDemo] = useState(() => {
+    return window.location.hash === '#styles-demo';
+  });
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
@@ -286,6 +290,19 @@ function AppContent() {
       }
     }
   };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setShowStylesDemo(window.location.hash === '#styles-demo');
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  if (showStylesDemo) {
+    return <StylesDemo />;
+  }
 
   if (loading) {
     return (
