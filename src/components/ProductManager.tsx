@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit2, Save, X, Package, Tag, AlertTriangle, Trash2 } from 'lucide-react';
+import { Edit2, Save, X, Package, Tag, AlertTriangle, Trash2, Plus, Power, PowerOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import TagsManager from './TagsManager';
 
@@ -7,12 +7,15 @@ interface Product {
   id: string;
   name: string;
   code: string;
-  category: string;
+  display_category: string;
+  original_category: string;
   unit: string;
   base_price: number;
   min_quantity: number;
   quantity_step: number;
   active: boolean;
+  description?: string;
+  index?: string;
 }
 
 export default function ProductManager() {
@@ -25,6 +28,21 @@ export default function ProductManager() {
   const [showTagsManager, setShowTagsManager] = useState(false);
   const [showDuplicates, setShowDuplicates] = useState(false);
   const [duplicates, setDuplicates] = useState<{name: string; products: Product[]}[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    code: '',
+    name: '',
+    display_category: 'Drób',
+    original_category: 'Drób',
+    unit: 'kg',
+    base_price: 0,
+    min_quantity: 1,
+    quantity_step: 1,
+    description: '',
+    index: '',
+    active: true
+  });
 
   useEffect(() => {
     loadProducts();
@@ -34,8 +52,8 @@ export default function ProductManager() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, code, category, unit, base_price, min_quantity, quantity_step, active')
-        .order('category', { ascending: true })
+        .select('id, name, code, display_category, original_category, unit, base_price, min_quantity, quantity_step, active, description, index')
+        .order('display_category', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -122,13 +140,88 @@ export default function ProductManager() {
     }
   };
 
-  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
+  const toggleActive = async (productId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ active: !currentStatus })
+        .eq('id', productId);
+
+      if (error) throw error;
+
+      alert(`Produkt ${!currentStatus ? 'aktywowany' : 'dezaktywowany'}!`);
+      loadProducts();
+    } catch (error) {
+      console.error('Error toggling product status:', error);
+      alert('Błąd podczas zmiany statusu produktu');
+    }
+  };
+
+  const addNewProduct = async () => {
+    if (!newProduct.code || !newProduct.name) {
+      alert('Wypełnij wymagane pola: Kod i Nazwa produktu');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .insert({
+          code: newProduct.code,
+          name: newProduct.name,
+          display_category: newProduct.display_category,
+          original_category: newProduct.original_category,
+          unit: newProduct.unit,
+          base_price: newProduct.base_price,
+          min_quantity: newProduct.min_quantity,
+          quantity_step: newProduct.quantity_step,
+          description: newProduct.description || null,
+          index: newProduct.index || null,
+          active: newProduct.active
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          alert('Produkt o takim kodzie już istnieje!');
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      alert('Produkt dodany pomyślnie!');
+      setShowAddForm(false);
+      setNewProduct({
+        code: '',
+        name: '',
+        display_category: 'Drób',
+        original_category: 'Drób',
+        unit: 'kg',
+        base_price: 0,
+        min_quantity: 1,
+        quantity_step: 1,
+        description: '',
+        index: '',
+        active: true
+      });
+      loadProducts();
+    } catch (error) {
+      console.error('Error adding product:', error);
+      alert('Błąd podczas dodawania produktu');
+    }
+  };
+
+  const categories = ['all', ...Array.from(new Set(products.map(p => p.display_category)))].filter(Boolean);
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(filter.toLowerCase()) ||
-                         product.code.toLowerCase().includes(filter.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+                         product.code.toLowerCase().includes(filter.toLowerCase()) ||
+                         (product.description && product.description.toLowerCase().includes(filter.toLowerCase()));
+    const matchesCategory = categoryFilter === 'all' || product.display_category === categoryFilter;
+    const matchesActiveFilter = activeFilter === 'all' ||
+                               (activeFilter === 'active' && product.active) ||
+                               (activeFilter === 'inactive' && !product.active);
+    return matchesSearch && matchesCategory && matchesActiveFilter;
   });
 
   if (loading) {
@@ -148,6 +241,13 @@ export default function ProductManager() {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setShowAddForm(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Dodaj produkt
+          </button>
+          <button
             onClick={findDuplicates}
             className="px-4 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition flex items-center gap-2"
           >
@@ -163,6 +263,200 @@ export default function ProductManager() {
           </button>
         </div>
       </div>
+
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <Plus className="w-6 h-6 text-green-600" />
+                <h3 className="text-xl font-bold text-gray-800">Dodaj nowy produkt</h3>
+              </div>
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Kod produktu <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newProduct.code}
+                      onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                      placeholder="np. P001"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Indeks (kod kreskowy)
+                    </label>
+                    <input
+                      type="text"
+                      value={newProduct.index}
+                      onChange={(e) => setNewProduct({ ...newProduct, index: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                      placeholder="np. 5901234567890"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nazwa produktu <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newProduct.name}
+                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                    placeholder="np. Filet z kurczaka"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Opis produktu
+                  </label>
+                  <textarea
+                    value={newProduct.description}
+                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                    placeholder="Opcjonalny opis produktu"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Kategoria oryginalna
+                    </label>
+                    <select
+                      value={newProduct.original_category}
+                      onChange={(e) => setNewProduct({ ...newProduct, original_category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                    >
+                      <option value="Drób">Drób</option>
+                      <option value="Indyk">Indyk</option>
+                      <option value="Mięso">Mięso</option>
+                      <option value="Wołowina">Wołowina</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Kategoria wyświetlana
+                    </label>
+                    <select
+                      value={newProduct.display_category}
+                      onChange={(e) => setNewProduct({ ...newProduct, display_category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                    >
+                      <option value="Drób">Drób</option>
+                      <option value="Indyk">Indyk</option>
+                      <option value="Mięso">Mięso</option>
+                      <option value="Wołowina">Wołowina</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Jednostka
+                    </label>
+                    <select
+                      value={newProduct.unit}
+                      onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                    >
+                      <option value="kg">kg</option>
+                      <option value="szt">szt</option>
+                      <option value="opak">opak</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cena bazowa (PLN)
+                    </label>
+                    <input
+                      type="number"
+                      value={newProduct.base_price}
+                      onChange={(e) => setNewProduct({ ...newProduct, base_price: parseFloat(e.target.value) })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                  <div className="flex items-center pt-6">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newProduct.active}
+                        onChange={(e) => setNewProduct({ ...newProduct, active: e.target.checked })}
+                        className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">Produkt aktywny</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Minimalna ilość
+                    </label>
+                    <input
+                      type="number"
+                      value={newProduct.min_quantity}
+                      onChange={(e) => setNewProduct({ ...newProduct, min_quantity: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                      step="1"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Krok zamówienia
+                    </label>
+                    <input
+                      type="number"
+                      value={newProduct.quantity_step}
+                      onChange={(e) => setNewProduct({ ...newProduct, quantity_step: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                      step="1"
+                      min="1"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={addNewProduct}
+                className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+              >
+                Dodaj produkt
+              </button>
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+              >
+                Anuluj
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showTagsManager && (
         <TagsManager onClose={() => setShowTagsManager(false)} />
@@ -200,7 +494,7 @@ export default function ProductManager() {
                             <div className="flex-1">
                               <div className="flex items-center gap-3">
                                 <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{product.code}</span>
-                                <span className="text-gray-600">{product.category}</span>
+                                <span className="text-gray-600">{product.display_category}</span>
                                 <span className="font-medium">{product.base_price.toFixed(2)} / 1{product.unit}</span>
                               </div>
                             </div>
@@ -233,20 +527,58 @@ export default function ProductManager() {
             className="w-full p-3 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
           />
 
-          <div className="flex gap-2 flex-wrap">
-            {categories.map(cat => (
+          <div className="space-y-2">
+            <div className="flex gap-2 flex-wrap">
               <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
-                  categoryFilter === cat
-                    ? 'bg-amber-600 text-white'
+                onClick={() => setActiveFilter('all')}
+                className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
+                  activeFilter === 'all'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {cat === 'all' ? 'Wszystkie' : cat}
+                <Package className="w-4 h-4" />
+                Wszystkie ({products.length})
               </button>
-            ))}
+              <button
+                onClick={() => setActiveFilter('active')}
+                className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
+                  activeFilter === 'active'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Power className="w-4 h-4" />
+                Aktywne ({products.filter(p => p.active).length})
+              </button>
+              <button
+                onClick={() => setActiveFilter('inactive')}
+                className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
+                  activeFilter === 'inactive'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <PowerOff className="w-4 h-4" />
+                Nieaktywne ({products.filter(p => !p.active).length})
+              </button>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                    categoryFilter === cat
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {cat === 'all' ? 'Wszystkie' : cat}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -254,6 +586,7 @@ export default function ProductManager() {
           <table className="w-full">
             <thead>
               <tr className="border-b-2 border-gray-200">
+                <th className="text-center py-3 px-2 text-sm font-semibold text-gray-700">Status</th>
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Kod</th>
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Nazwa</th>
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Kategoria</th>
@@ -265,10 +598,30 @@ export default function ProductManager() {
             </thead>
             <tbody>
               {filteredProducts.map((product) => (
-                <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr key={product.id} className={`border-b border-gray-100 hover:bg-gray-50 ${!product.active ? 'opacity-50 bg-gray-50' : ''}`}>
+                  <td className="py-3 px-2 text-center">
+                    <button
+                      onClick={() => toggleActive(product.id, product.active)}
+                      className={`p-2 rounded-lg transition ${
+                        product.active
+                          ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                          : 'bg-red-100 text-red-600 hover:bg-red-200'
+                      }`}
+                      title={product.active ? 'Dezaktywuj produkt' : 'Aktywuj produkt'}
+                    >
+                      {product.active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                    </button>
+                  </td>
                   <td className="py-3 px-2 text-sm font-mono">{product.code}</td>
                   <td className="py-3 px-2 text-sm">{product.name}</td>
-                  <td className="py-3 px-2 text-sm text-gray-600">{product.category}</td>
+                  <td className="py-3 px-2 text-sm text-gray-600">
+                    <div className="flex flex-col">
+                      <span className="font-medium">{product.display_category}</span>
+                      {product.original_category !== product.display_category && (
+                        <span className="text-xs text-gray-400">({product.original_category})</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-3 px-2 text-sm text-right">
                     {editingId === product.id ? (
                       <input
