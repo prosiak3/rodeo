@@ -291,31 +291,41 @@ export default function SpecialPricesManager() {
 
     setBulkOperationLoading(true);
     try {
-      const updates = [];
+      const priceIdsToUpdate = [];
+      const productIdsToUpdate = [];
 
       for (const productId of selectedProducts) {
         const existingPrice = prices[productId];
         if (existingPrice?.id) {
-          updates.push(existingPrice.id);
+          priceIdsToUpdate.push(existingPrice.id);
         }
+        productIdsToUpdate.push(productId);
       }
 
-      if (updates.length > 0) {
-        for (const priceId of updates) {
-          const { error } = await supabase
-            .from('special_prices')
-            .update({
-              promo_price: null,
-              promo_10_plus_1: false,
-              valid_to: new Date().toISOString(),
-            })
-            .eq('id', priceId);
+      if (priceIdsToUpdate.length > 0) {
+        const { error: priceError } = await supabase
+          .from('special_prices')
+          .update({
+            promo_price: null,
+            valid_to: new Date().toISOString(),
+          })
+          .in('id', priceIdsToUpdate);
 
-          if (error) throw error;
-        }
+        if (priceError) throw priceError;
       }
 
-      alert(`Pomyślnie anulowano promocje dla ${updates.length} produktów`);
+      if (productIdsToUpdate.length > 0) {
+        const { error: productError } = await supabase
+          .from('products')
+          .update({
+            promo_10_plus_1: false,
+          })
+          .in('id', productIdsToUpdate);
+
+        if (productError) throw productError;
+      }
+
+      alert(`Pomyślnie anulowano promocje dla ${selectedProducts.size} produktów`);
       setSelectedProducts(new Set());
       loadPricesForStore(selectedStore);
     } catch (error) {
