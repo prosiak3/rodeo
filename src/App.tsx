@@ -3,16 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { FontSizeProvider } from './contexts/FontSizeContext';
 import LoginScreen from './components/LoginScreen';
-import StylesDemo from './components/StylesDemo';
 import HomeScreen from './components/HomeScreen';
-
-import HomeScreen_Glassmorphism from './components/themes/HomeScreen_Glassmorphism';
-import HomeScreen_Minimalist from './components/themes/HomeScreen_Minimalist';
-import HomeScreen_Colorful from './components/themes/HomeScreen_Colorful';
-import HomeScreen_Corporate from './components/themes/HomeScreen_Corporate';
-import HomeScreen_DarkNeon from './components/themes/HomeScreen_DarkNeon';
-import HomeScreen_Material from './components/themes/HomeScreen_Material';
-import HomeScreen_Fluent from './components/themes/HomeScreen_Fluent';
 import VoiceOrderScreen from './components/VoiceOrderScreen';
 import ManualOrderScreen from './components/ManualOrderScreen';
 import CopyOrderScreen from './components/CopyOrderScreen';
@@ -36,22 +27,9 @@ import { useUserTracking } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import { Grid3x3, List } from 'lucide-react';
 
-const THEME_COMPONENTS = {
-  glassmorphism: HomeScreen_Glassmorphism,
-  minimalist: HomeScreen_Minimalist,
-  colorful: HomeScreen_Colorful,
-  corporate: HomeScreen_Corporate,
-  'dark-neon': HomeScreen_DarkNeon,
-  material: HomeScreen_Material,
-  fluent: HomeScreen_Fluent,
-};
-
 function AppContent() {
   const { session, user, loading, signIn, signOut, savedLocation } = useAuth();
   const { uiTheme } = useTheme();
-  const [showStylesDemo, setShowStylesDemo] = useState(() => {
-    return window.location.hash === '#styles-demo';
-  });
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
   const [previousTab, setPreviousTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
 
@@ -60,13 +38,6 @@ function AppContent() {
       setPreviousTab(activeTab);
     }
     setActiveTab(newTab);
-  };
-
-  const getHomeScreenComponent = () => {
-    if (uiTheme && THEME_COMPONENTS[uiTheme]) {
-      return THEME_COMPONENTS[uiTheme];
-    }
-    return HomeScreen;
   };
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
@@ -326,19 +297,6 @@ function AppContent() {
     }
   };
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      setShowStylesDemo(window.location.hash === '#styles-demo');
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  if (showStylesDemo) {
-    return <StylesDemo />;
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -537,19 +495,16 @@ function AppContent() {
           onBackClick={() => setActiveTab(previousTab)}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
-          {activeTab === 'home' && (() => {
-            const HomeScreenComponent = getHomeScreenComponent();
-            return (
-              <HomeScreenComponent
-                onNavigate={handleTabChange}
-                onVoiceOrder={() => {
-                  handleTabChange('new-order');
-                  setOrderMode('voice');
-                }}
-                userRole={user.role}
-              />
-            );
-          })()}
+          {activeTab === 'home' && (
+            <HomeScreen
+              onNavigate={handleTabChange}
+              onVoiceOrder={() => {
+                handleTabChange('new-order');
+                setOrderMode('voice');
+              }}
+              userRole={user.role}
+            />
+          )}
           {activeTab === 'orders' && (
             <div className="p-6">
               <OrdersList
@@ -622,19 +577,16 @@ function AppContent() {
         onBackClick={() => setActiveTab(previousTab)}
       />
       <div className="flex-1 overflow-y-auto pt-20 pb-16">
-        {activeTab === 'home' && (() => {
-          const HomeScreenComponent = getHomeScreenComponent();
-          return (
-            <HomeScreenComponent
-              onNavigate={handleTabChange}
-              onVoiceOrder={() => {
-                handleTabChange('new-order');
-                setOrderMode('voice');
-              }}
-              userRole={user.role}
-            />
-          );
-        })()}
+        {activeTab === 'home' && (
+          <HomeScreen
+            onNavigate={handleTabChange}
+            onVoiceOrder={() => {
+              handleTabChange('new-order');
+              setOrderMode('voice');
+            }}
+            userRole={user.role}
+          />
+        )}
 
         {activeTab === 'admin' && user.role === 'admin' && (
           <AdminPanel
