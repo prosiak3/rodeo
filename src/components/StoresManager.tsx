@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingBag, MapPin, Phone, CheckCircle, XCircle } from 'lucide-react';
+import { ShoppingBag, MapPin, Phone, CheckCircle, XCircle, Grid3x3, List } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Store {
@@ -16,6 +16,7 @@ export default function StoresManager() {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   useEffect(() => {
     loadStores();
@@ -84,14 +85,40 @@ export default function StoresManager() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Szukaj sklepu po nazwie, kodzie lub adresie..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-        />
+      <div className="bg-white rounded-lg shadow p-4 space-y-4">
+        <div className="flex items-center gap-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Szukaj sklepu po nazwie, kodzie lub adresie..."
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition ${
+                viewMode === 'list'
+                  ? 'bg-amber-100 text-amber-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Widok listy"
+            >
+              <List className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition ${
+                viewMode === 'grid'
+                  ? 'bg-amber-100 text-amber-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Widok siatki"
+            >
+              <Grid3x3 className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {activeStores.length > 0 && (
@@ -100,47 +127,121 @@ export default function StoresManager() {
             <CheckCircle className="w-5 h-5 text-green-600" />
             Aktywne sklepy ({activeStores.length})
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activeStores.map((store) => (
-              <div
-                key={store.id}
-                className="bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <ShoppingBag className="w-6 h-6 text-green-600" />
+
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {activeStores.map((store) => (
+                <div
+                  key={store.id}
+                  className="bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <ShoppingBag className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-800">{store.name}</h4>
+                        <p className="text-sm text-gray-500">{store.code}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-gray-800">{store.name}</h4>
-                      <p className="text-sm text-gray-500">{store.code}</p>
-                    </div>
+                    <button
+                      onClick={() => toggleActive(store.id, store.active)}
+                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
+                      title="Dezaktywuj sklep"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => toggleActive(store.id, store.active)}
-                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
-                    title="Dezaktywuj sklep"
-                  >
-                    <XCircle className="w-5 h-5" />
-                  </button>
+
+                  {store.address && (
+                    <div className="flex items-start gap-2 mb-2">
+                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-gray-600">{store.address}</p>
+                    </div>
+                  )}
+
+                  {store.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <p className="text-sm text-gray-600">{store.phone}</p>
+                    </div>
+                  )}
                 </div>
-
-                {store.address && (
-                  <div className="flex items-start gap-2 mb-2">
-                    <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">{store.address}</p>
-                  </div>
-                )}
-
-                {store.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">{store.phone}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sklep
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Kod
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Adres
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Telefon
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Akcje
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {activeStores.map((store) => (
+                    <tr key={store.id} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <ShoppingBag className="w-5 h-5 text-green-600" />
+                          </div>
+                          <span className="font-semibold text-gray-800">{store.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {store.code}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {store.address ? (
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <span>{store.address}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {store.phone ? (
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-gray-400" />
+                            <span>{store.phone}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <button
+                          onClick={() => toggleActive(store.id, store.active)}
+                          className="inline-flex items-center gap-2 px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition text-sm"
+                          title="Dezaktywuj sklep"
+                        >
+                          <XCircle className="w-4 h-4" />
+                          Dezaktywuj
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -150,47 +251,121 @@ export default function StoresManager() {
             <XCircle className="w-5 h-5 text-gray-400" />
             Nieaktywne sklepy ({inactiveStores.length})
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {inactiveStores.map((store) => (
-              <div
-                key={store.id}
-                className="bg-white rounded-xl shadow-lg p-5 opacity-60 hover:opacity-100 transition"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <ShoppingBag className="w-6 h-6 text-gray-400" />
+
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {inactiveStores.map((store) => (
+                <div
+                  key={store.id}
+                  className="bg-white rounded-xl shadow-lg p-5 opacity-60 hover:opacity-100 transition"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <ShoppingBag className="w-6 h-6 text-gray-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-800">{store.name}</h4>
+                        <p className="text-sm text-gray-500">{store.code}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-gray-800">{store.name}</h4>
-                      <p className="text-sm text-gray-500">{store.code}</p>
-                    </div>
+                    <button
+                      onClick={() => toggleActive(store.id, store.active)}
+                      className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition"
+                      title="Aktywuj sklep"
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => toggleActive(store.id, store.active)}
-                    className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition"
-                    title="Aktywuj sklep"
-                  >
-                    <CheckCircle className="w-5 h-5" />
-                  </button>
+
+                  {store.address && (
+                    <div className="flex items-start gap-2 mb-2">
+                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-gray-600">{store.address}</p>
+                    </div>
+                  )}
+
+                  {store.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <p className="text-sm text-gray-600">{store.phone}</p>
+                    </div>
+                  )}
                 </div>
-
-                {store.address && (
-                  <div className="flex items-start gap-2 mb-2">
-                    <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">{store.address}</p>
-                  </div>
-                )}
-
-                {store.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <p className="text-sm text-gray-600">{store.phone}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow overflow-hidden opacity-60">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sklep
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Kod
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Adres
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Telefon
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Akcje
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {inactiveStores.map((store) => (
+                    <tr key={store.id} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <ShoppingBag className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <span className="font-semibold text-gray-800">{store.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {store.code}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {store.address ? (
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <span>{store.address}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {store.phone ? (
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-gray-400" />
+                            <span>{store.phone}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <button
+                          onClick={() => toggleActive(store.id, store.active)}
+                          className="inline-flex items-center gap-2 px-3 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition text-sm"
+                          title="Aktywuj sklep"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Aktywuj
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
