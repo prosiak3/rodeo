@@ -12,6 +12,7 @@ const testUsers = [
   { email: 'handlowiec@hurtownia.pl', password: 'test123', role: 'Handlowiec' },
   { email: 'operator@hurtownia.pl', password: 'test123', role: 'Hurtownia' },
   { email: 'kierowca@rodeo.pl', password: 'test123', role: 'Kierowca' },
+  { email: 'analyse@sklep.pl', password: 'test123', role: 'Analityk' },
 ];
 
 export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenProps) {
@@ -59,9 +60,8 @@ export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenP
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex flex-col items-center mb-8">
-            <div className="text-7xl mb-2">🐃</div>
-            <h1 className="text-3xl font-bold text-gray-800">RODEO</h1>
-            <p className="text-amber-600 font-semibold mt-2 text-lg">Weź byka za rogi</p>
+            <img src="/erasebg-transformed.png" alt="RODEO Logo" className="w-64 object-contain mb-4" />
+            <p className="text-amber-600 font-semibold text-lg">Weź byka za rogi</p>
             <p className="text-gray-600 mt-1 text-sm">System Zamówień Mięsno-Wędliniarskich</p>
           </div>
 
@@ -131,9 +131,9 @@ export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenP
 
             {showTestUsers && (
               <div className="mt-4 space-y-3">
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-300">
-                  <p className="text-sm font-semibold text-amber-900 mb-2">Ważne!</p>
-                  <p className="text-xs text-amber-800 mb-3">
+                <div className="p-4 bg-green-50 rounded-lg border border-green-300">
+                  <p className="text-sm font-semibold text-green-900 mb-2">Ważne!</p>
+                  <p className="text-xs text-green-800 mb-3">
                     Najpierw kliknij &quot;Utwórz użytkowników testowych&quot; poniżej, a następnie zaloguj się jednym z kont.
                   </p>
                 </div>
@@ -167,7 +167,13 @@ export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenP
             )}
           </div>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-2">
+            <a
+              href="#styles-demo"
+              className="block text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline"
+            >
+              🎨 Zobacz demo stylów interfejsu
+            </a>
             <p className="text-xs text-gray-500">Wersja prototypowa</p>
           </div>
         </div>

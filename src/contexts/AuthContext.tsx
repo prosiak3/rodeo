@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, User } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
+import { restoreUserLocation, recordSessionGap } from '../hooks/useAutoLogout';
 
 interface AuthContextType {
   session: Session | null;
@@ -8,6 +9,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  savedLocation: any | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,6 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savedLocation, setSavedLocation] = useState<any | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -52,6 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       setUser(data);
+
+      const location = await restoreUserLocation(userId);
+      setSavedLocation(location);
+
+      await recordSessionGap(userId, false);
     } catch (error) {
       console.error('Error loading user profile:', error);
     } finally {
@@ -69,9 +77,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log('Logout button clicked');
+
+      if (user?.id) {
+        try {
+          // Try to close user sessions, but don't fail if the function doesn't exist
+          const { error } = await supabase.rpc('close_user_sessions', { p_user_id: user.id });
+
+          if (error) {
+            // Only log if it's not a "function not found" error
+            if (error.code !== 'PGRST202' && error.code !== '42883') {
+              console.warn('Failed to close sessions:', error.message);
+            }
+          }
+        } catch (err) {
+          // Silently ignore session cleanup errors - logout should still work
+        }
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
+      } else {
+        console.log('Logout successful');
       }
     } catch (err) {
       console.error('Sign out exception:', err);
@@ -82,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signOut, savedLocation }}>
       {children}
     </AuthContext.Provider>
   );

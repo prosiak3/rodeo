@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Plus, Trash2, Save, Search, Mic, MicOff } from 'lucide-react';
 import { supabase, Product, OrderItem } from '../lib/supabase';
+import BottomNav from './BottomNav';
 
 interface EditDraftOrderScreenProps {
   orderId: string;
@@ -20,11 +21,26 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   const [creatorId, setCreatorId] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [sourceType, setSourceType] = useState<string | null>(null);
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
   const productsRef = useRef<Product[]>([]);
 
   useEffect(() => {
+    loadUserPreferences();
     loadData();
   }, [orderId]);
+
+  const loadUserPreferences = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('show_delete_icons')
+      .eq('id', userId)
+      .single();
+
+    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+      setShowDeleteIcons(data.show_delete_icons);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -34,6 +50,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
         .select(`
           order_number,
           created_by,
+          source_type,
           creator:created_by (
             allow_collaborative_editing
           )
@@ -44,6 +61,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
       if (orderError) throw orderError;
       setOrderNumber(orderData.order_number);
       setCreatorId(orderData.created_by);
+      setSourceType(orderData.source_type);
 
       // Check if user can edit
       const isCreator = orderData.created_by === userId;
@@ -418,7 +436,8 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="fixed inset-0 flex flex-col bg-gray-50">
+      <div className="flex-1 overflow-y-auto pb-16">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
         <div className="flex items-center gap-3 mb-2">
           <button
@@ -470,12 +489,14 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                 <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-800 truncate">{item.products?.name}</div>
-                    <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)} PLN/{item.unit}</div>
+                    {sourceType !== 'voice' && (
+                      <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)}{item.unit && item.unit !== 'kg' ? ` / 1${item.unit}` : ''}</div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 bg-gray-200 rounded-lg font-bold hover:bg-gray-300 transition"
+                      className="w-8 h-8 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition"
                     >
                       -
                     </button>
@@ -489,27 +510,33 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                     />
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 bg-gray-200 rounded-lg font-bold hover:bg-gray-300 transition"
+                      className="w-8 h-8 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition"
                     >
                       +
                     </button>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="w-8 h-8 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition flex items-center justify-center"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {showDeleteIcons && (
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="w-8 h-8 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition flex items-center justify-center"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                  <div className="text-right min-w-[80px]">
-                    <div className="font-bold text-amber-600">{item.total_price.toFixed(2)} PLN</div>
-                  </div>
+                  {sourceType !== 'voice' && (
+                    <div className="text-right min-w-[80px]">
+                      <div className="font-bold text-amber-600">{item.total_price.toFixed(2)} PLN</div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-              <span className="font-semibold text-lg">Razem:</span>
-              <span className="font-bold text-2xl text-amber-600">{calculateTotal().toFixed(2)} PLN</span>
-            </div>
+            {sourceType !== 'voice' && (
+              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
+                <span className="font-semibold text-lg">Razem:</span>
+                <span className="font-bold text-2xl text-amber-600">{calculateTotal().toFixed(2)} PLN</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -517,7 +544,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
           <button
             onClick={saveOrder}
             disabled={saving || orderItems.length === 0}
-            className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-5 h-5" />
             {saving ? 'Zapisywanie...' : 'Zapisz zmiany'}
@@ -549,10 +576,14 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                   <div className="text-sm text-gray-600">{product.code}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <div className="font-semibold text-amber-600">{product.base_price.toFixed(2)} PLN</div>
-                    <div className="text-xs text-gray-500">za {product.unit}</div>
-                  </div>
+                  {sourceType !== 'voice' && (
+                    <div className="text-right">
+                      <div className="font-semibold text-amber-600">{product.base_price.toFixed(2)} PLN</div>
+                      {product.unit && product.unit !== 'kg' && (
+                        <div className="text-xs text-gray-500">za {product.unit}</div>
+                      )}
+                    </div>
+                  )}
                   <Plus className="w-5 h-5 text-amber-600 group-hover:scale-110 transition-transform" />
                 </div>
               </button>
@@ -560,6 +591,8 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
           </div>
         </div>
       </div>
+      </div>
+      <BottomNav activeTab="orders" onTabChange={() => {}} />
     </div>
   );
 }

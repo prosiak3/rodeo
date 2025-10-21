@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp, Minus, ArrowRight } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
+import { formatPriceDisplay } from '../lib/priceCalculations';
+import BottomNav from './BottomNav';
 
 interface OrderDetailsProps {
   orderId: string;
@@ -21,12 +23,65 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const [history, setHistory] = useState<OrderHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [statusExpanded, setStatusExpanded] = useState(false);
+  const [showButtonLabels, setShowButtonLabels] = useState(false);
+  const [showDeleteIcons, setShowDeleteIcons] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<string>('');
+  const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set());
+  const [longPressItemId, setLongPressItemId] = useState<string | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadOrderDetails();
+    loadUserPreferences();
   }, [orderId]);
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+      }
+    };
+  }, [longPressTimer]);
+
+  const loadUserPreferences = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('order_details_status_expanded, show_notebook_button_labels, show_delete_icons')
+        .eq('id', userId)
+        .maybeSingle();
+
+      // Handle missing columns gracefully
+      if (error) {
+        if (error.code === '42703' || error.message?.includes('column')) {
+          // Columns don't exist, use defaults
+          setStatusExpanded(true);
+          setShowButtonLabels(true);
+          setShowDeleteIcons(false);
+        }
+        return;
+      }
+
+      if (data) {
+        if (data.order_details_status_expanded !== null && data.order_details_status_expanded !== undefined) {
+          setStatusExpanded(data.order_details_status_expanded);
+        }
+        if (data.show_notebook_button_labels !== null && data.show_notebook_button_labels !== undefined) {
+          setShowButtonLabels(data.show_notebook_button_labels);
+        }
+        if (data.show_delete_icons !== null && data.show_delete_icons !== undefined) {
+          setShowDeleteIcons(data.show_delete_icons);
+        }
+      }
+    } catch (error) {
+      // Silently fail and use defaults
+      setStatusExpanded(true);
+      setShowButtonLabels(true);
+      setShowDeleteIcons(false);
+    }
+  };
 
   const loadOrderDetails = async () => {
     setLoading(true);
@@ -65,7 +120,9 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             name,
             code,
             image_url,
-            description
+            description,
+            average_weight,
+            unit
           )
         `)
         .eq('order_id', orderId);
@@ -325,6 +382,20 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     if (!confirmed) return;
 
     try {
+      // Wait for all pending updates to complete
+      while (pendingUpdates.size > 0) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // Additional safety delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // Reload items from database to get the latest values
+      const { data: freshItems } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', orderId);
+
       const { error: updateError } = await supabase
         .from('orders')
         .update({ status: 'draft' })
@@ -332,11 +403,22 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
       if (updateError) throw updateError;
 
+      // Prepare details with information about modified items using fresh data
+      const modifiedItemsDetails = (freshItems || items).map(item => ({
+        product_name: item.products?.name || 'Unknown',
+        quantity: item.quantity,
+        unit: item.unit
+      }));
+
       await supabase.from('order_history').insert({
         order_id: orderId,
         action: 'converted_to_draft',
         performed_by: userId,
-        details: { from_status: 'notatnik' },
+        details: {
+          from_status: 'notatnik',
+          items_count: (freshItems || items).length,
+          modified_items: modifiedItemsDetails
+        },
       });
 
       // Verify the update succeeded
@@ -414,6 +496,22 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
     }
   };
 
+  const handleLongPressStart = (itemId: string) => {
+    const timer = setTimeout(() => {
+      setLongPressItemId(itemId);
+      deleteOrderItem(itemId);
+    }, 800); // 800ms długiego przytrzymania
+    setLongPressTimer(timer);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    setLongPressItemId(null);
+  };
+
   const startEditingItem = (item: OrderItem) => {
     setEditingItemId(item.id);
     setEditingQuantity(item.quantity.toString());
@@ -480,24 +578,25 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   return (
     <>
       <ConfirmComponent />
-      <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <div className="flex items-center gap-3 mb-3">
+      <div className="fixed inset-0 flex flex-col bg-gray-50">
+      <div className="flex-1 overflow-y-auto pb-16">
+      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={onBack}
-            className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 rounded-lg px-4 py-3 transition-all active:scale-95 min-w-[100px]"
+            className="flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-lg p-2 transition-all active:scale-95"
+            title="Powrót"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Powrót</span>
           </button>
-          <h2 className="text-xl font-bold flex-1">{order.order_number}</h2>
+          <h2 className="text-sm font-semibold flex-1 truncate">{order.order_number}</h2>
           {canDelete && (
             <button
               onClick={deleteOrder}
-              className="flex items-center justify-center bg-red-500/90 hover:bg-red-600 rounded-lg p-3 transition-all active:scale-95"
+              className="flex items-center justify-center bg-red-500/90 hover:bg-red-600 rounded-lg p-2 transition-all active:scale-95"
               title="Usuń zamówienie"
             >
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -505,8 +604,236 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
       <div className="p-3 space-y-3">
         <div className="bg-white rounded-lg shadow p-3">
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium text-sm text-gray-600">Produkty ({items.length})</h3>
+          </div>
+          {items.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-sm">Brak produktów w zamówieniu</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {items.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-2 p-2 rounded hover:bg-gray-100 transition ${
+                    longPressItemId === item.id ? 'bg-red-100' : 'bg-gray-50'
+                  }`}
+                  onMouseDown={() => canDeleteItems && !showDeleteIcons && handleLongPressStart(item.id)}
+                  onMouseUp={() => !showDeleteIcons && handleLongPressEnd()}
+                  onMouseLeave={() => !showDeleteIcons && handleLongPressEnd()}
+                  onTouchStart={() => canDeleteItems && !showDeleteIcons && handleLongPressStart(item.id)}
+                  onTouchEnd={() => !showDeleteIcons && handleLongPressEnd()}
+                  onTouchCancel={() => !showDeleteIcons && handleLongPressEnd()}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {order.status === 'notatnik' ? (
+                      <span className="text-xs text-gray-500 font-semibold flex-shrink-0 w-5 text-center">
+                        {index + 1}
+                      </span>
+                    ) : (
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
+                        item.status === 'confirmed' ? 'bg-green-500 text-white' :
+                        item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
+                        item.status === 'rejected' ? 'bg-red-500 text-white' :
+                        'bg-gray-300 text-gray-600'
+                      }`}>
+                        {item.status === 'confirmed' ? '✓' :
+                         item.status === 'partially_confirmed' ? '~' :
+                         item.status === 'rejected' ? '✗' :
+                         '○'}
+                      </span>
+                    )}
+                    <span className="font-semibold text-gray-900 truncate text-base">{item.products?.name || 'Produkt'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-gray-600 flex-shrink-0">
+                    {canEditItems ? (
+                      <>
+                        <button
+                          onClick={async () => {
+                            const newQuantity = Math.max(1, item.quantity - 1);
+                            const newTotalPrice = newQuantity * item.unit_price;
+
+                            setItems(prevItems =>
+                              prevItems.map(i =>
+                                i.id === item.id
+                                  ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                  : i
+                              )
+                            );
+
+                            setPendingUpdates(prev => new Set(prev).add(item.id));
+                            await supabase
+                              .from('order_items')
+                              .update({
+                                quantity: newQuantity,
+                                total_price: newTotalPrice
+                              })
+                              .eq('id', item.id);
+                            setPendingUpdates(prev => {
+                              const next = new Set(prev);
+                              next.delete(item.id);
+                              return next;
+                            });
+                          }}
+                          className="w-5 h-5 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition active:scale-95"
+                          title="Zmniejsz ilość"
+                        >
+                          <Minus className="w-2.5 h-2.5" />
+                        </button>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="1"
+                            value={item.quantity}
+                            onChange={async (e) => {
+                              const newQuantity = parseFloat(e.target.value);
+                              if (!isNaN(newQuantity) && newQuantity >= 0) {
+                                const newTotalPrice = newQuantity * item.unit_price;
+
+                                setItems(prevItems =>
+                                  prevItems.map(i =>
+                                    i.id === item.id
+                                      ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                      : i
+                                  )
+                                );
+
+                                setPendingUpdates(prev => new Set(prev).add(item.id));
+                                await supabase
+                                  .from('order_items')
+                                  .update({
+                                    quantity: newQuantity,
+                                    total_price: newTotalPrice
+                                  })
+                                  .eq('id', item.id);
+                                setPendingUpdates(prev => {
+                                  const next = new Set(prev);
+                                  next.delete(item.id);
+                                  return next;
+                                });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur();
+                              }
+                            }}
+                            className="w-12 pl-1 pr-6 py-0.5 border border-gray-300 rounded text-xs font-medium text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-300 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          {item.unit && item.unit !== 'kg' && (
+                            <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] font-medium text-gray-400 pointer-events-none">{item.unit}</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const newQuantity = item.quantity + 1;
+                            const newTotalPrice = newQuantity * item.unit_price;
+
+                            setItems(prevItems =>
+                              prevItems.map(i =>
+                                i.id === item.id
+                                  ? { ...i, quantity: newQuantity, total_price: newTotalPrice }
+                                  : i
+                              )
+                            );
+
+                            setPendingUpdates(prev => new Set(prev).add(item.id));
+                            await supabase
+                              .from('order_items')
+                              .update({
+                                quantity: newQuantity,
+                                total_price: newTotalPrice
+                              })
+                              .eq('id', item.id);
+                            setPendingUpdates(prev => {
+                              const next = new Set(prev);
+                              next.delete(item.id);
+                              return next;
+                            });
+                          }}
+                          className="w-5 h-5 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded transition active:scale-95"
+                          title="Zwiększ ilość"
+                        >
+                          <Plus className="w-2.5 h-2.5" />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-sm font-medium">{item.quantity} {item.unit}</span>
+                    )}
+                    {canDeleteItems && showDeleteIcons && (
+                      <button
+                        onClick={() => deleteOrderItem(item.id)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                        title="Usuń pozycję"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
+                      <>
+                        <span className="text-gray-400 text-[15px]">×</span>
+                        <span className="text-[15px]">{item.unit_price.toFixed(2)}</span>
+                        <span className="font-bold text-amber-600 min-w-[60px] text-right text-[15px]">{item.total_price.toFixed(2)} PLN</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {order.source_type && ['price_list', 'copy'].includes(order.source_type) && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-semibold text-gray-700">Razem:</span>
+                <div className="text-right">
+                  <span className="font-bold text-lg text-amber-600">{formatPriceDisplay(order.total_amount)} PLN</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {(canAddMore || canConvertToDraft) && (
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="grid grid-cols-2 gap-2">
+                {canAddMore && (
+                  <button
+                    onClick={onAddProducts || onBack}
+                    className="py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {showButtonLabels && <span className="text-sm">Dodaj</span>}
+                  </button>
+                )}
+                {canConvertToDraft && (
+                  <button
+                    onClick={convertToDraft}
+                    className="py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition flex items-center justify-center gap-2 shadow"
+                  >
+                    <ArrowRight className="w-5 h-5" />
+                    {showButtonLabels && <span className="text-sm">Dalej</span>}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow">
+          <button
+            onClick={() => setStatusExpanded(!statusExpanded)}
+            className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition"
+          >
+            <h3 className="font-semibold text-sm">Status i uczestnicy</h3>
+            {statusExpanded ? (
+              <ChevronUp className="w-4 h-4 text-gray-600" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
+          {statusExpanded && (
+          <div className="px-3 pb-3 space-y-3 border-t border-gray-100">
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
               <div>
                 <span className="text-gray-500">Status:</span>
                 <span className="ml-1 font-medium">{order.status}</span>
@@ -551,10 +878,10 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             </div>
 
             <div className="border-t border-gray-200 pt-3">
-              <h4 className="font-semibold text-xs text-gray-700 mb-2">Uczestnicy realizacji:</h4>
+              <h4 className="font-semibold text-[10px] text-gray-700 mb-2">Uczestnicy realizacji:</h4>
               <div className="space-y-2">
                 {order.creator && (
-                  <div className="flex items-start gap-2 text-xs">
+                  <div className="flex items-start gap-2 text-[10px]">
                     <span className="text-2xl">📝</span>
                     <div>
                       <div className="font-medium text-gray-700">
@@ -572,7 +899,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 )}
 
                 {history.filter(h => h.action.toLowerCase().includes('wysłano')).map(h => h.users).filter(Boolean)[0] && (
-                  <div className="flex items-start gap-2 text-xs">
+                  <div className="flex items-start gap-2 text-[10px]">
                     <span className="text-2xl">📤</span>
                     <div>
                       <div className="font-medium text-gray-700">Wysłał do realizacji</div>
@@ -590,7 +917,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 )}
 
                 {history.filter(h => h.action.toLowerCase().includes('potwierdz')).map(h => h.users).filter(Boolean)[0] && (
-                  <div className="flex items-start gap-2 text-xs">
+                  <div className="flex items-start gap-2 text-[10px]">
                     <span className="text-2xl">✅</span>
                     <div>
                       <div className="font-medium text-gray-700">Potwierdził realizację</div>
@@ -607,7 +934,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                 )}
 
                 {history.filter(h => h.action.toLowerCase().includes('odrzuc')).map(h => h.users).filter(Boolean)[0] && (
-                  <div className="flex items-start gap-2 text-xs">
+                  <div className="flex items-start gap-2 text-[10px]">
                     <span className="text-2xl">❌</span>
                     <div>
                       <div className="font-medium text-gray-700">Odrzucił zamówienie</div>
@@ -650,128 +977,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-3">
-          <h3 className="font-semibold text-base mb-2">Produkty ({items.length})</h3>
-          {items.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-sm">Brak produktów w zamówieniu</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100 transition">
-                  <div className="flex-1 min-w-0 mr-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                        item.status === 'confirmed' ? 'bg-green-500 text-white' :
-                        item.status === 'partially_confirmed' ? 'bg-yellow-500 text-white' :
-                        item.status === 'rejected' ? 'bg-red-500 text-white' :
-                        'bg-gray-300 text-gray-600'
-                      }`}>
-                        {item.status === 'confirmed' ? '✓' :
-                         item.status === 'partially_confirmed' ? '~' :
-                         item.status === 'rejected' ? '✗' :
-                         '○'}
-                      </span>
-                      <span className="font-medium text-gray-800 truncate text-[15px]">{item.products?.name || 'Produkt'}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-600 flex-shrink-0">
-                    {editingItemId === item.id ? (
-                      <>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={editingQuantity}
-                          onChange={(e) => setEditingQuantity(e.target.value)}
-                          className="w-20 px-2 py-1 border border-blue-500 rounded text-[15px] font-medium text-center"
-                          autoFocus
-                        />
-                        <span className="text-[15px]">{item.unit}</span>
-                        <button
-                          onClick={() => saveItemQuantity(item)}
-                          className="p-1 text-green-600 hover:bg-green-50 rounded transition"
-                          title="Zapisz"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={cancelEditingItem}
-                          className="p-1 text-gray-600 hover:bg-gray-200 rounded transition"
-                          title="Anuluj"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span className="font-medium text-[15px]">{item.quantity} {item.unit}</span>
-                        <span className="text-gray-400 text-[15px]">×</span>
-                        <span className="text-[15px]">{item.unit_price.toFixed(2)}</span>
-                        <span className="font-bold text-amber-600 min-w-[60px] text-right text-[15px]">{item.total_price.toFixed(2)} PLN</span>
-                        {canEditItems && (
-                          <button
-                            onClick={() => startEditingItem(item)}
-                            className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
-                            title="Edytuj ilość"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        )}
-                        {canDeleteItems && (
-                          <button
-                            onClick={() => deleteOrderItem(item.id)}
-                            className="p-1 text-red-500 hover:bg-red-50 rounded transition"
-                            title="Usuń pozycję"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
           )}
-          <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center text-sm">
-            <span className="font-semibold text-gray-700">Razem:</span>
-            <span className="font-bold text-lg text-amber-600">{order.total_amount.toFixed(2)} PLN</span>
-          </div>
         </div>
-
-        {(canAddMore || canConvertToDraft) && (
-          <div className="bg-white rounded-lg shadow p-3 space-y-3">
-            {canConvertToDraft && (
-              <div className="bg-blue-600 text-white p-3 rounded-lg text-sm">
-                <p className="font-medium">Przekształć w szkic aby móc wysłać zamówienie</p>
-                <p className="text-xs mt-1 opacity-90">Po kliknięciu "Dalej" zamówienie zostanie przekształcone w szkic i będzie można je edytować oraz wysłać do hurtowni.</p>
-              </div>
-            )}
-            <div className="grid grid-cols-2 gap-2">
-              {canAddMore && (
-                <button
-                  onClick={onAddProducts || onBack}
-                  className="py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
-                >
-                  <Plus className="w-5 h-5" />
-                  Dodaj asortyment
-                </button>
-              )}
-              {canConvertToDraft && (
-                <button
-                  onClick={convertToDraft}
-                  className="py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-cyan-700 transition flex items-center justify-center gap-2 shadow"
-                >
-                  <FileEdit className="w-5 h-5" />
-                  Dalej
-                </button>
-              )}
-            </div>
-          </div>
-        )}
 
         {canEdit && onEdit && (
           <div className="bg-white rounded-lg shadow p-3">
@@ -902,6 +1109,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           </div>
         )}
       </div>
+      </div>
+      <BottomNav activeTab="orders" onTabChange={() => {}} userRole={userRole} />
     </div>
     </>
   );

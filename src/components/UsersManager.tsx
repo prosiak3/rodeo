@@ -24,6 +24,7 @@ const roleLabels: Record<string, string> = {
   salesperson: 'Handlowiec',
   operator: 'Hurtownia',
   driver: 'Kierowca',
+  analyst: 'Analityk',
 };
 
 export default function UsersManager() {
@@ -257,6 +258,7 @@ export default function UsersManager() {
                 <option value="operator">Hurtownia</option>
                 <option value="driver">Kierowca</option>
                 <option value="admin">Administrator</option>
+                <option value="analyst">Analityk</option>
               </select>
             </div>
 

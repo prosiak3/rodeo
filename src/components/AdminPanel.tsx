@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import { Package, Users, ShoppingBag, DollarSign, Settings, UserCog } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Package, Users as UsersIcon, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresManager from './StoresManager';
-import PriceList from './PriceList';
+import StoreGroupsManager from './StoreGroupsManager';
 import ProductManager from './ProductManager';
 import SystemSettings from './SystemSettings';
 import UsersManager from './UsersManager';
+import AILearningPanel from './AILearningPanel';
+import BannersManager from './BannersManager';
+import SpecialPricesManager from './SpecialPricesManager';
+import { supabase } from '../lib/supabase';
 
 interface AdminPanelProps {
   userId: string;
@@ -15,7 +19,23 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'users' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'storegroups' | 'products' | 'pricelists' | 'specialprices' | 'users' | 'ai' | 'banners' | 'settings'>('orders');
+  const [storeId, setStoreId] = useState<string>('');
+
+  useEffect(() => {
+    const loadStoreId = async () => {
+      const { data } = await supabase
+        .from('users')
+        .select('store_id')
+        .eq('id', userId)
+        .single();
+
+      if (data?.store_id) {
+        setStoreId(data.store_id);
+      }
+    };
+    loadStoreId();
+  }, [userId]);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -53,6 +73,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Sklepy
           </button>
           <button
+            onClick={() => setActiveTab('storegroups')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'storegroups'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <UsersIcon className="w-5 h-5" />
+            Grupy sklepów
+          </button>
+          <button
             onClick={() => setActiveTab('products')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'products'
@@ -60,7 +91,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            <Users className="w-5 h-5" />
+            <Package className="w-5 h-5" />
             Produkty
           </button>
           <button
@@ -75,6 +106,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Cenniki
           </button>
           <button
+            onClick={() => setActiveTab('specialprices')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'specialprices'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Percent className="w-5 h-5" />
+            Ceny specjalne
+          </button>
+          <button
             onClick={() => setActiveTab('users')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'users'
@@ -84,6 +126,28 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
           >
             <UserCog className="w-5 h-5" />
             Użytkownicy
+          </button>
+          <button
+            onClick={() => setActiveTab('ai')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'ai'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Brain className="w-5 h-5" />
+            AI
+          </button>
+          <button
+            onClick={() => setActiveTab('banners')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'banners'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Tag className="w-5 h-5" />
+            Banery
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -106,11 +170,19 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
 
         {activeTab === 'stores' && <StoresManager />}
 
+        {activeTab === 'storegroups' && <StoreGroupsManager />}
+
         {activeTab === 'products' && <ProductManager />}
 
         {activeTab === 'pricelists' && <PriceListManager />}
 
+        {activeTab === 'specialprices' && <SpecialPricesManager />}
+
         {activeTab === 'users' && <UsersManager />}
+
+        {activeTab === 'ai' && storeId && <AILearningPanel storeId={storeId} />}
+
+        {activeTab === 'banners' && <BannersManager />}
 
         {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>

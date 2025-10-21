@@ -83,13 +83,13 @@ export default function ConfirmDialog({
         <div className="flex gap-3 p-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 rounded-lg font-medium transition-all hover:scale-105 active:scale-95 bg-gray-100 hover:bg-gray-200 text-gray-900"
+            className="flex-1 px-6 py-4 rounded-lg font-medium transition-all hover:scale-105 active:scale-95 bg-gray-100 hover:bg-gray-200 text-gray-900 text-base"
           >
             {cancelText}
           </button>
           <button
             onClick={handleConfirm}
-            className={`flex-1 px-4 py-3 rounded-lg font-medium text-white transition-all hover:scale-105 active:scale-95 ${style.buttonBg}`}
+            className={`flex-1 px-6 py-4 rounded-lg font-medium text-white transition-all hover:scale-105 active:scale-95 text-base ${style.buttonBg}`}
           >
             {confirmText}
           </button>

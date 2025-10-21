@@ -19,6 +19,7 @@ interface Product {
   promo_price?: number;
   tags?: string[];
   final_price?: number;
+  promo_10_plus_1?: boolean;
 }
 
 type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
@@ -57,6 +58,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   const [notebookMode, setNotebookMode] = useState<'single' | 'multiple'>('multiple');
   const [showSortIcons, setShowSortIcons] = useState<boolean>(true);
   const [showPriceLayoutToggle, setShowPriceLayoutToggle] = useState<boolean>(true);
+  const [showSortButtons, setShowSortButtons] = useState<boolean>(false);
+  const [showGroupButtons, setShowGroupButtons] = useState<boolean>(false);
   const [currentSessionNotebookId, setCurrentSessionNotebookId] = useState<string | null>(notebookOrderId || null);
 
   useEffect(() => {
@@ -101,14 +104,14 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (isDragging && touchStart !== null && swipedProduct !== null) {
-        e.stopPropagation();
+        e.preventDefault();
         setTouchCurrent(e.clientX);
       }
     };
 
     const handleGlobalMouseUp = (e: MouseEvent) => {
       if (isDragging) {
-        e.stopPropagation();
+        e.preventDefault();
         setIsDragging(false);
         setTouchStart(null);
         setTouchCurrent(null);
@@ -117,13 +120,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     };
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleGlobalMouseMove, { capture: true });
-      document.addEventListener('mouseup', handleGlobalMouseUp, { capture: true });
+      document.addEventListener('mousemove', handleGlobalMouseMove, { passive: false });
+      document.addEventListener('mouseup', handleGlobalMouseUp, { passive: false });
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleGlobalMouseMove, { capture: true });
-      document.removeEventListener('mouseup', handleGlobalMouseUp, { capture: true });
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
   }, [isDragging, touchStart, swipedProduct]);
 
@@ -136,7 +139,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       const { data: userData } = await supabase
         .from('users')
-        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle')
+        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle, show_sort_buttons, show_group_buttons')
         .eq('id', authData.user.id)
         .single();
 
@@ -148,11 +151,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       setNotebookMode((userData as any)?.notebook_mode || 'multiple');
       setShowSortIcons((userData as any)?.show_sort_icons ?? true);
       setShowPriceLayoutToggle((userData as any)?.show_price_layout_toggle ?? true);
+      setShowSortButtons((userData as any)?.show_sort_buttons ?? false);
+      setShowGroupButtons((userData as any)?.show_group_buttons ?? false);
 
       const { data, error } = await supabase
         .from('products')
         .select(`
-          id, code, name, display_category, original_category, unit, base_price, description, index, min_quantity, quantity_step, tags,
+          id, code, name, display_category, original_category, unit, base_price, description, index, min_quantity, quantity_step, tags, promo_10_plus_1,
           special_prices!left (
             your_price,
             promo_price
@@ -202,7 +207,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     }
   };
 
-  const categories = ['all', 'Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
+  const categories = ['all', 'Drób', 'Indyk', 'Mięso', 'Wołowina'];
 
   console.log('🔍 FILTERING - notebookItems:', notebookItems.length, 'products:', products.length);
 
@@ -216,30 +221,48 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   console.log('✅ FILTERED RESULT:', filteredProducts.length, 'products');
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (selectedCategory === 'all') {
-      const categoryOrder = ['Drób', 'Indyk', 'Mięso', 'Mięso wołowe'];
-      const categoryCompare = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
-      if (categoryCompare !== 0) return categoryCompare;
-    }
+  const promoProducts = filteredProducts.filter(p =>
+    (p.promo_price && p.promo_price < (p.your_price || p.base_price)) || p.promo_10_plus_1
+  );
 
-    switch (sortBy) {
-      case 'name-asc':
-        return a.name.localeCompare(b.name);
-      case 'name-desc':
-        return b.name.localeCompare(a.name);
-      case 'price-asc':
-        return (a.final_price || a.base_price) - (b.final_price || b.base_price);
-      case 'price-desc':
-        return (b.final_price || b.base_price) - (a.final_price || a.base_price);
-      default:
-        return 0;
-    }
-  });
+  const regularProducts = filteredProducts.filter(p =>
+    !((p.promo_price && p.promo_price < (p.your_price || p.base_price)) || p.promo_10_plus_1)
+  );
+
+  const sortProducts = (products: Product[]) => {
+    return [...products].sort((a, b) => {
+      if (selectedCategory === 'all') {
+        const categoryOrder = ['Drób', 'Indyk', 'Mięso', 'Wołowina'];
+        const categoryCompare = categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+        if (categoryCompare !== 0) return categoryCompare;
+      }
+
+      switch (sortBy) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'price-asc':
+          return (a.final_price || a.base_price) - (b.final_price || b.base_price);
+        case 'price-desc':
+          return (b.final_price || b.base_price) - (a.final_price || a.base_price);
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const sortedPromoProducts = sortProducts(promoProducts);
+  const sortedRegularProducts = sortProducts(regularProducts);
 
   const groupedProducts: { [key: string]: Product[] } = {};
+
+  if (sortedPromoProducts.length > 0) {
+    groupedProducts['🔥 PROMOCJE'] = sortedPromoProducts;
+  }
+
   if (selectedCategory === 'all') {
-    sortedProducts.forEach(product => {
+    sortedRegularProducts.forEach(product => {
       const category = product.category || 'Inne';
       if (!groupedProducts[category]) {
         groupedProducts[category] = [];
@@ -247,33 +270,66 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       groupedProducts[category].push(product);
     });
   } else {
-    groupedProducts[selectedCategory] = sortedProducts;
+    if (sortedRegularProducts.length > 0) {
+      groupedProducts[selectedCategory] = sortedRegularProducts;
+    }
   }
+
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [isHorizontalSwipe, setIsHorizontalSwipe] = useState<boolean>(false);
 
   const handleTouchStart = (e: React.TouchEvent, productId: string) => {
     const touch = e.touches[0];
-    console.log('📱 SWIPE START:', touch.clientX);
+    console.log('📱 SWIPE START:', touch.clientX, touch.clientY);
     setTouchStart(touch.clientX);
     setTouchCurrent(touch.clientX);
+    setTouchStartY(touch.clientY);
     setSwipedProduct(productId);
+    setIsHorizontalSwipe(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchStart === null || swipedProduct === null) {
+    if (touchStart === null || swipedProduct === null || touchStartY === null) {
       return;
     }
-    e.preventDefault();
+
     const touch = e.touches[0];
-    console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
-    setTouchCurrent(touch.clientX);
+    const deltaX = Math.abs(touch.clientX - touchStart);
+    const deltaY = Math.abs(touch.clientY - touchStartY);
+
+    // Determine swipe direction on first significant movement (increased threshold to 20px)
+    if (!isHorizontalSwipe && (deltaX > 20 || deltaY > 20)) {
+      if (deltaX > deltaY * 1.5) {
+        // Horizontal swipe detected - deltaX must be 1.5x bigger than deltaY
+        setIsHorizontalSwipe(true);
+        e.preventDefault(); // Only prevent when we confirm horizontal swipe
+      } else {
+        // It's a vertical scroll, reset swipe state immediately
+        setTouchStart(null);
+        setTouchCurrent(null);
+        setTouchStartY(null);
+        setSwipedProduct(null);
+        setIsHorizontalSwipe(false);
+        return;
+      }
+    }
+
+    // Track movement for horizontal swipe and prevent default to avoid scroll
+    if (isHorizontalSwipe) {
+      e.preventDefault();
+      console.log('📱 SWIPE MOVE:', touch.clientX, 'distance:', touch.clientX - touchStart);
+      setTouchCurrent(touch.clientX);
+    }
   };
 
   const handleTouchEnd = async (product: Product) => {
-    console.log('📱 SWIPE END:', { touchStart, touchCurrent });
-    if (touchStart === null || touchCurrent === null) {
+    console.log('📱 SWIPE END:', { touchStart, touchCurrent, isHorizontalSwipe });
+    if (touchStart === null || touchCurrent === null || !isHorizontalSwipe) {
       setTouchStart(null);
       setTouchCurrent(null);
+      setTouchStartY(null);
       setSwipedProduct(null);
+      setIsHorizontalSwipe(false);
       return;
     }
 
@@ -290,7 +346,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
     setTouchStart(null);
     setTouchCurrent(null);
+    setTouchStartY(null);
     setSwipedProduct(null);
+    setIsHorizontalSwipe(false);
   };
 
   const handleMouseDown = (e: React.MouseEvent, productId: string) => {
@@ -337,8 +395,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       setSwipedProduct(null);
     };
 
-    document.addEventListener('mousemove', handleDocumentMouseMove);
-    document.addEventListener('mouseup', handleDocumentMouseUp);
+    document.addEventListener('mousemove', handleDocumentMouseMove, { passive: false });
+    document.addEventListener('mouseup', handleDocumentMouseUp, { passive: false });
 
     return () => {
       document.removeEventListener('mousemove', handleDocumentMouseMove);
@@ -480,9 +538,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" style={{ touchAction: 'pan-y' }}>
       {notebookOrderId && onBackToOrder && (
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-30 mb-3">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-30 mb-3" style={{ touchAction: 'auto' }}>
           <button
             onClick={onBackToOrder}
             className="w-full flex items-center justify-center gap-2 text-white font-medium hover:opacity-90 transition"
@@ -492,7 +550,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           </button>
         </div>
       )}
-      <div className={`bg-white rounded-lg shadow p-3 sticky z-20 ${notebookOrderId ? 'top-[60px]' : 'top-0'}`}>
+      <div className={`bg-white rounded-lg shadow p-3 sticky z-20 ${notebookOrderId ? 'top-[60px]' : 'top-0'}`} style={{ touchAction: 'auto' }}>
         <div className="flex items-center gap-2 mb-2">
           <Search className="w-4 h-4 text-gray-400" />
           <input
@@ -505,21 +563,23 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           />
         </div>
 
-        <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition bg-gray-100 text-gray-700 hover:bg-gray-200"
-              style={selectedCategory === cat ? { backgroundColor: colors.primary, color: 'white' } : {}}
-            >
-              {cat === 'all' ? 'Wszystkie' : cat}
-            </button>
-          ))}
-        </div>
+        {showGroupButtons && (
+          <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition bg-gray-100 text-gray-700 hover:bg-gray-200"
+                style={selectedCategory === cat ? { backgroundColor: colors.primary, color: 'white' } : {}}
+              >
+                {cat === 'all' ? 'Wszystkie' : cat}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="flex gap-2 items-center justify-between">
-          {showSortIcons && (
+          {showSortIcons && showSortButtons && (
             <div className="flex gap-1">
               <button
                 onClick={() => setSortBy('name-asc')}
@@ -543,7 +603,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 style={sortBy === 'price-asc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
                 title="Cena rosnąco"
               >
-                <span className="text-xs font-semibold">PLN</span>
                 <ArrowUp className="w-3 h-3" />
               </button>
               <button
@@ -552,7 +611,6 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                 style={sortBy === 'price-desc' ? { backgroundColor: colors.primary, color: 'white' } : {}}
                 title="Cena malejąco"
               >
-                <span className="text-xs font-semibold">PLN</span>
                 <ArrowDown className="w-3 h-3" />
               </button>
             </div>
@@ -591,13 +649,26 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           {Object.entries(groupedProducts).map(([category, categoryProducts]) => (
             <div key={category}>
               {selectedCategory === 'all' && (
-                <div className="px-4 py-2.5 mb-2 rounded-lg shadow-md" style={{ background: colors.gradient }}>
+                <div
+                  className={`px-4 py-2.5 mb-2 rounded-lg shadow-md ${
+                    category === '🔥 PROMOCJE'
+                      ? 'bg-gradient-to-r from-red-500 to-orange-500 animate-pulse'
+                      : ''
+                  }`}
+                  style={category !== '🔥 PROMOCJE' ? { background: colors.gradient } : {}}
+                >
                   <h3 className="text-white font-bold text-base">{category}</h3>
                 </div>
               )}
               <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
                 {categoryProducts.map((product) => {
               const hasPromo = product.promo_price && product.promo_price > 0;
+              const hasDiscountPromo = hasPromo && product.promo_price! < (product.your_price || product.base_price);
+              const discountPercent = hasDiscountPromo
+                ? Math.round(((product.your_price || product.base_price) - product.promo_price!) / (product.your_price || product.base_price) * 100)
+                : 0;
+              const is10Plus1 = product.promo_10_plus_1;
+              const hasAnyPromo = hasDiscountPromo || is10Plus1;
               const isInNotebook = notebookItems.includes(product.id);
               const swipeOffset = getSwipeTransform(product.id);
               const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
@@ -605,8 +676,8 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               return (
                 <div
                   key={product.id}
-                  className={`relative overflow-hidden ${isInNotebook ? 'bg-green-50' : hasPromo ? 'bg-yellow-50' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
-                  style={{ touchAction: isDisabled ? 'auto' : 'none' }}
+                  className={`relative ${isInNotebook ? 'bg-green-50' : hasAnyPromo ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-400' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                  style={{ overflow: swipeOffset > 0 ? 'hidden' : 'visible', touchAction: isDisabled ? 'auto' : 'pan-y' }}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
                   onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
@@ -630,8 +701,15 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                           <span className="font-medium text-sm text-gray-800 truncate">
                             {product.name}
                           </span>
+                          <span className="text-xs text-gray-500 flex-shrink-0">({product.unit})</span>
                           {isInNotebook && (
                             <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">W NOTATNIKU</span>
+                          )}
+                          {hasDiscountPromo && (
+                            <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold animate-pulse">-{discountPercent}%</span>
+                          )}
+                          {is10Plus1 && (
+                            <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">10+1 GRATIS</span>
                           )}
                         </div>
                         {showDescription && product.description && (
@@ -639,79 +717,37 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         )}
                       </div>
                       {priceLayout === 'horizontal' ? (
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {!product.your_price && !product.promo_price && (
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm font-bold" style={{ color: colors.text }}>
-                                {product.base_price.toFixed(2)}
-                              </span>
-                              <span className="text-xs text-gray-500">PLN/{product.unit}</span>
-                            </div>
-                          )}
-                          {(product.your_price || product.promo_price) && (
+                        <div className="flex items-center gap-2 flex-shrink-0" style={{ marginRight: '-60px' }}>
+                          {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
-                              <div className="flex flex-col items-end">
-                                <span className="text-[9px] text-gray-400 uppercase leading-none">Norm.</span>
-                                <span className="text-xs line-through text-gray-400">
-                                  {product.base_price.toFixed(2)}
-                                </span>
-                              </div>
-                              {product.your_price && product.your_price > 0 && (
-                                <div className="flex flex-col items-end">
-                                  <span className="text-[9px] text-blue-600 uppercase font-medium leading-none">Twoja</span>
-                                  <span className={`text-sm font-bold ${product.promo_price ? 'line-through text-gray-400' : 'text-blue-600'}`}>
-                                    {product.your_price.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              {product.promo_price && product.promo_price > 0 && (
-                                <div className="flex flex-col items-end animate-pulse">
-                                  <span className="text-[9px] text-red-600 uppercase font-bold leading-none">Specj.</span>
-                                  <span className="text-base font-bold text-red-600">
-                                    {product.promo_price.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                              <span className="text-xs line-through text-gray-400">
+                                {(product.your_price || product.base_price).toFixed(2)}
+                              </span>
+                              <span className="text-base font-bold text-red-600 animate-pulse">
+                                {product.promo_price.toFixed(2)}
+                              </span>
                             </>
+                          ) : (
+                            <span className="text-sm font-bold" style={{ color: colors.text }}>
+                              {(product.your_price || product.base_price).toFixed(2)}
+                            </span>
                           )}
                         </div>
                       ) : (
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                          {!product.your_price && !product.promo_price && (
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-base font-bold" style={{ color: colors.text }}>
-                                {product.base_price.toFixed(2)}
-                              </span>
-                              <span className="text-xs text-gray-500">PLN/{product.unit}</span>
-                            </div>
-                          )}
-                          {(product.your_price || product.promo_price) && (
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0" style={{ marginRight: '-60px' }}>
+                          {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-[10px] text-gray-400 uppercase">Normalna</span>
-                                <span className="text-sm line-through text-gray-400">
-                                  {product.base_price.toFixed(2)}
-                                </span>
-                              </div>
-                              {product.your_price && product.your_price > 0 && (
-                                <div className="flex items-baseline gap-1">
-                                  <span className="text-[10px] text-blue-600 uppercase font-medium">Twoja</span>
-                                  <span className={`text-sm ${product.promo_price ? 'line-through text-gray-400' : 'font-bold text-blue-600'}`}>
-                                    {product.your_price.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              {product.promo_price && product.promo_price > 0 && (
-                                <div className="flex items-baseline gap-1 animate-pulse">
-                                  <span className="text-[10px] text-red-600 uppercase font-bold">Specjalna</span>
-                                  <span className="text-base font-bold text-red-600">
-                                    {product.promo_price.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              <span className="text-xs text-gray-500">PLN/{product.unit}</span>
+                              <span className="text-sm line-through text-gray-400">
+                                {(product.your_price || product.base_price).toFixed(2)}
+                              </span>
+                              <span className="text-base font-bold text-red-600 animate-pulse">
+                                {product.promo_price.toFixed(2)}
+                              </span>
                             </>
+                          ) : (
+                            <span className="text-base font-bold" style={{ color: colors.text }}>
+                              {(product.your_price || product.base_price).toFixed(2)}
+                            </span>
                           )}
                         </div>
                       )}
