@@ -3,8 +3,8 @@
 
   1. Przykładowe dane
     - Produkty tylko z ceną normalną (brak special_prices)
-    - Produkty z ceną normalną + Twoja cena (your_price)
-    - Produkty z ceną normalną + Twoja cena + Specjalna (promo_price)
+    - Produkty z ceną normalną + Cena sklepu (your_price)
+    - Produkty z ceną normalną + Cena sklepu + Promocyjna (promo_price)
     
   2. Kombinacje dla Delikatesy Centrum
     - Część produktów: tylko base_price
@@ -19,7 +19,7 @@
 -- Usuń stare dane special_prices dla czystości
 DELETE FROM special_prices;
 
--- Produkty z ceną "Twoja" (5-10% taniej niż base_price)
+-- Produkty z ceną sklepu (5-10% taniej niż base_price)
 INSERT INTO special_prices (store_id, product_id, your_price, promo_price, valid_from, valid_to)
 VALUES
   -- Boczek parzony: Normalna 28.99 → Twoja 26.50

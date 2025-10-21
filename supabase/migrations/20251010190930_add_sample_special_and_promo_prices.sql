@@ -3,19 +3,19 @@
 
   1. Zmiany
     - Dodanie większej różnicy między cenami
-    - Twoja cena: 5-15% taniej niż normalna
+    - Cena sklepu: 5-15% taniej niż normalna
     - Cena promocyjna: 15-30% taniej niż normalna
-    
+
   2. Przykłady
-    - Produkty z tylko ceną "Twoja"
-    - Produkty z ceną "Twoja" i "Specjalna"
+    - Produkty z tylko ceną sklepu
+    - Produkty z ceną sklepu i promocyjną
     - Różne poziomy rabatów
 */
 
 -- Usuń istniejące ceny specjalne dla sklepu Delikatesy Centrum
 DELETE FROM special_prices WHERE store_id = '5409c92b-76bf-4a32-b8ca-cebd8e34630c';
 
--- Produkty z ceną "Twoja" (10% taniej)
+-- Produkty z ceną sklepu (10% taniej)
 INSERT INTO special_prices (product_id, store_id, your_price, promo_price, valid_from, valid_to)
 SELECT 
   p.id,

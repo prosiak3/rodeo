@@ -463,7 +463,7 @@ export default function SpecialPricesManager() {
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Kod</th>
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Nazwa produktu</th>
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Cena bazowa</th>
-                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Twoja cena</th>
+                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Cena sklepu</th>
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Cena promocyjna</th>
                 <th className="text-center py-3 px-2 text-sm font-semibold text-gray-700">10+1</th>
                 <th className="text-center py-3 px-2 text-sm font-semibold text-gray-700">Akcje</th>
@@ -613,7 +613,7 @@ export default function SpecialPricesManager() {
         <h3 className="font-semibold text-blue-900 mb-2">Informacje o cenach</h3>
         <ul className="space-y-1 text-sm text-blue-800">
           <li>• <strong>Cena bazowa</strong> - podstawowa cena produktu widoczna dla wszystkich</li>
-          <li>• <strong>Twoja cena</strong> - specjalna cena dla tego sklepu (jeśli nie ustawiona, używana jest cena bazowa)</li>
+          <li>• <strong>Cena sklepu</strong> - indywidualna cena negocjowana dla tego sklepu (jeśli nie ustawiona, używana jest cena bazowa)</li>
           <li>• <strong>Cena promocyjna</strong> - najniższa cena, pokazywana z rabatem procentowym</li>
           <li>• <strong>10+1</strong> - przy zamówieniu 10 sztuk, jedenasta gratis</li>
         </ul>

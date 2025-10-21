@@ -37,5 +37,5 @@ BEGIN
 END $$;
 
 -- Dodaj komentarze do kolumn
-COMMENT ON COLUMN special_prices.your_price IS 'Cena dla konkretnego sklepu (Twoja cena)';
+COMMENT ON COLUMN special_prices.your_price IS 'Indywidualna cena negocjowana dla konkretnego sklepu (widoczna dla ekspedienta jako "Twoja cena")';
 COMMENT ON COLUMN special_prices.promo_price IS 'Cena promocyjna/specjalna (najniższa)';

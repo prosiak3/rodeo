@@ -39,7 +39,7 @@ RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówie
    - Dwa układy wyświetlania cen (poziomy/pionowy)
    - Wyświetlanie trzech rodzajów cen:
      - Cena bazowa (base_price) - oznaczona jako "N:"
-     - Twoja cena (your_price) - oznaczona jako "T:" (kolor niebieski)
+     - Twoja cena (your_price) - indywidualna cena negocjowana dla sklepu, widoczna dla ekspedienta jako "T:" (kolor niebieski)
      - Cena promocyjna (promo_price) - oznaczona jako "S:" (kolor czerwony, pulsująca)
    - Produkty z limitami ilościowymi (min_quantity, quantity_step)
    - Produkty pogrupowane według kategorii wyświetlania
