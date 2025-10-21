@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+import type { FontSize } from '../lib/supabase';
+
 /**
  * User preferences with sensible defaults
  */
@@ -11,6 +13,7 @@ interface UserPreferences {
   show_sort_buttons: boolean;
   auto_logout_enabled: boolean;
   ui_theme: string | null;
+  font_size_preference: FontSize;
 }
 
 /**
@@ -23,6 +26,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   show_sort_buttons: true,
   auto_logout_enabled: true,
   ui_theme: null,
+  font_size_preference: 'medium',
 };
 
 /**

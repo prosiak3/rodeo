@@ -37,6 +37,8 @@ export interface Store {
   updated_at: string;
 }
 
+export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
+
 export interface User {
   id: string;
   email: string;
@@ -49,6 +51,7 @@ export interface User {
   show_all_order_filters?: boolean;
   auto_order_analysis_days?: number;
   show_sort_buttons?: boolean;
+  font_size_preference?: FontSize;
 }
 
 export interface Product {

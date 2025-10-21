@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2 } from 'lucide-react';
-import { User, supabase } from '../lib/supabase';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type } from 'lucide-react';
+import { User, supabase, FontSize } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { ThemeStyle, THEME_CONFIGS } from '../types/themes';
 import { showAlert } from '../lib/alerts';
+import { useFontSize } from '../contexts/FontSizeContext';
 
 interface ProfileScreenProps {
   user: User;
@@ -20,6 +21,7 @@ const roleLabels: Record<string, string> = {
 
 export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const { theme, setTheme, uiTheme, setUiTheme } = useTheme();
+  const { fontSize, setFontSize } = useFontSize();
   const [showAllFilters, setShowAllFilters] = useState<boolean>(user.show_all_order_filters || false);
   const [allowCollaboration, setAllowCollaboration] = useState<boolean>((user as any).allow_collaborative_editing ?? true);
   const [showDescription, setShowDescription] = useState<boolean>((user as any).show_product_description ?? true);
@@ -322,6 +324,19 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
+  const handleFontSizeChange = async (size: FontSize) => {
+    setSaving(true);
+    try {
+      await setFontSize(size);
+      showAlert('Rozmiar interfejsu został zmieniony!', 'success');
+    } catch (error) {
+      console.error('Error updating font size:', error);
+      showAlert('Błąd podczas zapisywania rozmiaru', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleClearAICache = async () => {
     if (!confirm('Czy na pewno chcesz wyczyścić pamięć podręczną AI? Model zostanie ponownie pobrany przy następnym użyciu.')) {
       return;
@@ -394,6 +409,70 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 <p className="font-medium text-gray-800">{roleLabels[user.role] || user.role}</p>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Type className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Wielkość interfejsu</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Wybierz rozmiar czcionki dostosowany do Twoich potrzeb. Zmiana zostanie zastosowana natychmiast.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleFontSizeChange('small')}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                fontSize === 'small'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              } disabled:opacity-50`}
+            >
+              <div className="font-semibold text-gray-800 mb-1 text-sm">Mały</div>
+              <div className="text-xs text-gray-600">14px - Kompaktowy</div>
+              <div className="text-xs text-gray-500 mt-2">Przykładowy tekst</div>
+            </button>
+            <button
+              onClick={() => handleFontSizeChange('medium')}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                fontSize === 'medium'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              } disabled:opacity-50`}
+            >
+              <div className="font-semibold text-gray-800 mb-1 text-base">Średni</div>
+              <div className="text-sm text-gray-600">16px - Standardowy</div>
+              <div className="text-sm text-gray-500 mt-2">Przykładowy tekst</div>
+            </button>
+            <button
+              onClick={() => handleFontSizeChange('large')}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                fontSize === 'large'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              } disabled:opacity-50`}
+            >
+              <div className="font-semibold text-gray-800 mb-1 text-lg">Duży</div>
+              <div className="text-base text-gray-600">18px - Wygodny</div>
+              <div className="text-base text-gray-500 mt-2">Przykładowy tekst</div>
+            </button>
+            <button
+              onClick={() => handleFontSizeChange('extra-large')}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                fontSize === 'extra-large'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              } disabled:opacity-50`}
+            >
+              <div className="font-semibold text-gray-800 mb-1 text-xl">Bardzo duży</div>
+              <div className="text-lg text-gray-600">20px - Maksymalny</div>
+              <div className="text-lg text-gray-500 mt-2">Przykładowy tekst</div>
+            </button>
           </div>
         </div>
 

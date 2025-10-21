@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { FontSizeProvider } from './contexts/FontSizeContext';
 import LoginScreen from './components/LoginScreen';
 import StylesDemo from './components/StylesDemo';
 import HomeScreen from './components/HomeScreen';
@@ -906,7 +907,9 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <AppContent />
+        <FontSizeProvider>
+          <AppContent />
+        </FontSizeProvider>
       </ThemeProvider>
     </AuthProvider>
   );
