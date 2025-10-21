@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ThemeProvider, useTheme } from './contexts/ThemeContext';
-import { FontSizeProvider } from './contexts/FontSizeContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import LoginScreen from './components/LoginScreen';
 import HomeScreen from './components/HomeScreen';
 import VoiceOrderScreen from './components/VoiceOrderScreen';
@@ -9,172 +8,28 @@ import ManualOrderScreen from './components/ManualOrderScreen';
 import CopyOrderScreen from './components/CopyOrderScreen';
 import PriceListOrderScreen from './components/PriceListOrderScreen';
 import PriceListOrderListMode from './components/PriceListOrderListMode';
-import AutoOrderScreen from './components/AutoOrderScreen';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
 import EditDraftOrderScreen from './components/EditDraftOrderScreen';
 import ProfileScreen from './components/ProfileScreen';
 import AdminPanel from './components/AdminPanel';
-import AnalyticsPanel from './components/AnalyticsPanel';
-import SalesAnalyticsPanel from './components/SalesAnalyticsPanel';
 import PriceList from './components/PriceList';
 import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
-import SessionCleanupService from './components/SessionCleanupService';
 import { supabase, OrderStatus } from './lib/supabase';
-import { useUserTracking } from './hooks/useUserTracking';
-import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
-  const { session, user, loading, signIn, signOut, savedLocation } = useAuth();
-  const { uiTheme } = useTheme();
+  const { session, user, loading, signIn, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
-  const [previousTab, setPreviousTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
-
-  const handleTabChange = (newTab: typeof activeTab) => {
-    if (newTab !== 'profile') {
-      setPreviousTab(activeTab);
-    }
-    setActiveTab(newTab);
-  };
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [orderRefreshKey, setOrderRefreshKey] = useState(0);
-  const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | 'auto' | null>(null);
+  const [orderMode, setOrderMode] = useState<'voice' | 'manual' | 'copy' | 'pricelist' | null>(null);
   const [templateOrderId, setTemplateOrderId] = useState<string | null>(null);
   const [addingToNotebookOrderId, setAddingToNotebookOrderId] = useState<string | null>(null);
   const [ordersListFilter, setOrdersListFilter] = useState<OrderStatus | 'all' | null>(null);
-  const [aiPreloaded, setAiPreloaded] = useState(false);
-  const [analystView, setAnalystView] = useState<'behavior' | 'sales'>('behavior');
-
-  // Initialize user tracking
-  useUserTracking(
-    user?.id || null,
-    editingOrderId ? 'edit-draft' :
-    selectedOrderId ? 'order-details' :
-    activeTab === 'new-order' && orderMode ? orderMode :
-    activeTab
-  );
-
-  // Auto-logout with location saving
-  useAutoLogout({
-    timeoutMinutes: 15,
-    enabled: !!(session && user && (user as any).auto_logout_enabled !== false),
-    onBeforeLogout: async () => {
-      console.log('[Auto-Logout] Saving location before logout...');
-      if (user) {
-        await saveUserLocation(user.id, {
-          activeTab,
-          orderMode,
-          selectedOrderId,
-          editingOrderId,
-        });
-      }
-    },
-    onLogout: async () => {
-      console.log('[Auto-Logout] Executing logout...');
-      await signOut();
-    },
-  });
-
-  // Restore saved location after login
-  useEffect(() => {
-    if (savedLocation && !selectedOrderId && !editingOrderId) {
-      console.log('[App] Restoring saved location:', savedLocation);
-
-      if (savedLocation.activeTab) {
-        setActiveTab(savedLocation.activeTab);
-      }
-
-      if (savedLocation.orderMode) {
-        setOrderMode(savedLocation.orderMode);
-      }
-
-      if (savedLocation.selectedOrderId) {
-        setSelectedOrderId(savedLocation.selectedOrderId);
-      }
-
-      if (savedLocation.editingOrderId) {
-        setEditingOrderId(savedLocation.editingOrderId);
-      }
-    }
-  }, [savedLocation]);
-
-  // Save location periodically while user is active
-  useEffect(() => {
-    if (!user) return;
-
-    const saveInterval = setInterval(() => {
-      saveUserLocation(user.id, {
-        activeTab,
-        orderMode,
-        selectedOrderId,
-        editingOrderId,
-      });
-    }, 30000); // Save every 30 seconds
-
-    return () => clearInterval(saveInterval);
-  }, [user, activeTab, orderMode, selectedOrderId, editingOrderId]);
-
-  useEffect(() => {
-    if (session && user && !aiPreloaded) {
-      const preloadAI = async () => {
-        try {
-          console.log('[AI Preload] Starting background initialization...');
-
-          if (typeof window === 'undefined') {
-            console.log('[AI Preload] Not in browser environment, skipping');
-            setAiPreloaded(false);
-            return;
-          }
-
-          // Dynamiczny import z obsługą błędów
-          const { embeddingsManager } = await import('./lib/embeddingsManager');
-
-          console.log('[AI Preload] Initializing AI model...');
-          await embeddingsManager.initialize();
-          console.log('[AI Preload] Model loaded successfully');
-
-          // Załaduj produkty
-          console.log('[AI Preload] Loading products...');
-          const { data: products, error: productsError } = await supabase
-            .from('products')
-            .select('id, name, index, base_price')
-            .eq('active', true);
-
-          if (productsError) {
-            console.error('[AI Preload] Failed to load products:', productsError);
-            setAiPreloaded(false);
-            return;
-          }
-
-          if (products && products.length > 0) {
-            console.log('[AI Preload] Generating embeddings for', products.length, 'products...');
-            await embeddingsManager.generateProductEmbeddings(products);
-            console.log('[AI Preload] All embeddings ready!');
-          }
-
-          setAiPreloaded(true);
-          console.log('[AI Preload] ✅ Complete!');
-        } catch (error) {
-          console.error('[AI Preload] ❌ Failed:', error);
-          // Nie blokuj aplikacji - AI jest opcjonalne
-          setAiPreloaded(false);
-        }
-      };
-
-      // Opóźnij inicjalizację, żeby nie blokować UI
-      const timer = setTimeout(() => {
-        preloadAI().catch(err => {
-          console.error('[AI Preload] Unhandled error:', err);
-        });
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [session, user, aiPreloaded]);
 
   const createTestUsers = async () => {
     const testUsers = [
@@ -211,13 +66,6 @@ function AppContent() {
         password: 'test123',
         full_name: 'Marek Nowicki',
         role: 'driver',
-        store_code: null,
-      },
-      {
-        email: 'analyse@sklep.pl',
-        password: 'test123',
-        full_name: 'Analityk Systemu',
-        role: 'analyst',
         store_code: null,
       },
     ];
@@ -338,13 +186,11 @@ function AppContent() {
         onEdit={() => {
           setEditingOrderId(selectedOrderId);
           setSelectedOrderId(null);
-          setOrderRefreshKey(prev => prev + 1);
         }}
         onOrderSent={() => {
           setSelectedOrderId(null);
           setOrdersListFilter('sent');
           setActiveTab('orders');
-          setOrderRefreshKey(prev => prev + 1);
         }}
         onUseAsTemplate={(orderId) => {
           setTemplateOrderId(orderId);
@@ -361,43 +207,6 @@ function AppContent() {
     );
   }
 
-  if (user.role === 'analyst') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">System Analityczny RODEO</h1>
-              <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setAnalystView('behavior')}
-                  className={`px-4 py-2 rounded-lg font-medium transition ${
-                    analystView === 'behavior'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Analiza Użytkowników
-                </button>
-                <button
-                  onClick={() => setAnalystView('sales')}
-                  className={`px-4 py-2 rounded-lg font-medium transition ${
-                    analystView === 'sales'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Analiza Sprzedaży
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        {analystView === 'behavior' ? <AnalyticsPanel /> : <SalesAnalyticsPanel />}
-      </div>
-    );
-  }
-
   if (user.role === 'driver') {
     const getHeaderForTab = () => {
       if (activeTab === 'profile') return { title: 'Profil', subtitle: '' };
@@ -410,17 +219,15 @@ function AppContent() {
         <Header
           title={header.title}
           subtitle={header.subtitle}
-          onProfileClick={() => handleTabChange('profile')}
+          onProfileClick={() => setActiveTab('profile')}
           showProfile={activeTab !== 'profile'}
-          showBack={activeTab === 'profile'}
-          onBackClick={() => setActiveTab(previousTab)}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && <DriverScreen userId={user.id} />}
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={(tab) => {
-          handleTabChange(tab);
+          setActiveTab(tab);
           if (tab === 'orders') {
             setOrdersListFilter(null);
           }
@@ -441,10 +248,8 @@ function AppContent() {
         <Header
           title={header.title}
           subtitle={header.subtitle}
-          onProfileClick={() => handleTabChange('profile')}
+          onProfileClick={() => setActiveTab('profile')}
           showProfile={activeTab !== 'profile'}
-          showBack={activeTab === 'profile'}
-          onBackClick={() => setActiveTab(previousTab)}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && (
@@ -457,7 +262,7 @@ function AppContent() {
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={(tab) => {
-          handleTabChange(tab);
+          setActiveTab(tab);
           if (tab === 'orders') {
             setOrdersListFilter(null);
           }
@@ -489,26 +294,14 @@ function AppContent() {
         <Header
           title={header.title}
           subtitle={header.subtitle}
-          onProfileClick={() => handleTabChange('profile')}
+          onProfileClick={() => setActiveTab('profile')}
           showProfile={activeTab !== 'profile'}
-          showBack={activeTab === 'profile'}
-          onBackClick={() => setActiveTab(previousTab)}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
-          {activeTab === 'home' && (
-            <HomeScreen
-              onNavigate={handleTabChange}
-              onVoiceOrder={() => {
-                handleTabChange('new-order');
-                setOrderMode('voice');
-              }}
-              userRole={user.role}
-            />
-          )}
+          {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
           {activeTab === 'orders' && (
             <div className="p-6">
               <OrdersList
-                key={`orders-list-${orderRefreshKey}`}
                 userRole={user.role}
                 onSelectOrder={setSelectedOrderId}
                 initialFilter={ordersListFilter || undefined}
@@ -522,7 +315,7 @@ function AppContent() {
                 onBackToOrder={addingToNotebookOrderId ? () => {
                   setSelectedOrderId(addingToNotebookOrderId);
                   setAddingToNotebookOrderId(null);
-                  handleTabChange('orders');
+                  setActiveTab('orders');
                 } : undefined}
               />
             </div>
@@ -530,7 +323,7 @@ function AppContent() {
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={(tab) => {
-          handleTabChange(tab);
+          setActiveTab(tab);
           if (tab !== 'prices') {
             setAddingToNotebookOrderId(null);
           }
@@ -565,28 +358,14 @@ function AppContent() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-gray-50">
-      {/* Background service: automatically closes inactive sessions every 5 minutes */}
-      <SessionCleanupService />
-
       <Header
         title={header.title}
         subtitle={header.subtitle}
-        onProfileClick={() => handleTabChange('profile')}
+        onProfileClick={() => setActiveTab('profile')}
         showProfile={activeTab !== 'profile'}
-        showBack={activeTab === 'profile'}
-        onBackClick={() => setActiveTab(previousTab)}
       />
       <div className="flex-1 overflow-y-auto pt-20 pb-16">
-        {activeTab === 'home' && (
-          <HomeScreen
-            onNavigate={handleTabChange}
-            onVoiceOrder={() => {
-              handleTabChange('new-order');
-              setOrderMode('voice');
-            }}
-            userRole={user.role}
-          />
-        )}
+        {activeTab === 'home' && <HomeScreen onNavigate={setActiveTab} userRole={user.role} />}
 
         {activeTab === 'admin' && user.role === 'admin' && (
           <AdminPanel
@@ -712,25 +491,6 @@ function AppContent() {
                     </div>
                   </button>
                 )}
-
-                <button
-                  onClick={() => setOrderMode('auto')}
-                  className={`w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg shadow-lg hover:shadow-xl transition text-left ${
-                    (user as any).order_mode_layout === 'grid' ? 'p-4' : 'p-3'
-                  }`}
-                >
-                  <div className={`flex gap-3 ${
-                    (user as any).order_mode_layout === 'grid' ? 'flex-col items-center text-center' : 'items-center'
-                  }`}>
-                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">✨</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-base">Auto zamówienie</h3>
-                      <p className="text-xs opacity-90">Wygenerowane na podstawie historii</p>
-                    </div>
-                  </div>
-                </button>
               </div>
               </>
             )}
@@ -752,8 +512,6 @@ function AppContent() {
                 userId={user.id}
                 onOrderSent={() => {
                   setOrderMode(null);
-                  setOrderRefreshKey(prev => prev + 1);
-                  setOrdersListFilter('draft');
                   setActiveTab('orders');
                 }}
                 onCancel={() => setOrderMode(null)}
@@ -767,8 +525,6 @@ function AppContent() {
                   userId={user.id}
                   onOrderSaved={() => {
                     setOrderMode(null);
-                    setOrderRefreshKey(prev => prev + 1);
-                    setOrdersListFilter('draft');
                     setActiveTab('orders');
                   }}
                   onCancel={() => {
@@ -782,8 +538,6 @@ function AppContent() {
                   userId={user.id}
                   onOrderSent={() => {
                     setOrderMode(null);
-                    setOrderRefreshKey(prev => prev + 1);
-                    setOrdersListFilter('draft');
                     setActiveTab('orders');
                   }}
                   onCancel={() => {
@@ -801,8 +555,6 @@ function AppContent() {
                 onOrderSent={() => {
                   setOrderMode(null);
                   setTemplateOrderId(null);
-                  setOrderRefreshKey(prev => prev + 1);
-                  setOrdersListFilter('draft');
                   setActiveTab('orders');
                 }}
                 onCancel={() => {
@@ -812,27 +564,12 @@ function AppContent() {
                 preselectedOrderId={templateOrderId || undefined}
               />
             )}
-
-            {orderMode === 'auto' && (
-              <AutoOrderScreen
-                storeId={user.store_id}
-                userId={user.id}
-                onOrderSent={() => {
-                  setOrderMode(null);
-                  setOrderRefreshKey(prev => prev + 1);
-                  setOrdersListFilter('draft');
-                  setActiveTab('orders');
-                }}
-                onCancel={() => setOrderMode(null)}
-              />
-            )}
           </>
         )}
 
         {activeTab === 'orders' && (
           <div className="p-6">
             <OrdersList
-              key={`orders-list-${orderRefreshKey}`}
               storeId={user.store_id}
               userRole={user.role}
               onSelectOrder={setSelectedOrderId}
@@ -849,7 +586,7 @@ function AppContent() {
               onBackToOrder={addingToNotebookOrderId ? () => {
                 setSelectedOrderId(addingToNotebookOrderId);
                 setAddingToNotebookOrderId(null);
-                handleTabChange('orders');
+                setActiveTab('orders');
               } : undefined}
             />
           </div>
@@ -859,14 +596,14 @@ function AppContent() {
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={(tab) => {
-        handleTabChange(tab);
+        setActiveTab(tab);
         if (tab !== 'prices') {
           setAddingToNotebookOrderId(null);
         }
         if (tab === 'orders') {
           setOrdersListFilter(null);
         }
-      }} userRole={user.role} />
+      }} />
     </div>
   );
 }
@@ -875,9 +612,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <FontSizeProvider>
-          <AppContent />
-        </FontSizeProvider>
+        <AppContent />
       </ThemeProvider>
     </AuthProvider>
   );
