@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Tag, Mic } from 'lucide-react';
+import { Mic } from 'lucide-react';
+import { useActiveBanners } from '../hooks/useActiveBanners';
+import OccasionBanner from './OccasionBanner';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
@@ -8,80 +10,40 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const { currentBanner, trackInteraction } = useActiveBanners();
+  const [dismissedBannerId, setDismissedBannerId] = useState<string | null>(null);
 
+  // Track banner view when it appears
   useEffect(() => {
-    const promoShown = sessionStorage.getItem('promo_alert_shown');
-    if (!promoShown) {
-      setShowPromoAlert(true);
-      sessionStorage.setItem('promo_alert_shown', 'true');
+    if (currentBanner && currentBanner.id !== dismissedBannerId) {
+      trackInteraction(currentBanner.id, 'view');
     }
-  }, []);
+  }, [currentBanner?.id]);
+
+  const handleBannerDismiss = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'dismiss');
+      setDismissedBannerId(currentBanner.id);
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'click');
+      onNavigate?.('prices');
+    }
+  };
 
   return (
     <div className="bg-gray-50">
       <div className="p-6 space-y-6">
-        {showPromoAlert && (
-          <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl shadow-lg p-6 relative animate-pulse">
-            <button
-              onClick={() => setShowPromoAlert(false)}
-              className="absolute top-4 right-4 text-white hover:text-gray-200 text-2xl font-bold"
-            >
-              ×
-            </button>
-            <div className="flex items-start gap-4">
-              <Tag className="w-8 h-8 flex-shrink-0 mt-1" />
-              <div className="w-full">
-                <h3 className="font-bold text-xl mb-3">Nowe promocje w cenniku!</h3>
-
-                <div className="space-y-3 mb-4">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🔥</span>
-                      <span className="font-bold">PROMOCJA -15%</span>
-                    </div>
-                    <div className="space-y-1 text-sm pl-7">
-                      <div className="flex justify-between items-center">
-                        <span>Kurczak</span>
-                        <span className="font-bold">8.49 / 1kg</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Boczek świeży</span>
-                        <span className="font-bold">24.57 / 1kg</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🎁</span>
-                      <span className="font-bold">PROMOCJA 10+1 GRATIS</span>
-                    </div>
-                    <div className="space-y-1 text-sm pl-7">
-                      <div className="flex justify-between items-center">
-                        <span>Karkówka extra Rytel</span>
-                        <span className="font-bold">18.49 / 1kg</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Polędwiczki wp vac</span>
-                        <span className="font-bold">23.90 / 1kg</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setShowPromoAlert(false);
-                    onNavigate?.('prices');
-                  }}
-                  className="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition w-full text-base"
-                >
-                  Zobacz promocje w cenniku
-                </button>
-              </div>
-            </div>
-          </div>
+        {/* Dynamic Occasion Banner */}
+        {currentBanner && currentBanner.id !== dismissedBannerId && (
+          <OccasionBanner
+            banner={currentBanner}
+            onDismiss={handleBannerDismiss}
+            onClick={handleBannerClick}
+          />
         )}
 
         <div className="bg-white rounded-xl shadow-lg p-6">

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Package, Users, ShoppingBag, DollarSign, Settings, UserCog, Brain } from 'lucide-react';
+import { Package, Users, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresManager from './StoresManager';
-import PriceList from './PriceList';
 import ProductManager from './ProductManager';
 import SystemSettings from './SystemSettings';
 import UsersManager from './UsersManager';
 import AILearningPanel from './AILearningPanel';
+import BannersManager from './BannersManager';
 import { supabase } from '../lib/supabase';
 
 interface AdminPanelProps {
@@ -17,7 +17,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'users' | 'ai' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'users' | 'ai' | 'banners' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -115,6 +115,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             AI
           </button>
           <button
+            onClick={() => setActiveTab('banners')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'banners'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Tag className="w-5 h-5" />
+            Banery
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'settings'
@@ -142,6 +153,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'users' && <UsersManager />}
 
         {activeTab === 'ai' && storeId && <AILearningPanel storeId={storeId} />}
+
+        {activeTab === 'banners' && <BannersManager />}
 
         {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>

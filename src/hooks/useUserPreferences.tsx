@@ -65,7 +65,13 @@ export function useUserPreferences(userId: string | undefined, fields?: (keyof U
           }
         } else if (data) {
           // Merge fetched data with defaults to handle any missing fields
-          setPreferences({ ...DEFAULT_PREFERENCES, ...data });
+          const mergedData: Partial<UserPreferences> = { ...DEFAULT_PREFERENCES };
+          Object.keys(data).forEach(key => {
+            if (key in DEFAULT_PREFERENCES) {
+              mergedData[key as keyof UserPreferences] = data[key];
+            }
+          });
+          setPreferences(mergedData);
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
@@ -95,19 +101,19 @@ export async function getUserPreference<K extends keyof UserPreferences>(
   try {
     const { data, error } = await supabase
       .from('users')
-      .select(field)
+      .select(field as string)
       .eq('id', userId)
       .maybeSingle();
 
     if (error) {
       // Return default on error (likely column doesn't exist)
       if (error.code === '42703' || error.message.includes('column')) {
-        console.warn(`[UserPreferences] Column '${field}' not found, using default`);
+        console.warn(`[UserPreferences] Column '${String(field)}' not found, using default`);
       }
       return DEFAULT_PREFERENCES[field];
     }
 
-    return data?.[field] ?? DEFAULT_PREFERENCES[field];
+    return (data as any)?.[field] ?? DEFAULT_PREFERENCES[field];
   } catch (err) {
     console.error('[UserPreferences] Error:', err);
     return DEFAULT_PREFERENCES[field];
