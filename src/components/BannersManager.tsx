@@ -1,3 +1,21 @@
+/**
+ * BannersManager - Zarządzanie banerami okolicznościowymi
+ *
+ * Pozwala administratorom tworzyć i zarządzać banerami wyświetlanymi w aplikacji
+ * w zależności od okazji (święta, promocje, wydarzenia specjalne).
+ *
+ * Funkcjonalności:
+ * - Tworzenie banerów z tytułem, treścią i okresem wyświetlania
+ * - Przypisywanie do typów okazji (Boże Narodzenie, Wielkanoc, etc.)
+ * - Ustawianie priorytetu wyświetlania
+ * - Włączanie/wyłączanie banerów
+ * - Edycja i usuwanie banerów
+ *
+ * Tabele bazy danych:
+ * - occasion_banners - definicje banerów z harmonogramem
+ * - occasion_types - typy okazji (święta, promocje, etc.)
+ */
+
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Eye, EyeOff, Calendar } from 'lucide-react';
 import { supabase } from '../lib/supabase';

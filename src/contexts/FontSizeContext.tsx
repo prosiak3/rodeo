@@ -1,3 +1,22 @@
+/**
+ * FontSizeContext - Zarządzanie rozmiarem czcionki w aplikacji
+ *
+ * Kontekst globalny do zarządzania preferencjami rozmiaru czcionki użytkownika.
+ * Rozmiar czcionki jest zapisywany w bazie danych i synchronizowany między sesjami.
+ *
+ * Dostępne rozmiary:
+ * - small: 14px (skala 0.875)
+ * - medium: 16px (skala 1.0) - domyślny
+ * - large: 18px (skala 1.125)
+ * - extra-large: 20px (skala 1.25)
+ *
+ * Zastosowanie:
+ * - Automatyczne ładowanie preferencji użytkownika przy logowaniu
+ * - Dynamiczna zmiana rozmiaru czcionki w całej aplikacji
+ * - Zapisywanie zmian w tabeli users (pole font_size_preference)
+ * - Aplikacja skali CSS za pomocą CSS custom property --font-scale
+ */
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase, FontSize } from '../lib/supabase';
 import { useAuth } from './AuthContext';

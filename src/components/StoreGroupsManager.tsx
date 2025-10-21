@@ -1,3 +1,21 @@
+/**
+ * StoreGroupsManager - Zarządzanie grupami sklepów
+ *
+ * Umożliwia tworzenie i zarządzanie grupami sklepów (regionalne, tematyczne).
+ * Sklepy mogą należeć do wielu grup jednocześnie.
+ *
+ * Funkcjonalności:
+ * - Tworzenie nowych grup z nazwą, opisem i kolorem
+ * - Edycja istniejących grup
+ * - Przypisywanie/usuwanie sklepów do/z grup
+ * - Aktywacja/dezaktywacja grup
+ * - Wyszukiwanie grup
+ *
+ * Tabele bazy danych:
+ * - store_groups - definicje grup
+ * - store_group_assignments - przypisania sklepów do grup
+ */
+
 import { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Trash2, Save, X, Search, Store, CheckSquare, Square } from 'lucide-react';
 import { supabase } from '../lib/supabase';

@@ -1,10 +1,11 @@
-# RODEO - Manifest Backupu v1.2
+# RODEO - Manifest Backupu v1.3
 
-**Data utworzenia:** 2025-10-20 10:57:51
-**Plik archiwum:** `rodeo-backup-20251020-105751.tar.gz`
-**Rozmiar skompresowany:** 292 KB
+**Data utworzenia:** 2025-10-21 21:55:11
+**Plik archiwum:** `rodeo_backup_20251021_215511.tar.gz`
+**Rozmiar skompresowany:** 96 MB
 **Rozmiar nieskompresowany:** ~364 MB
 **Liczba plików:** 14,134
+**Commit źródłowy:** `68f46f048f1d920d84c7e4ee39a9fa349df7b02a` (GitHub)
 
 ---
 
@@ -21,18 +22,21 @@
 ### Struktura bazy danych
 
 #### Główne tabele
-1. `users` - użytkownicy z rolami (user, admin, driver, analyst)
-2. `stores` - sklepy z lokalizacjami GPS
-3. `products` - produkty z jednostkami i cenami
-4. `orders` - zamówienia ze statusami
-5. `order_items` - pozycje zamówień
-6. `price_lists` - cenniki dla sklepów
-7. `special_prices` - ceny specjalne i promocje
-8. `tags` - tagi produktów
-9. `user_sessions` - sesje użytkowników z trackingiem
-10. `session_paths` - ścieżki nawigacji w sesjach
-11. `user_session_gaps` - przerwy między sesjami
-12. `order_history` - historia zmian zamówień
+1. `users` - użytkownicy z rolami (user, admin, driver, analyst) + preferencje UI
+2. `stores` - sklepy z lokalizacjami GPS i współrzędnymi na mapie
+3. `store_groups` - grupy sklepów (regionalne, typowe)
+4. `store_group_assignments` - przypisania sklepów do grup
+5. `products` - produkty z jednostkami i cenami
+6. `orders` - zamówienia ze statusami
+7. `order_items` - pozycje zamówień
+8. `price_lists` - cenniki dla sklepów
+9. `special_prices` - ceny specjalne i promocje
+10. `tags` - tagi produktów
+11. `user_sessions` - sesje użytkowników z trackingiem
+12. `session_paths` - ścieżki nawigacji w sesjach
+13. `user_session_gaps` - przerwy między sesjami
+14. `order_history` - historia zmian zamówień
+15. `occasion_banners` - banery okolicznościowe z harmonogramem
 
 #### Tabele AI i uczenia maszynowego
 13. `voice_learning_corrections` - korekty rozpoznawania głosowego (per-user + global)
@@ -65,7 +69,19 @@
 
 ---
 
-## Nowe funkcje w wersji 1.2
+## Nowe funkcje w wersji 1.3
+
+### Zmiany od wersji 1.2:
+1. **Grupy sklepów** - system grupowania sklepów regionalnie lub tematycznie
+2. **Mapa sklepów z koordynatami** - wizualizacja 124 sklepów na mapie Polski północno-wschodniej
+3. **Menedżer banerów okolicznościowych** - system wyświetlania banerów świątecznych z harmonogramem
+4. **Rozbudowane preferencje użytkownika** - font size, UI theme, layout preferences
+5. **Uprawnienia zarządzania produktami** - szczegółowe RLS dla admin i user
+6. **Poprawki bezpieczeństwa RLS** - security definer functions dla złożonych zapytań
+
+---
+
+## Funkcje z wersji 1.2
 
 ### 1. System uczenia się AI
 **Lokalizacja kodu:**

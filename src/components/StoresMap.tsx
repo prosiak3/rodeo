@@ -1,3 +1,22 @@
+/**
+ * StoresMap - Mapa sklepów z wizualizacją lokalizacji
+ *
+ * Wyświetla 124 sklepy na interaktywnej mapie Polski północno-wschodniej
+ * z wykorzystaniem biblioteki Leaflet i OpenStreetMap.
+ *
+ * Funkcjonalności:
+ * - Wizualizacja sklepów jako markery na mapie
+ * - Automatyczne centrowanie na wybranym sklepie
+ * - Popupy z informacjami o sklepie (nazwa, adres)
+ * - Różne kolory markerów (niebieski - normalny, pomarańczowy - wybrany)
+ * - Inteligentne dopasowanie widoku do granic wszystkich sklepów
+ *
+ * Wykorzystuje:
+ * - react-leaflet - komponenty React dla Leaflet
+ * - leaflet - biblioteka map
+ * - OpenStreetMap - darmowe kafelki map
+ */
+
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';

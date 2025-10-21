@@ -671,40 +671,53 @@ Główny komponent cennika z następującymi funkcjami:
 
 Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do automatyzacji procesu zamawiania towarów i zarządzania dostawami.
 
-## Najważniejsze Zmiany (Ostatnia Aktualizacja)
+## Najważniejsze Zmiany (Ostatnia Aktualizacja - v1.3)
 
-1. **Usunięto kody kreskowe:**
-   - Z wyświetlania w cenniku (grafika + tekst)
-   - Z wyszukiwania w ManualOrderScreen
-   - Pozostawiono indeksy produktów do wyszukiwania
+### Nowe funkcje od poprzedniej wersji:
 
-2. **Dodano mechanizm Swipe-to-Add:**
-   - Przesunięcie produktu w prawo w cenniku
-   - Automatyczne dodawanie do zamówienia "notatnik"
-   - Produkty znikają po dodaniu (animacja)
-   - Ilość = 0, do uzupełnienia później
+1. **System grup sklepów:**
+   - Możliwość tworzenia grup sklepów (regionalne, tematyczne)
+   - Przypisywanie sklepów do wielu grup jednocześnie
+   - Zarządzanie przez StoreGroupsManager.tsx
+   - Tabele: store_groups, store_group_assignments
 
-3. **Nowy status zamówienia "notatnik":**
-   - Dodany do bazy danych (constraint)
-   - Dodany do TypeScript types
-   - Dodany do OrdersList z ikoną i kolorem
-   - Możliwość filtrowania zamówień notatnik
-   - Możliwość usuwania zamówień notatnik
+2. **Mapa sklepów:**
+   - 124 realne sklepy w Polsce północno-wschodniej z koordynatami GPS
+   - Wizualizacja na mapie Leaflet (StoresMap.tsx)
+   - Możliwość filtrowania według grup
+   - Marker clustering dla lepszej czytelności
 
-4. **Uproszczenie cennika:**
-   - Usunięto filtry kategorii
-   - Usunięto filtry tagów
-   - Wyszukiwanie tylko po nazwie i indeksie
-   - Czysty, minimalistyczny interfejs
+3. **System banerów okolicznościowych:**
+   - Tabela occasion_banners z harmonogramem wyświetlania
+   - BannersManager.tsx do zarządzania banerami
+   - OccasionBanner.tsx do wyświetlania banerów w aplikacji
+   - Obsługa różnych okazji (święta, promocje, wydarzenia)
 
-5. **Zmieniony przepływ zamawiania głosowego:**
-   - Po dyktowaniu zamówienie zapisywane jako szkic (draft), nie wysyłane
-   - Automatyczne przekierowanie do ekranu edycji szkicu (EditDraftOrderScreen)
-   - Użytkownik może dalej edytować zamówienie przed wysłaniem
-   - Przycisk "Zapisz jako szkic" zamiast "Przejdź do potwierdzenia"
-   - Usunięty stage 'summary' (zbędny w nowym przepływie)
+4. **Rozbudowane preferencje użytkownika:**
+   - font_size - rozmiar czcionki (small, medium, large)
+   - ui_theme - motyw interfejsu (7 motywów do wyboru)
+   - show_sort_buttons - widoczność przycisków sortowania
+   - order_details_status_expanded - domyślny stan rozwinięcia statusów
+   - notebook_button_labels - widoczność etykiet przycisków w notatniku
+   - show_delete_icons - widoczność ikon usuwania
+   - price_list_layout - układ cennika
 
-6. **Poprawka filtrowania po wysłaniu zamówienia:**
-   - Po wysłaniu zamówienia filtr automatycznie przełącza się na "Wysłane"
-   - Poprawiony typ stanu ordersListFilter w App.tsx
-   - Dodany useEffect w OrdersList reagujący na zmiany initialFilter
+5. **Uprawnienia zarządzania produktami:**
+   - Szczegółowe polityki RLS dla tabeli products
+   - Admin może wszystko (CRUD)
+   - User może tylko czytać produkty
+   - Security definer functions dla złożonych zapytań
+
+6. **Poprawki bezpieczeństwa RLS:**
+   - Użycie SECURITY DEFINER dla funkcji get_user_role()
+   - Zapobieganie nieskończonej rekursji w politykach
+   - Poprawne sprawdzanie uprawnień użytkowników
+
+### Poprzednie zmiany (v1.2):
+
+1. **Usunięto kody kreskowe** - pozostawiono indeksy produktów
+2. **Mechanizm Swipe-to-Add** - dodawanie produktów przez gest
+3. **Status "notatnik"** - lista produktów bez ilości
+4. **Uproszczenie cennika** - usunięto filtry kategorii i tagów
+5. **Zmieniony przepływ głosowy** - zapisywanie jako szkic, nie wysyłanie
+6. **Auto-filtrowanie** - po wysłaniu przełączanie na "Wysłane"
