@@ -53,6 +53,14 @@ function AppContent() {
     return window.location.hash === '#styles-demo';
   });
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
+  const [previousTab, setPreviousTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
+
+  const handleTabChange = (newTab: typeof activeTab) => {
+    if (newTab !== 'profile') {
+      setPreviousTab(activeTab);
+    }
+    setActiveTab(newTab);
+  };
 
   const getHomeScreenComponent = () => {
     if (uiTheme && THEME_COMPONENTS[uiTheme]) {
@@ -444,15 +452,17 @@ function AppContent() {
         <Header
           title={header.title}
           subtitle={header.subtitle}
-          onProfileClick={() => setActiveTab('profile')}
+          onProfileClick={() => handleTabChange('profile')}
           showProfile={activeTab !== 'profile'}
+          showBack={activeTab === 'profile'}
+          onBackClick={() => setActiveTab(previousTab)}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && <DriverScreen userId={user.id} />}
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={(tab) => {
-          setActiveTab(tab);
+          handleTabChange(tab);
           if (tab === 'orders') {
             setOrdersListFilter(null);
           }
@@ -473,8 +483,10 @@ function AppContent() {
         <Header
           title={header.title}
           subtitle={header.subtitle}
-          onProfileClick={() => setActiveTab('profile')}
+          onProfileClick={() => handleTabChange('profile')}
           showProfile={activeTab !== 'profile'}
+          showBack={activeTab === 'profile'}
+          onBackClick={() => setActiveTab(previousTab)}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && (
@@ -487,7 +499,7 @@ function AppContent() {
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={(tab) => {
-          setActiveTab(tab);
+          handleTabChange(tab);
           if (tab === 'orders') {
             setOrdersListFilter(null);
           }
@@ -519,17 +531,19 @@ function AppContent() {
         <Header
           title={header.title}
           subtitle={header.subtitle}
-          onProfileClick={() => setActiveTab('profile')}
+          onProfileClick={() => handleTabChange('profile')}
           showProfile={activeTab !== 'profile'}
+          showBack={activeTab === 'profile'}
+          onBackClick={() => setActiveTab(previousTab)}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && (() => {
             const HomeScreenComponent = getHomeScreenComponent();
             return (
               <HomeScreenComponent
-                onNavigate={setActiveTab}
+                onNavigate={handleTabChange}
                 onVoiceOrder={() => {
-                  setActiveTab('new-order');
+                  handleTabChange('new-order');
                   setOrderMode('voice');
                 }}
                 userRole={user.role}
@@ -553,7 +567,7 @@ function AppContent() {
                 onBackToOrder={addingToNotebookOrderId ? () => {
                   setSelectedOrderId(addingToNotebookOrderId);
                   setAddingToNotebookOrderId(null);
-                  setActiveTab('orders');
+                  handleTabChange('orders');
                 } : undefined}
               />
             </div>
@@ -561,7 +575,7 @@ function AppContent() {
           {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
         </div>
         <BottomNav activeTab={activeTab} onTabChange={(tab) => {
-          setActiveTab(tab);
+          handleTabChange(tab);
           if (tab !== 'prices') {
             setAddingToNotebookOrderId(null);
           }
@@ -602,17 +616,19 @@ function AppContent() {
       <Header
         title={header.title}
         subtitle={header.subtitle}
-        onProfileClick={() => setActiveTab('profile')}
+        onProfileClick={() => handleTabChange('profile')}
         showProfile={activeTab !== 'profile'}
+        showBack={activeTab === 'profile'}
+        onBackClick={() => setActiveTab(previousTab)}
       />
       <div className="flex-1 overflow-y-auto pt-20 pb-16">
         {activeTab === 'home' && (() => {
           const HomeScreenComponent = getHomeScreenComponent();
           return (
             <HomeScreenComponent
-              onNavigate={setActiveTab}
+              onNavigate={handleTabChange}
               onVoiceOrder={() => {
-                setActiveTab('new-order');
+                handleTabChange('new-order');
                 setOrderMode('voice');
               }}
               userRole={user.role}
@@ -881,7 +897,7 @@ function AppContent() {
               onBackToOrder={addingToNotebookOrderId ? () => {
                 setSelectedOrderId(addingToNotebookOrderId);
                 setAddingToNotebookOrderId(null);
-                setActiveTab('orders');
+                handleTabChange('orders');
               } : undefined}
             />
           </div>
@@ -891,7 +907,7 @@ function AppContent() {
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={(tab) => {
-        setActiveTab(tab);
+        handleTabChange(tab);
         if (tab !== 'prices') {
           setAddingToNotebookOrderId(null);
         }
