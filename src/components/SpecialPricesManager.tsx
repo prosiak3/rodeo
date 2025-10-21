@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, Store, Search, Save, X, Percent, Tag as TagIcon, CheckSquare, Square, Trash2 } from 'lucide-react';
+import { DollarSign, Store, Search, Save, X, Percent, Tag as TagIcon, CheckSquare, Square, Trash2, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Store {
@@ -7,6 +7,15 @@ interface Store {
   name: string;
   code: string;
   active: boolean;
+}
+
+interface StoreGroup {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string;
+  active: boolean;
+  store_count?: number;
 }
 
 interface Product {
@@ -20,7 +29,8 @@ interface Product {
 
 interface SpecialPrice {
   id?: string;
-  store_id: string;
+  store_id: string | null;
+  store_group_id: string | null;
   product_id: string;
   your_price: number | null;
   promo_price: number | null;
@@ -31,8 +41,11 @@ interface SpecialPrice {
 
 export default function SpecialPricesManager() {
   const [stores, setStores] = useState<Store[]>([]);
+  const [groups, setGroups] = useState<StoreGroup[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [assignmentType, setAssignmentType] = useState<'store' | 'group'>('store');
   const [selectedStore, setSelectedStore] = useState<string>('');
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [prices, setPrices] = useState<Record<string, SpecialPrice>>({});
@@ -51,14 +64,17 @@ export default function SpecialPricesManager() {
 
   useEffect(() => {
     loadStores();
+    loadGroups();
     loadProducts();
   }, []);
 
   useEffect(() => {
-    if (selectedStore) {
+    if (assignmentType === 'store' && selectedStore) {
       loadPricesForStore(selectedStore);
+    } else if (assignmentType === 'group' && selectedGroup) {
+      loadPricesForGroup(selectedGroup);
     }
-  }, [selectedStore]);
+  }, [selectedStore, selectedGroup, assignmentType]);
 
   const loadStores = async () => {
     try {
@@ -66,15 +82,45 @@ export default function SpecialPricesManager() {
         .from('stores')
         .select('id, name, code, active')
         .eq('active', true)
-        .order('name', { ascending: true });
+        .order('name', { ascending: true});
 
       if (error) throw error;
       setStores(data || []);
-      if (data && data.length > 0) {
+      if (data && data.length > 0 && !selectedStore) {
         setSelectedStore(data[0].id);
       }
     } catch (error) {
       console.error('Error loading stores:', error);
+    }
+  };
+
+  const loadGroups = async () => {
+    try {
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('store_groups')
+        .select('*')
+        .eq('active', true)
+        .order('name', { ascending: true });
+
+      if (groupsError) throw groupsError;
+
+      const groupsWithCounts = await Promise.all(
+        (groupsData || []).map(async (group) => {
+          const { count } = await supabase
+            .from('store_group_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('group_id', group.id);
+
+          return {
+            ...group,
+            store_count: count || 0,
+          };
+        })
+      );
+
+      setGroups(groupsWithCounts);
+    } catch (error) {
+      console.error('Error loading groups:', error);
     }
   };
 
@@ -101,7 +147,28 @@ export default function SpecialPricesManager() {
       const { data, error } = await supabase
         .from('special_prices')
         .select('*')
-        .eq('store_id', storeId);
+        .eq('store_id', storeId)
+        .is('store_group_id', null);
+
+      if (error) throw error;
+
+      const pricesMap: Record<string, SpecialPrice> = {};
+      (data || []).forEach((price: any) => {
+        pricesMap[price.product_id] = price;
+      });
+      setPrices(pricesMap);
+    } catch (error) {
+      console.error('Error loading prices:', error);
+    }
+  };
+
+  const loadPricesForGroup = async (groupId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('special_prices')
+        .select('*')
+        .eq('store_group_id', groupId)
+        .is('store_id', null);
 
       if (error) throw error;
 
@@ -124,7 +191,8 @@ export default function SpecialPricesManager() {
   };
 
   const savePrice = async (productId: string) => {
-    if (!selectedStore) return;
+    if (assignmentType === 'store' && !selectedStore) return;
+    if (assignmentType === 'group' && !selectedGroup) return;
 
     try {
       const priceData = prices[productId];
@@ -145,24 +213,37 @@ export default function SpecialPricesManager() {
         if (error) throw error;
       } else if (priceData) {
         // Insert new price
+        const insertData: any = {
+          product_id: productId,
+          your_price: priceData.your_price,
+          promo_price: priceData.promo_price,
+          promo_10_plus_1: priceData.promo_10_plus_1,
+          valid_from: priceData.valid_from || new Date().toISOString(),
+          valid_to: priceData.valid_to,
+        };
+
+        if (assignmentType === 'store') {
+          insertData.store_id = selectedStore;
+          insertData.store_group_id = null;
+        } else {
+          insertData.store_id = null;
+          insertData.store_group_id = selectedGroup;
+        }
+
         const { error } = await supabase
           .from('special_prices')
-          .insert({
-            store_id: selectedStore,
-            product_id: productId,
-            your_price: priceData.your_price,
-            promo_price: priceData.promo_price,
-            promo_10_plus_1: priceData.promo_10_plus_1,
-            valid_from: priceData.valid_from || new Date().toISOString(),
-            valid_to: priceData.valid_to,
-          });
+          .insert(insertData);
 
         if (error) throw error;
       }
 
       alert('Cena zapisana pomyślnie!');
       setEditingProduct(null);
-      loadPricesForStore(selectedStore);
+      if (assignmentType === 'store') {
+        loadPricesForStore(selectedStore);
+      } else {
+        loadPricesForGroup(selectedGroup);
+      }
     } catch (error) {
       console.error('Error saving price:', error);
       alert('Błąd podczas zapisywania ceny');
@@ -174,7 +255,8 @@ export default function SpecialPricesManager() {
       ...prev,
       [productId]: {
         ...prev[productId],
-        store_id: selectedStore,
+        store_id: assignmentType === 'store' ? selectedStore : null,
+        store_group_id: assignmentType === 'group' ? selectedGroup : null,
         product_id: productId,
         [field]: value,
       } as SpecialPrice,
@@ -202,7 +284,7 @@ export default function SpecialPricesManager() {
   };
 
   const handleBulkSetPromo = async () => {
-    if (!selectedStore || selectedProducts.size === 0) return;
+    if ((assignmentType === 'store' && !selectedStore) || (assignmentType === 'group' && !selectedGroup) || selectedProducts.size === 0) return;
 
     setBulkOperationLoading(true);
     try {
@@ -225,8 +307,7 @@ export default function SpecialPricesManager() {
 
         promoPrice = Math.round(promoPrice * 100) / 100;
 
-        const priceData = {
-          store_id: selectedStore,
+        const priceData: any = {
           product_id: productId,
           your_price: existingPrice?.your_price || null,
           promo_price: promoPrice,
@@ -234,6 +315,14 @@ export default function SpecialPricesManager() {
           valid_from: bulkPromoConfig.validFrom || new Date().toISOString(),
           valid_to: bulkPromoConfig.validTo || null,
         };
+
+        if (assignmentType === 'store') {
+          priceData.store_id = selectedStore;
+          priceData.store_group_id = null;
+        } else {
+          priceData.store_id = null;
+          priceData.store_group_id = selectedGroup;
+        }
 
         if (existingPrice?.id) {
           updates.push({
@@ -273,7 +362,11 @@ export default function SpecialPricesManager() {
       alert(`Pomyślnie ustawiono promocje dla ${selectedProducts.size} produktów`);
       setShowBulkPromoModal(false);
       setSelectedProducts(new Set());
-      loadPricesForStore(selectedStore);
+      if (assignmentType === 'store') {
+        loadPricesForStore(selectedStore);
+      } else {
+        loadPricesForGroup(selectedGroup);
+      }
     } catch (error) {
       console.error('Error setting bulk promotions:', error);
       alert('Błąd podczas ustawiania promocji');
@@ -283,7 +376,7 @@ export default function SpecialPricesManager() {
   };
 
   const handleBulkCancelPromo = async () => {
-    if (!selectedStore || selectedProducts.size === 0) return;
+    if ((assignmentType === 'store' && !selectedStore) || (assignmentType === 'group' && !selectedGroup) || selectedProducts.size === 0) return;
 
     if (!confirm(`Czy na pewno chcesz anulować promocje dla ${selectedProducts.size} produktów?`)) {
       return;
@@ -327,7 +420,11 @@ export default function SpecialPricesManager() {
 
       alert(`Pomyślnie anulowano promocje dla ${selectedProducts.size} produktów`);
       setSelectedProducts(new Set());
-      loadPricesForStore(selectedStore);
+      if (assignmentType === 'store') {
+        loadPricesForStore(selectedStore);
+      } else {
+        loadPricesForGroup(selectedGroup);
+      }
     } catch (error) {
       console.error('Error canceling bulk promotions:', error);
       alert('Błąd podczas anulowania promocji');
@@ -403,19 +500,78 @@ export default function SpecialPricesManager() {
         <div className="space-y-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Wybierz sklep
+              Przypisz ceny do
             </label>
-            <select
-              value={selectedStore}
-              onChange={(e) => setSelectedStore(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
-            >
-              {stores.map(store => (
-                <option key={store.id} value={store.id}>
-                  {store.name} ({store.code})
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-4 mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={assignmentType === 'store'}
+                  onChange={() => {
+                    setAssignmentType('store');
+                    setPrices({});
+                  }}
+                  className="w-4 h-4 text-amber-600"
+                />
+                <Store className="w-4 h-4" />
+                <span className="text-sm font-medium">Pojedynczy sklep</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={assignmentType === 'group'}
+                  onChange={() => {
+                    setAssignmentType('group');
+                    setPrices({});
+                  }}
+                  className="w-4 h-4 text-amber-600"
+                />
+                <Users className="w-4 h-4" />
+                <span className="text-sm font-medium">Grupa sklepów</span>
+              </label>
+            </div>
+
+            {assignmentType === 'store' ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Wybierz sklep
+                </label>
+                <select
+                  value={selectedStore}
+                  onChange={(e) => setSelectedStore(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                >
+                  {stores.map(store => (
+                    <option key={store.id} value={store.id}>
+                      {store.name} ({store.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Wybierz grupę sklepów
+                </label>
+                <select
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                >
+                  <option value="">-- Wybierz grupę --</option>
+                  {groups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.store_count || 0} {group.store_count === 1 ? 'sklep' : 'sklepów'})
+                    </option>
+                  ))}
+                </select>
+                {selectedGroup && (
+                  <p className="text-xs text-gray-600 mt-2">
+                    Ceny będą automatycznie zastosowane do wszystkich sklepów w tej grupie
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <input
@@ -616,6 +772,7 @@ export default function SpecialPricesManager() {
           <li>• <strong>Cena sklepu</strong> - indywidualna cena negocjowana dla tego sklepu (jeśli nie ustawiona, używana jest cena bazowa)</li>
           <li>• <strong>Cena promocyjna</strong> - najniższa cena, pokazywana z rabatem procentowym</li>
           <li>• <strong>10+1</strong> - przy zamówieniu 10 sztuk, jedenasta gratis</li>
+          <li>• <strong>Grupy sklepów</strong> - ceny można przypisać do całej grupy naraz, co automatycznie zastosuje je do wszystkich sklepów w grupie</li>
         </ul>
       </div>
 

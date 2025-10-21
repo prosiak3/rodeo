@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Package, Users, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent } from 'lucide-react';
+import { Package, Users as UsersIcon, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresManager from './StoresManager';
+import StoreGroupsManager from './StoreGroupsManager';
 import ProductManager from './ProductManager';
 import SystemSettings from './SystemSettings';
 import UsersManager from './UsersManager';
@@ -18,7 +19,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'specialprices' | 'users' | 'ai' | 'banners' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'storegroups' | 'products' | 'pricelists' | 'specialprices' | 'users' | 'ai' | 'banners' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -72,6 +73,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Sklepy
           </button>
           <button
+            onClick={() => setActiveTab('storegroups')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'storegroups'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <UsersIcon className="w-5 h-5" />
+            Grupy sklepów
+          </button>
+          <button
             onClick={() => setActiveTab('products')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'products'
@@ -79,7 +91,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            <Users className="w-5 h-5" />
+            <Package className="w-5 h-5" />
             Produkty
           </button>
           <button
@@ -157,6 +169,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         )}
 
         {activeTab === 'stores' && <StoresManager />}
+
+        {activeTab === 'storegroups' && <StoreGroupsManager />}
 
         {activeTab === 'products' && <ProductManager />}
 
