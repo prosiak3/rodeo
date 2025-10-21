@@ -11,11 +11,13 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
   const { currentBanner, trackInteraction } = useActiveBanners();
-  const [dismissedBannerId, setDismissedBannerId] = useState<string | null>(null);
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [lastViewedBannerId, setLastViewedBannerId] = useState<string | null>(null);
 
-  // Track banner view when it appears
   useEffect(() => {
-    if (currentBanner && currentBanner.id !== dismissedBannerId) {
+    if (currentBanner && currentBanner.id !== lastViewedBannerId) {
+      setIsBannerDismissed(false);
+      setLastViewedBannerId(currentBanner.id);
       trackInteraction(currentBanner.id, 'view');
     }
   }, [currentBanner?.id]);
@@ -23,7 +25,7 @@ export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeS
   const handleBannerDismiss = () => {
     if (currentBanner) {
       trackInteraction(currentBanner.id, 'dismiss');
-      setDismissedBannerId(currentBanner.id);
+      setIsBannerDismissed(true);
     }
   };
 
@@ -37,8 +39,7 @@ export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeS
   return (
     <div className="bg-gray-50">
       <div className="p-6 space-y-6">
-        {/* Dynamic Occasion Banner */}
-        {currentBanner && currentBanner.id !== dismissedBannerId && (
+        {currentBanner && !isBannerDismissed && (
           <OccasionBanner
             banner={currentBanner}
             onDismiss={handleBannerDismiss}

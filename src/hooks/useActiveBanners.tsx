@@ -34,34 +34,21 @@ export interface ActiveBanner {
  * Automatically detects current date, weekends, and recurring events
  */
 export function useActiveBanners() {
-  const [banners, setBanners] = useState<ActiveBanner[]>([]);
+  const [currentBanner, setCurrentBanner] = useState<ActiveBanner | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
   useEffect(() => {
-    loadActiveBanners();
+    loadActiveBanner();
 
-    // Reload banners every 5 minutes to catch new ones
     const interval = setInterval(() => {
-      loadActiveBanners();
+      loadActiveBanner();
     }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Rotate banners every 10 seconds if multiple exist
-  useEffect(() => {
-    if (banners.length <= 1) return;
-
-    const rotationInterval = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
-    }, 10000);
-
-    return () => clearInterval(rotationInterval);
-  }, [banners.length]);
-
-  const loadActiveBanners = async () => {
+  const loadActiveBanner = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -70,20 +57,20 @@ export function useActiveBanners() {
         .rpc('get_active_banners', { check_date: new Date().toISOString() });
 
       if (queryError) {
-        // If function doesn't exist, silently fail
         if (queryError.code === 'PGRST202' || queryError.code === '42883') {
-          setBanners([]);
+          setCurrentBanner(null);
           return;
         }
         throw queryError;
       }
 
-      setBanners(data || []);
+      const banners = data || [];
+      setCurrentBanner(banners.length > 0 ? banners[0] : null);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       console.error('[Banners] Failed to load:', message);
       setError(message);
-      setBanners([]);
+      setCurrentBanner(null);
     } finally {
       setLoading(false);
     }
@@ -102,19 +89,15 @@ export function useActiveBanners() {
         timestamp: new Date().toISOString(),
       });
     } catch (err) {
-      // Silently fail - tracking is optional
       console.warn('[Banners] Failed to track interaction:', err);
     }
   };
 
-  const currentBanner = banners.length > 0 ? banners[currentBannerIndex] : null;
-
   return {
-    banners,
     currentBanner,
     loading,
     error,
     trackInteraction,
-    refresh: loadActiveBanners,
+    refresh: loadActiveBanner,
   };
 }
