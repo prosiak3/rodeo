@@ -77,13 +77,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log('Logout button clicked');
+
       if (user?.id) {
-        await supabase.rpc('close_user_sessions', { p_user_id: user.id });
+        try {
+          // Try to close user sessions, but don't fail if the function doesn't exist
+          const { error } = await supabase.rpc('close_user_sessions', { p_user_id: user.id });
+
+          if (error) {
+            // Only log if it's not a "function not found" error
+            if (error.code !== 'PGRST202' && error.code !== '42883') {
+              console.warn('Failed to close sessions:', error.message);
+            }
+          }
+        } catch (err) {
+          // Silently ignore session cleanup errors - logout should still work
+        }
       }
 
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);
+      } else {
+        console.log('Logout successful');
       }
     } catch (err) {
       console.error('Sign out exception:', err);

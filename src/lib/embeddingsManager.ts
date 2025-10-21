@@ -48,13 +48,18 @@ class EmbeddingsManager {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      await supabase.from('ai_metrics').insert({
+      const { error } = await supabase.from('ai_metrics').insert({
         ...metric,
         user_id: user?.id || null,
         created_at: new Date().toISOString()
       });
+
+      // Silently ignore permission errors - metrics are nice to have but not critical
+      if (error && error.code !== 'PGRST301' && error.code !== '42501') {
+        console.warn('[AI] Metrics tracking unavailable:', error.message);
+      }
     } catch (error) {
-      console.error('[AI] Failed to track metric:', error);
+      // Silently fail - metrics tracking should never break the main functionality
     }
   }
 

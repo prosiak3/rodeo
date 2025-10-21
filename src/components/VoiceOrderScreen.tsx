@@ -105,14 +105,28 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   const [showDeleteIcons, setShowDeleteIcons] = useState(false);
 
   const loadUserPreferences = async () => {
-    const { data } = await supabase
-      .from('users')
-      .select('show_delete_icons')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('show_delete_icons')
+        .eq('id', userId)
+        .maybeSingle();
 
-    if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
-      setShowDeleteIcons(data.show_delete_icons);
+      // Handle missing column or other errors gracefully
+      if (error) {
+        if (error.code === '42703' || error.message?.includes('column')) {
+          // Column doesn't exist, use default
+          setShowDeleteIcons(false);
+        }
+        return;
+      }
+
+      if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
+        setShowDeleteIcons(data.show_delete_icons);
+      }
+    } catch (err) {
+      // Silently fail and use default
+      setShowDeleteIcons(false);
     }
   };
 

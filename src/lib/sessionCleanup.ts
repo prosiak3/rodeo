@@ -9,11 +9,15 @@ export async function closeInactiveSessions(): Promise<{ success: boolean; error
     const { error } = await supabase.rpc('close_inactive_sessions');
 
     if (error) {
+      // Silently ignore "function not found" errors - this means the database migration hasn't been applied yet
+      if (error.code === 'PGRST202' || error.code === '42883') {
+        return { success: false, error: 'Function not available (migration pending)' };
+      }
+
       console.error('[Session Cleanup] Failed to close inactive sessions:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('[Session Cleanup] Successfully closed inactive sessions');
     return { success: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
@@ -62,6 +66,11 @@ export async function closeUserSessions(userId: string): Promise<{ success: bool
     const { error } = await supabase.rpc('close_user_sessions', { p_user_id: userId });
 
     if (error) {
+      // Silently ignore "function not found" errors
+      if (error.code === 'PGRST202' || error.code === '42883') {
+        return { success: false, error: 'Function not available (migration pending)' };
+      }
+
       console.error('[Session Cleanup] Failed to close user sessions:', error);
       return { success: false, error: error.message };
     }

@@ -47,25 +47,39 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
   const loadUserPreferences = async () => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('users')
         .select('order_details_status_expanded, show_notebook_button_labels, show_delete_icons')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
+
+      // Handle missing columns gracefully
+      if (error) {
+        if (error.code === '42703' || error.message?.includes('column')) {
+          // Columns don't exist, use defaults
+          setStatusExpanded(true);
+          setShowButtonLabels(true);
+          setShowDeleteIcons(false);
+        }
+        return;
+      }
 
       if (data) {
-        if (data.order_details_status_expanded !== null) {
+        if (data.order_details_status_expanded !== null && data.order_details_status_expanded !== undefined) {
           setStatusExpanded(data.order_details_status_expanded);
         }
-        if (data.show_notebook_button_labels !== null) {
+        if (data.show_notebook_button_labels !== null && data.show_notebook_button_labels !== undefined) {
           setShowButtonLabels(data.show_notebook_button_labels);
         }
-        if (data.show_delete_icons !== null) {
+        if (data.show_delete_icons !== null && data.show_delete_icons !== undefined) {
           setShowDeleteIcons(data.show_delete_icons);
         }
       }
     } catch (error) {
-      console.error('Error loading user preferences:', error);
+      // Silently fail and use defaults
+      setStatusExpanded(true);
+      setShowButtonLabels(true);
+      setShowDeleteIcons(false);
     }
   };
 
