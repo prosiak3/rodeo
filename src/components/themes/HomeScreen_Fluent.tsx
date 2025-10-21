@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Tag, Mic, Package, FileText, Sparkles, ChevronRight } from 'lucide-react';
+import { Mic, Package, FileText, Sparkles, ChevronRight } from 'lucide-react';
+import { useActiveBanners } from '../../hooks/useActiveBanners';
+import OccasionBanner from '../OccasionBanner';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
@@ -8,15 +10,31 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen_Fluent({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const { currentBanner, trackInteraction } = useActiveBanners();
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [lastViewedBannerId, setLastViewedBannerId] = useState<string | null>(null);
 
   useEffect(() => {
-    const promoShown = sessionStorage.getItem('promo_alert_fluent_shown');
-    if (!promoShown) {
-      setShowPromoAlert(true);
-      sessionStorage.setItem('promo_alert_fluent_shown', 'true');
+    if (currentBanner && currentBanner.id !== lastViewedBannerId) {
+      setIsBannerDismissed(false);
+      setLastViewedBannerId(currentBanner.id);
+      trackInteraction(currentBanner.id, 'view');
     }
-  }, []);
+  }, [currentBanner?.id]);
+
+  const handleBannerDismiss = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'dismiss');
+      setIsBannerDismissed(true);
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'click');
+      onNavigate?.('prices');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
@@ -42,77 +60,12 @@ export default function HomeScreen_Fluent({ onNavigate, onVoiceOrder, userRole }
           </div>
         </div>
 
-        {showPromoAlert && (
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-orange-500 rounded-3xl"></div>
-            <div className="absolute inset-0 bg-white/20 backdrop-blur-2xl rounded-3xl"></div>
-            <div className="relative p-6 text-white">
-              <button
-                onClick={() => setShowPromoAlert(false)}
-                className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 backdrop-blur-lg rounded-full flex items-center justify-center text-xl font-bold border border-white/30 transition"
-              >
-                ×
-              </button>
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center flex-shrink-0 border border-white/30 shadow-xl">
-                  <Tag className="w-7 h-7" />
-                </div>
-                <div className="w-full">
-                  <h3 className="font-bold text-2xl mb-4 flex items-center gap-2">
-                    Nowe promocje w cenniku!
-                    <Sparkles className="w-6 h-6" />
-                  </h3>
-
-                  <div className="space-y-3 mb-4">
-                    <div className="bg-white/15 backdrop-blur-xl rounded-2xl p-4 border border-white/30 shadow-lg">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">🔥</span>
-                        <span className="font-bold text-lg">PROMOCJA -15%</span>
-                      </div>
-                      <div className="space-y-2 pl-8">
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/90">Kurczak</span>
-                          <span className="font-bold">8.49 zł / 1kg</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/90">Boczek świeży</span>
-                          <span className="font-bold">24.57 zł / 1kg</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white/15 backdrop-blur-xl rounded-2xl p-4 border border-white/30 shadow-lg">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">🎁</span>
-                        <span className="font-bold text-lg">PROMOCJA 10+1 GRATIS</span>
-                      </div>
-                      <div className="space-y-2 pl-8">
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/90">Karkówka extra Rytel</span>
-                          <span className="font-bold">18.49 zł / 1kg</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/90">Polędwiczki wp vac</span>
-                          <span className="font-bold">23.90 zł / 1kg</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setShowPromoAlert(false);
-                      onNavigate?.('prices');
-                    }}
-                    className="w-full bg-white/30 hover:bg-white/40 backdrop-blur-xl border border-white/40 px-6 py-4 rounded-2xl font-semibold transition shadow-lg flex items-center justify-center gap-2"
-                  >
-                    Zobacz wszystkie promocje
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {currentBanner && !isBannerDismissed && (
+          <OccasionBanner
+            banner={currentBanner}
+            onDismiss={handleBannerDismiss}
+            onClick={handleBannerClick}
+          />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

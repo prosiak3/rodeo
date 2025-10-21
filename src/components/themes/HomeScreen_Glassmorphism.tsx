@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Tag, Mic, ShoppingCart, FileText, Sparkles } from 'lucide-react';
+import { Mic, ShoppingCart, FileText, Sparkles } from 'lucide-react';
+import { useActiveBanners } from '../../hooks/useActiveBanners';
+import OccasionBanner from '../OccasionBanner';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
@@ -8,15 +10,31 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen_Glassmorphism({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const { currentBanner, trackInteraction } = useActiveBanners();
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [lastViewedBannerId, setLastViewedBannerId] = useState<string | null>(null);
 
   useEffect(() => {
-    const promoShown = sessionStorage.getItem('promo_alert_glassmorphism_shown');
-    if (!promoShown) {
-      setShowPromoAlert(true);
-      sessionStorage.setItem('promo_alert_glassmorphism_shown', 'true');
+    if (currentBanner && currentBanner.id !== lastViewedBannerId) {
+      setIsBannerDismissed(false);
+      setLastViewedBannerId(currentBanner.id);
+      trackInteraction(currentBanner.id, 'view');
     }
-  }, []);
+  }, [currentBanner?.id]);
+
+  const handleBannerDismiss = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'dismiss');
+      setIsBannerDismissed(true);
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'click');
+      onNavigate?.('prices');
+    }
+  };
 
   return (
     <div
@@ -49,74 +67,12 @@ export default function HomeScreen_Glassmorphism({ onNavigate, onVoiceOrder, use
           </div>
         </div>
 
-        {showPromoAlert && (
-          <div
-            className="backdrop-blur-xl bg-gradient-to-br from-red-500/30 to-orange-500/30 rounded-3xl p-6 border border-white/30 shadow-2xl relative"
-            style={{
-              boxShadow: '0 8px 32px 0 rgba(255, 107, 107, 0.4)',
-            }}
-          >
-            <button
-              onClick={() => setShowPromoAlert(false)}
-              className="absolute top-4 right-4 text-white hover:text-white/70 text-2xl font-bold backdrop-blur-sm bg-white/10 w-8 h-8 rounded-full flex items-center justify-center"
-            >
-              ×
-            </button>
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-lg flex items-center justify-center flex-shrink-0">
-                <Tag className="w-6 h-6 text-white" />
-              </div>
-              <div className="w-full">
-                <h3 className="font-bold text-2xl mb-4 text-white drop-shadow-lg">Nowe promocje!</h3>
-
-                <div className="space-y-3 mb-4">
-                  <div className="backdrop-blur-lg bg-white/15 rounded-2xl p-4 border border-white/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-2xl">🔥</span>
-                      <span className="font-bold text-white text-lg">PROMOCJA -15%</span>
-                    </div>
-                    <div className="space-y-2 text-white/90 pl-8">
-                      <div className="flex justify-between items-center">
-                        <span>Kurczak</span>
-                        <span className="font-bold">8.49 / 1kg</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Boczek świeży</span>
-                        <span className="font-bold">24.57 / 1kg</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="backdrop-blur-lg bg-white/15 rounded-2xl p-4 border border-white/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-2xl">🎁</span>
-                      <span className="font-bold text-white text-lg">10+1 GRATIS</span>
-                    </div>
-                    <div className="space-y-2 text-white/90 pl-8">
-                      <div className="flex justify-between items-center">
-                        <span>Karkówka extra</span>
-                        <span className="font-bold">18.49 / 1kg</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Polędwiczki wp vac</span>
-                        <span className="font-bold">23.90 / 1kg</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setShowPromoAlert(false);
-                    onNavigate?.('prices');
-                  }}
-                  className="backdrop-blur-xl bg-white/30 hover:bg-white/40 border border-white/40 text-white px-6 py-4 rounded-2xl font-semibold transition w-full text-base shadow-lg"
-                >
-                  Zobacz wszystkie promocje
-                </button>
-              </div>
-            </div>
-          </div>
+        {currentBanner && !isBannerDismissed && (
+          <OccasionBanner
+            banner={currentBanner}
+            onDismiss={handleBannerDismiss}
+            onClick={handleBannerClick}
+          />
         )}
 
         <div

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Tag, Mic, ShoppingBag, Sparkles, Heart, Zap } from 'lucide-react';
+import { Mic, ShoppingBag, Sparkles, Heart, Zap } from 'lucide-react';
+import { useActiveBanners } from '../../hooks/useActiveBanners';
+import OccasionBanner from '../OccasionBanner';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
@@ -8,15 +10,31 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen_Colorful({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const { currentBanner, trackInteraction } = useActiveBanners();
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [lastViewedBannerId, setLastViewedBannerId] = useState<string | null>(null);
 
   useEffect(() => {
-    const promoShown = sessionStorage.getItem('promo_alert_colorful_shown');
-    if (!promoShown) {
-      setShowPromoAlert(true);
-      sessionStorage.setItem('promo_alert_colorful_shown', 'true');
+    if (currentBanner && currentBanner.id !== lastViewedBannerId) {
+      setIsBannerDismissed(false);
+      setLastViewedBannerId(currentBanner.id);
+      trackInteraction(currentBanner.id, 'view');
     }
-  }, []);
+  }, [currentBanner?.id]);
+
+  const handleBannerDismiss = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'dismiss');
+      setIsBannerDismissed(true);
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'click');
+      onNavigate?.('prices');
+    }
+  };
 
   return (
     <div
@@ -45,73 +63,12 @@ export default function HomeScreen_Colorful({ onNavigate, onVoiceOrder, userRole
           </div>
         </div>
 
-        {showPromoAlert && (
-          <div className="bg-gradient-to-br from-yellow-400 via-red-400 to-pink-500 rounded-3xl p-6 shadow-2xl relative animate-bounce">
-            <button
-              onClick={() => setShowPromoAlert(false)}
-              className="absolute -top-2 -right-2 bg-white text-red-500 hover:text-red-700 w-10 h-10 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg"
-            >
-              ×
-            </button>
-            <div className="bg-white/90 backdrop-blur rounded-2xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <Tag className="w-7 h-7 text-white" />
-                </div>
-                <div className="w-full">
-                  <h3 className="font-black text-2xl mb-4 bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">
-                    🎉 Super Promocje!
-                  </h3>
-
-                  <div className="space-y-3 mb-4">
-                    <div className="bg-gradient-to-r from-red-100 to-orange-100 rounded-2xl p-4 border-2 border-red-300">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">🔥</span>
-                        <span className="font-black text-red-600 text-lg">MEGA RABAT -15%</span>
-                      </div>
-                      <div className="space-y-2 text-gray-800 font-semibold pl-8">
-                        <div className="flex justify-between items-center">
-                          <span>Kurczak</span>
-                          <span className="text-red-600 font-black">8.49 zł</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span>Boczek świeży</span>
-                          <span className="text-red-600 font-black">24.57 zł</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-4 border-2 border-purple-300">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">🎁</span>
-                        <span className="font-black text-purple-600 text-lg">GRATIS 10+1!</span>
-                      </div>
-                      <div className="space-y-2 text-gray-800 font-semibold pl-8">
-                        <div className="flex justify-between items-center">
-                          <span>Karkówka extra</span>
-                          <span className="text-purple-600 font-black">18.49 zł</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span>Polędwiczki wp vac</span>
-                          <span className="text-purple-600 font-black">23.90 zł</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setShowPromoAlert(false);
-                      onNavigate?.('prices');
-                    }}
-                    className="bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 hover:from-yellow-500 hover:via-pink-600 hover:to-purple-600 text-white px-6 py-4 rounded-2xl font-black transition w-full text-base shadow-lg transform hover:scale-105"
-                  >
-                    🎯 Zobacz wszystkie promocje!
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {currentBanner && !isBannerDismissed && (
+          <OccasionBanner
+            banner={currentBanner}
+            onDismiss={handleBannerDismiss}
+            onClick={handleBannerClick}
+          />
         )}
 
         <div className="space-y-4">

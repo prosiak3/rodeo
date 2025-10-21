@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, Mic, Package, FileText } from 'lucide-react';
+import { useActiveBanners } from '../../hooks/useActiveBanners';
+import OccasionBanner from '../OccasionBanner';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
@@ -8,15 +10,31 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen_Minimalist({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const { currentBanner, trackInteraction } = useActiveBanners();
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [lastViewedBannerId, setLastViewedBannerId] = useState<string | null>(null);
 
   useEffect(() => {
-    const promoShown = sessionStorage.getItem('promo_alert_minimalist_shown');
-    if (!promoShown) {
-      setShowPromoAlert(true);
-      sessionStorage.setItem('promo_alert_minimalist_shown', 'true');
+    if (currentBanner && currentBanner.id !== lastViewedBannerId) {
+      setIsBannerDismissed(false);
+      setLastViewedBannerId(currentBanner.id);
+      trackInteraction(currentBanner.id, 'view');
     }
-  }, []);
+  }, [currentBanner?.id]);
+
+  const handleBannerDismiss = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'dismiss');
+      setIsBannerDismissed(true);
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'click');
+      onNavigate?.('prices');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -26,57 +44,12 @@ export default function HomeScreen_Minimalist({ onNavigate, onVoiceOrder, userRo
           <p className="text-gray-500 text-sm tracking-wide uppercase">System Zamówień</p>
         </header>
 
-        {showPromoAlert && (
-          <div className="border-l-4 border-black pl-6 py-4 relative">
-            <button
-              onClick={() => setShowPromoAlert(false)}
-              className="absolute -top-2 -right-2 text-gray-400 hover:text-gray-600 text-xl"
-            >
-              ×
-            </button>
-            <h3 className="text-xl font-medium text-gray-900 mb-4">Aktywne promocje</h3>
-
-            <div className="space-y-4 text-sm">
-              <div>
-                <div className="font-medium text-gray-900 mb-2">Rabat 15%</div>
-                <div className="space-y-1 text-gray-600 pl-4">
-                  <div className="flex justify-between">
-                    <span>Kurczak</span>
-                    <span className="font-medium text-gray-900">8.49 zł</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Boczek świeży</span>
-                    <span className="font-medium text-gray-900">24.57 zł</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-100 pt-4">
-                <div className="font-medium text-gray-900 mb-2">Promocja 10+1</div>
-                <div className="space-y-1 text-gray-600 pl-4">
-                  <div className="flex justify-between">
-                    <span>Karkówka extra</span>
-                    <span className="font-medium text-gray-900">18.49 zł</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Polędwiczki</span>
-                    <span className="font-medium text-gray-900">23.90 zł</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setShowPromoAlert(false);
-                onNavigate?.('prices');
-              }}
-              className="mt-6 text-sm text-gray-900 border-b border-gray-900 hover:text-gray-600 hover:border-gray-600 transition inline-flex items-center gap-1"
-            >
-              Zobacz cennik
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+        {currentBanner && !isBannerDismissed && (
+          <OccasionBanner
+            banner={currentBanner}
+            onDismiss={handleBannerDismiss}
+            onClick={handleBannerClick}
+          />
         )}
 
         <section>

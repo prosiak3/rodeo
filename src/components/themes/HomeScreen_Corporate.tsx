@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Tag, Mic, Briefcase, FileText, TrendingUp, Shield } from 'lucide-react';
+import { Mic, Briefcase, FileText, TrendingUp, Shield } from 'lucide-react';
+import { useActiveBanners } from '../../hooks/useActiveBanners';
+import OccasionBanner from '../OccasionBanner';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
@@ -8,15 +10,31 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen_Corporate({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const { currentBanner, trackInteraction } = useActiveBanners();
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [lastViewedBannerId, setLastViewedBannerId] = useState<string | null>(null);
 
   useEffect(() => {
-    const promoShown = sessionStorage.getItem('promo_alert_corporate_shown');
-    if (!promoShown) {
-      setShowPromoAlert(true);
-      sessionStorage.setItem('promo_alert_corporate_shown', 'true');
+    if (currentBanner && currentBanner.id !== lastViewedBannerId) {
+      setIsBannerDismissed(false);
+      setLastViewedBannerId(currentBanner.id);
+      trackInteraction(currentBanner.id, 'view');
     }
-  }, []);
+  }, [currentBanner?.id]);
+
+  const handleBannerDismiss = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'dismiss');
+      setIsBannerDismissed(true);
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'click');
+      onNavigate?.('prices');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -39,67 +57,12 @@ export default function HomeScreen_Corporate({ onNavigate, onVoiceOrder, userRol
           </div>
         </div>
 
-        {showPromoAlert && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Tag className="w-6 h-6 text-white" />
-                <h3 className="font-bold text-white text-lg">Current Promotions</h3>
-              </div>
-              <button
-                onClick={() => setShowPromoAlert(false)}
-                className="text-white hover:text-white/80 text-xl font-bold w-8 h-8 flex items-center justify-center"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Special Offer</span>
-                  <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">-15%</span>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-700 font-medium">Kurczak</span>
-                    <span className="font-bold text-slate-900">8.49 PLN / kg</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-700 font-medium">Boczek świeży</span>
-                    <span className="font-bold text-slate-900">24.57 PLN / kg</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border border-slate-200 rounded-xl p-4 bg-slate-50">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Volume Discount</span>
-                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">10+1 Free</span>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-700 font-medium">Karkówka extra Rytel</span>
-                    <span className="font-bold text-slate-900">18.49 PLN / kg</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-700 font-medium">Polędwiczki wp vac</span>
-                    <span className="font-bold text-slate-900">23.90 PLN / kg</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  setShowPromoAlert(false);
-                  onNavigate?.('prices');
-                }}
-                className="w-full bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg"
-              >
-                View Full Price List
-              </button>
-            </div>
-          </div>
+        {currentBanner && !isBannerDismissed && (
+          <OccasionBanner
+            banner={currentBanner}
+            onDismiss={handleBannerDismiss}
+            onClick={handleBannerClick}
+          />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

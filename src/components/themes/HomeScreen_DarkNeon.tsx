@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Tag, Mic, Database, Code, Zap, Terminal } from 'lucide-react';
+import { Mic, Database, Code, Zap, Terminal } from 'lucide-react';
+import { useActiveBanners } from '../../hooks/useActiveBanners';
+import OccasionBanner from '../OccasionBanner';
 
 interface HomeScreenProps {
   onNavigate?: (tab: 'new-order' | 'orders' | 'admin' | 'prices') => void;
@@ -8,15 +10,31 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen_DarkNeon({ onNavigate, onVoiceOrder, userRole }: HomeScreenProps) {
-  const [showPromoAlert, setShowPromoAlert] = useState(false);
+  const { currentBanner, trackInteraction } = useActiveBanners();
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const [lastViewedBannerId, setLastViewedBannerId] = useState<string | null>(null);
 
   useEffect(() => {
-    const promoShown = sessionStorage.getItem('promo_alert_darkneon_shown');
-    if (!promoShown) {
-      setShowPromoAlert(true);
-      sessionStorage.setItem('promo_alert_darkneon_shown', 'true');
+    if (currentBanner && currentBanner.id !== lastViewedBannerId) {
+      setIsBannerDismissed(false);
+      setLastViewedBannerId(currentBanner.id);
+      trackInteraction(currentBanner.id, 'view');
     }
-  }, []);
+  }, [currentBanner?.id]);
+
+  const handleBannerDismiss = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'dismiss');
+      setIsBannerDismissed(true);
+    }
+  };
+
+  const handleBannerClick = () => {
+    if (currentBanner) {
+      trackInteraction(currentBanner.id, 'click');
+      onNavigate?.('prices');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden">
@@ -42,75 +60,12 @@ export default function HomeScreen_DarkNeon({ onNavigate, onVoiceOrder, userRole
           </div>
         </div>
 
-        {showPromoAlert && (
-          <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-pink-500/30 shadow-2xl shadow-pink-500/20 relative">
-            <button
-              onClick={() => setShowPromoAlert(false)}
-              className="absolute -top-2 -right-2 bg-slate-800 border border-pink-500/50 text-pink-400 hover:text-pink-300 w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold shadow-lg shadow-pink-500/20"
-            >
-              ×
-            </button>
-            <div className="flex items-start gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-pink-500/50">
-                <Tag className="w-7 h-7 text-white" />
-              </div>
-              <div className="w-full">
-                <h3 className="font-black text-2xl mb-4 bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent">
-                  {'// ACTIVE_PROMOTIONS'}
-                </h3>
-
-                <div className="space-y-3 mb-4 font-mono">
-                  <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-red-500/30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-red-400 font-bold">{'{'}</span>
-                      <span className="text-cyan-400">discount:</span>
-                      <span className="text-pink-400 font-bold">-15%</span>
-                      <span className="text-red-400 font-bold">{'}'}</span>
-                    </div>
-                    <div className="space-y-2 text-sm pl-4">
-                      <div className="flex justify-between items-center text-slate-300">
-                        <span><span className="text-purple-400">&quot;</span>Kurczak<span className="text-purple-400">&quot;</span></span>
-                        <span className="text-cyan-400 font-bold">8.49</span>
-                      </div>
-                      <div className="flex justify-between items-center text-slate-300">
-                        <span><span className="text-purple-400">&quot;</span>Boczek świeży<span className="text-purple-400">&quot;</span></span>
-                        <span className="text-cyan-400 font-bold">24.57</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-purple-500/30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-purple-400 font-bold">{'{'}</span>
-                      <span className="text-cyan-400">promo:</span>
-                      <span className="text-pink-400 font-bold">&quot;10+1&quot;</span>
-                      <span className="text-purple-400 font-bold">{'}'}</span>
-                    </div>
-                    <div className="space-y-2 text-sm pl-4">
-                      <div className="flex justify-between items-center text-slate-300">
-                        <span><span className="text-purple-400">&quot;</span>Karkówka<span className="text-purple-400">&quot;</span></span>
-                        <span className="text-cyan-400 font-bold">18.49</span>
-                      </div>
-                      <div className="flex justify-between items-center text-slate-300">
-                        <span><span className="text-purple-400">&quot;</span>Polędwiczki<span className="text-purple-400">&quot;</span></span>
-                        <span className="text-cyan-400 font-bold">23.90</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setShowPromoAlert(false);
-                    onNavigate?.('prices');
-                  }}
-                  className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white px-6 py-4 rounded-xl font-bold transition w-full text-base shadow-lg shadow-purple-500/30 border border-cyan-400/30"
-                >
-                  {'> VIEW_ALL_PROMOTIONS()'}
-                </button>
-              </div>
-            </div>
-          </div>
+        {currentBanner && !isBannerDismissed && (
+          <OccasionBanner
+            banner={currentBanner}
+            onDismiss={handleBannerDismiss}
+            onClick={handleBannerClick}
+          />
         )}
 
         <div className="space-y-3">
