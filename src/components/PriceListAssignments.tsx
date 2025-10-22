@@ -30,7 +30,7 @@ interface Assignment {
   store_name: string | null;
   store_group_id: string | null;
   store_group_name: string | null;
-  priority: 'admin' | 'warehouse' | 'salesperson';
+  priority: 'admin' | 'warehouse';
   assigned_by: string;
   created_at: string;
 }
@@ -48,7 +48,7 @@ export default function PriceListAssignments() {
     target_type: 'store' as 'store' | 'group',
     store_id: '',
     store_group_id: '',
-    priority: 'warehouse' as 'admin' | 'warehouse' | 'salesperson',
+    priority: 'warehouse' as 'admin' | 'warehouse',
   });
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
 
@@ -208,7 +208,6 @@ export default function PriceListAssignments() {
     switch (priority) {
       case 'admin': return 'Administrator';
       case 'warehouse': return 'Hurtownia';
-      case 'salesperson': return 'Handlowiec';
       default: return priority;
     }
   };
@@ -217,7 +216,6 @@ export default function PriceListAssignments() {
     switch (priority) {
       case 'admin': return 'bg-purple-100 text-purple-700';
       case 'warehouse': return 'bg-blue-100 text-blue-700';
-      case 'salesperson': return 'bg-green-100 text-green-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -225,7 +223,6 @@ export default function PriceListAssignments() {
   const canManagePriority = (priority: string) => {
     if (user?.role === 'admin') return true;
     if (user?.role === 'warehouse' && priority !== 'admin') return true;
-    if (user?.role === 'salesperson' && priority === 'salesperson') return true;
     return false;
   };
 
@@ -263,8 +260,7 @@ export default function PriceListAssignments() {
             <p className="font-semibold mb-2">Priorytety cenników:</p>
             <ol className="list-decimal list-inside space-y-1 ml-2">
               <li><strong>Administrator</strong> - najwyższy priorytet, może nadpisywać wszystkie inne cenniki</li>
-              <li><strong>Hurtownia</strong> - średni priorytet, może nadpisywać cenniki handlowców</li>
-              <li><strong>Handlowiec</strong> - podstawowy priorytet</li>
+              <li><strong>Hurtownia</strong> - standardowy priorytet</li>
             </ol>
             <p className="mt-3">
               <strong>Zasada nadpisywania:</strong> Indywidualne przypisanie do sklepu zawsze ma pierwszeństwo przed przypisaniem grupowym.
@@ -324,7 +320,6 @@ export default function PriceListAssignments() {
                     {(user?.role === 'admin' || user?.role === 'warehouse') && (
                       <option value="warehouse">Hurtownia</option>
                     )}
-                    <option value="salesperson">Handlowiec</option>
                   </select>
                 </div>
 

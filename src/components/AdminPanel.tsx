@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent } from 'lucide-react';
+import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresAndGroupsManager from './StoresAndGroupsManager';
@@ -9,6 +9,7 @@ import UsersManager from './UsersManager';
 import AILearningPanel from './AILearningPanel';
 import BannersManager from './BannersManager';
 import SpecialPricesManager from './SpecialPricesManager';
+import SalespersonAssignments from './SalespersonAssignments';
 import { supabase } from '../lib/supabase';
 
 interface AdminPanelProps {
@@ -18,7 +19,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'specialprices' | 'users' | 'ai' | 'banners' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'specialprices' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -36,15 +37,32 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
     loadStoreId();
   }, [userId]);
 
+  const getTabTitle = () => {
+    switch (activeTab) {
+      case 'orders': return 'Zamówienia';
+      case 'stores': return 'Sklepy i grupy';
+      case 'products': return 'Produkty';
+      case 'pricelists': return 'Cenniki';
+      case 'specialprices': return 'Ceny specjalne';
+      case 'users': return 'Użytkownicy';
+      case 'salesperson_assignments': return 'Przypisania handlowców';
+      case 'ai': return 'Panel AI';
+      case 'banners': return 'Banery';
+      case 'settings': return 'Ustawienia';
+      default: return 'Panel Administracyjny';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3">
           <span className="text-4xl">🐃</span>
-          <h2 className="text-xl font-bold">Panel Administracyjny</h2>
+          <div>
+            <h2 className="text-xl font-bold">{getTabTitle()}</h2>
+            <p className="text-amber-100 text-sm">Zarządzanie systemem RODEO</p>
+          </div>
         </div>
-        <p className="text-white font-semibold">Weź byka za rogi</p>
-        <p className="text-amber-100 mt-1 text-sm">Zarządzanie systemem RODEO</p>
       </div>
 
       <div className="border-b border-gray-200 bg-white">
@@ -116,6 +134,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Użytkownicy
           </button>
           <button
+            onClick={() => setActiveTab('salesperson_assignments')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'salesperson_assignments'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <UserCheck className="w-5 h-5" />
+            Handlowcy
+          </button>
+          <button
             onClick={() => setActiveTab('ai')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'ai'
@@ -167,6 +196,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'specialprices' && <SpecialPricesManager />}
 
         {activeTab === 'users' && <UsersManager />}
+
+        {activeTab === 'salesperson_assignments' && <SalespersonAssignments />}
 
         {activeTab === 'ai' && storeId && <AILearningPanel storeId={storeId} />}
 
