@@ -37,34 +37,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
     loadStoreId();
   }, [userId]);
 
-  const getTabTitle = () => {
-    switch (activeTab) {
-      case 'orders': return 'Zamówienia';
-      case 'stores': return 'Sklepy';
-      case 'products': return 'Produkty';
-      case 'pricelists': return 'Cenniki';
-      case 'specialprices': return 'Promo';
-      case 'users': return 'Użytkownicy';
-      case 'salesperson_assignments': return 'Przypisania handlowców';
-      case 'ai': return 'Panel AI';
-      case 'banners': return 'Banery';
-      case 'settings': return 'Ustawienia';
-      default: return 'Panel Administracyjny';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">🐃</span>
-          <div>
-            <h2 className="text-xl font-bold">{getTabTitle()}</h2>
-            <p className="text-amber-100 text-sm">Zarządzanie systemem RODEO</p>
-          </div>
-        </div>
-      </div>
-
       <div className="border-b border-gray-200 bg-white">
         <div className="flex overflow-x-auto">
           <button
