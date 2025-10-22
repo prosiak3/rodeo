@@ -156,6 +156,32 @@ export default function PriceListManager() {
     );
   }
 
+  if (showHistory && historyPriceListId) {
+    return (
+      <div className="space-y-6">
+        <button
+          onClick={() => {
+            setShowHistory(false);
+            setHistoryPriceListId(null);
+            setHistoryPriceListName('');
+          }}
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition"
+        >
+          ← Powrót do cenników
+        </button>
+        <PriceListHistory
+          priceListId={historyPriceListId}
+          priceListName={historyPriceListName}
+          onClose={() => {
+            setShowHistory(false);
+            setHistoryPriceListId(null);
+            setHistoryPriceListName('');
+          }}
+        />
+      </div>
+    );
+  }
+
   if (showAssignments) {
     return (
       <div className="space-y-6">
@@ -397,17 +423,6 @@ export default function PriceListManager() {
         </ul>
       </div>
 
-      {showHistory && historyPriceListId && (
-        <PriceListHistory
-          priceListId={historyPriceListId}
-          priceListName={historyPriceListName}
-          onClose={() => {
-            setShowHistory(false);
-            setHistoryPriceListId(null);
-            setHistoryPriceListName('');
-          }}
-        />
-      )}
     </div>
   );
 }

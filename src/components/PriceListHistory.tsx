@@ -220,34 +220,25 @@ export default function PriceListHistory({ priceListId, priceListName, onClose }
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl shadow-2xl p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Wczytywanie historii...</p>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <Clock className="w-6 h-6 text-amber-600" />
-            <div>
-              <h3 className="text-xl font-bold text-gray-800">Historia cennika</h3>
-              <p className="text-sm text-gray-600">{priceListName}</p>
-            </div>
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex items-center gap-3">
+          <Clock className="w-6 h-6 text-amber-600" />
+          <div>
+            <h3 className="text-xl font-bold text-gray-800">Historia cennika</h3>
+            <p className="text-sm text-gray-600">{priceListName}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
+      </div>
 
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('changes')}
@@ -284,7 +275,7 @@ export default function PriceListHistory({ priceListId, priceListName, onClose }
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="p-6">
           {activeTab === 'changes' && (
             <div className="space-y-3">
               {changes.length === 0 ? (
@@ -521,15 +512,6 @@ export default function PriceListHistory({ priceListId, priceListName, onClose }
               )}
             </div>
           )}
-        </div>
-
-        <div className="p-6 border-t border-gray-200 bg-gray-50">
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
-          >
-            Zamknij
-          </button>
         </div>
       </div>
     </div>
