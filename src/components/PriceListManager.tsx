@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, XCircle, Calendar } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, XCircle, Calendar, Link2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import PriceListAssignments from './PriceListAssignments';
 
 interface PriceList {
   id: string;
@@ -17,6 +18,7 @@ export default function PriceListManager() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showAssignments, setShowAssignments] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -139,6 +141,20 @@ export default function PriceListManager() {
     );
   }
 
+  if (showAssignments) {
+    return (
+      <div className="space-y-6">
+        <button
+          onClick={() => setShowAssignments(false)}
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition"
+        >
+          ← Powrót do cenników
+        </button>
+        <PriceListAssignments />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -148,17 +164,26 @@ export default function PriceListManager() {
             Aktywny może być tylko jeden cennik jednocześnie
           </p>
         </div>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditingId(null);
-            setFormData({ name: '', description: '', valid_from: new Date().toISOString().split('T')[0], valid_to: '' });
-          }}
-          className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Nowy cennik
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAssignments(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            <Link2 className="w-5 h-5" />
+            Przypisania cenników
+          </button>
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditingId(null);
+              setFormData({ name: '', description: '', valid_from: new Date().toISOString().split('T')[0], valid_to: '' });
+            }}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Nowy cennik
+          </button>
+        </div>
       </div>
 
       {showForm && (
