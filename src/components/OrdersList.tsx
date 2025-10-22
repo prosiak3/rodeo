@@ -28,7 +28,7 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>(
-    initialFilter || (showLimitedFilters ? 'notatnik' : 'draft')
+    initialFilter || (showLimitedFilters ? 'notatnik' : (userRole === 'admin' || userRole === 'warehouse' ? 'all' : 'draft'))
   );
   const [sortAscending, setSortAscending] = useState(false);
   const [initialFilterSet, setInitialFilterSet] = useState(false);
