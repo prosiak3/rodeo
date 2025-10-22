@@ -6,12 +6,13 @@
  */
 
 import { useState } from 'react';
-import { ShoppingBag, Users } from 'lucide-react';
+import { ShoppingBag, Users, Map } from 'lucide-react';
 import StoresManager from './StoresManager';
 import StoreGroupsManager from './StoreGroupsManager';
+import StoresMap from './StoresMap';
 
 export default function StoresAndGroupsManager() {
-  const [activeSubTab, setActiveSubTab] = useState<'stores' | 'groups'>('stores');
+  const [activeSubTab, setActiveSubTab] = useState<'stores' | 'groups' | 'map'>('stores');
 
   return (
     <div className="space-y-4">
@@ -38,11 +39,23 @@ export default function StoresAndGroupsManager() {
           <Users className="w-4 h-4" />
           Grupy sklepów
         </button>
+        <button
+          onClick={() => setActiveSubTab('map')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition ${
+            activeSubTab === 'map'
+              ? 'bg-amber-500 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <Map className="w-4 h-4" />
+          Mapa
+        </button>
       </div>
 
       <div>
         {activeSubTab === 'stores' && <StoresManager />}
         {activeSubTab === 'groups' && <StoreGroupsManager />}
+        {activeSubTab === 'map' && <StoresMap />}
       </div>
     </div>
   );
