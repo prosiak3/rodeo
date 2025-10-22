@@ -17,7 +17,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Eye, EyeOff, Calendar } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, Calendar, Zap, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface OccasionType {
