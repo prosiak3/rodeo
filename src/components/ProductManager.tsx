@@ -119,7 +119,7 @@ export default function ProductManager() {
 
   const saveEdit = async (productId: string) => {
     try {
-      const { error } = await supabase
+      const { error: productError } = await supabase
         .from('products')
         .update({
           min_quantity: editData.min_quantity,
@@ -128,7 +128,27 @@ export default function ProductManager() {
         })
         .eq('id', productId);
 
-      if (error) throw error;
+      if (productError) throw productError;
+
+      const { data: basePriceList } = await supabase
+        .from('price_lists')
+        .select('id')
+        .eq('name', 'Cennik Bazowy')
+        .single();
+
+      if (basePriceList && editData.base_price !== undefined) {
+        const { error: priceListError } = await supabase
+          .from('price_list_items')
+          .upsert({
+            price_list_id: basePriceList.id,
+            product_id: productId,
+            price: editData.base_price,
+          }, {
+            onConflict: 'price_list_id,product_id'
+          });
+
+        if (priceListError) throw priceListError;
+      }
 
       alert('Produkt zaktualizowany!');
       setEditingId(null);
@@ -164,7 +184,7 @@ export default function ProductManager() {
     }
 
     try {
-      const { error } = await supabase
+      const { data: insertedProduct, error } = await supabase
         .from('products')
         .insert({
           code: newProduct.code,
@@ -178,7 +198,9 @@ export default function ProductManager() {
           description: newProduct.description || null,
           index: newProduct.index || null,
           active: newProduct.active
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
         if (error.code === '23505') {
@@ -187,6 +209,22 @@ export default function ProductManager() {
           throw error;
         }
         return;
+      }
+
+      const { data: basePriceList } = await supabase
+        .from('price_lists')
+        .select('id')
+        .eq('name', 'Cennik Bazowy')
+        .single();
+
+      if (basePriceList && insertedProduct) {
+        await supabase
+          .from('price_list_items')
+          .insert({
+            price_list_id: basePriceList.id,
+            product_id: insertedProduct.id,
+            price: newProduct.base_price,
+          });
       }
 
       alert('Produkt dodany pomyślnie!');

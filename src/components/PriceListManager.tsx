@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, XCircle, Calendar, Link2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, XCircle, Calendar, Link2, Package } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import PriceListAssignments from './PriceListAssignments';
+import PriceListProductsManager from './PriceListProductsManager';
 
 interface PriceList {
   id: string;
@@ -19,6 +20,7 @@ export default function PriceListManager() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAssignments, setShowAssignments] = useState(false);
+  const [selectedPriceListId, setSelectedPriceListId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -138,6 +140,15 @@ export default function PriceListManager() {
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
       </div>
+    );
+  }
+
+  if (selectedPriceListId) {
+    return (
+      <PriceListProductsManager
+        priceListId={selectedPriceListId}
+        onBack={() => setSelectedPriceListId(null)}
+      />
     );
   }
 
@@ -314,6 +325,13 @@ export default function PriceListManager() {
                 </div>
 
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedPriceListId(priceList.id)}
+                    className="p-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition"
+                    title="Zarządzaj produktami"
+                  >
+                    <Package className="w-5 h-5" />
+                  </button>
                   <button
                     onClick={() => toggleActive(priceList.id, priceList.is_active)}
                     className={`p-2 rounded-lg transition ${
