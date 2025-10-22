@@ -44,25 +44,6 @@ export default function HomeScreen_Colorful({ onNavigate, onVoiceOrder, userRole
       }}
     >
       <div className="p-6 space-y-6">
-        <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-3xl p-1 shadow-xl">
-          <div className="bg-white rounded-3xl p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-pink-400 to-purple-500 rounded-3xl flex items-center justify-center shadow-lg transform rotate-3">
-                <span className="text-4xl">🐂</span>
-              </div>
-              <div>
-                <h1 className="text-4xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
-                  RODEO
-                </h1>
-                <p className="text-purple-600 font-bold text-sm flex items-center gap-1">
-                  <Sparkles className="w-4 h-4" />
-                  Weź byka za rogi!
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {currentBanner && !isBannerDismissed && (
           <OccasionBanner
             banner={currentBanner}

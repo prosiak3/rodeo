@@ -38,20 +38,6 @@ export default function HomeScreen_Material({ onNavigate, onVoiceOrder, userRole
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 shadow-lg">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl">🐂</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">RODEO</h1>
-              <p className="text-purple-100 text-sm">Weź byka za rogi</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {currentBanner && !isBannerDismissed && (
           <OccasionBanner

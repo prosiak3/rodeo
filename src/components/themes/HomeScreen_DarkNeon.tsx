@@ -46,20 +46,6 @@ export default function HomeScreen_DarkNeon({ onNavigate, onVoiceOrder, userRole
       </div>
 
       <div className="relative p-6 space-y-6">
-        <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-cyan-500/30 shadow-2xl shadow-cyan-500/20">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/50">
-              <Terminal className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                RODEO
-              </h1>
-              <p className="text-cyan-400 text-sm font-mono">{'> system.orders.init()'}</p>
-            </div>
-          </div>
-        </div>
-
         {currentBanner && !isBannerDismissed && (
           <OccasionBanner
             banner={currentBanner}

@@ -39,27 +39,6 @@ export default function HomeScreen_Fluent({ onNavigate, onVoiceOrder, userRole }
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl opacity-90"></div>
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-xl rounded-3xl"></div>
-          <div className="relative p-8 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center border border-white/30 shadow-xl">
-                  <span className="text-3xl">🐂</span>
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold mb-1">RODEO</h1>
-                  <p className="text-white/80 text-sm flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    Weź byka za rogi
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {currentBanner && !isBannerDismissed && (
           <OccasionBanner
             banner={currentBanner}

@@ -50,23 +50,6 @@ export default function HomeScreen_Glassmorphism({ onNavigate, onVoiceOrder, use
       </div>
 
       <div className="relative p-6 space-y-6">
-        <div
-          className="backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/20 shadow-2xl"
-          style={{
-            boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-          }}
-        >
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-lg border border-white/30 flex items-center justify-center">
-              <span className="text-3xl">🐂</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white drop-shadow-lg">RODEO</h1>
-              <p className="text-white/80 text-sm">Weź byka za rogi</p>
-            </div>
-          </div>
-        </div>
-
         {currentBanner && !isBannerDismissed && (
           <OccasionBanner
             banner={currentBanner}

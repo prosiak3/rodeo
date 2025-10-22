@@ -39,11 +39,6 @@ export default function HomeScreen_Minimalist({ onNavigate, onVoiceOrder, userRo
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto p-8 space-y-12">
-        <header className="border-b border-gray-200 pb-8">
-          <h1 className="text-5xl font-light text-gray-900 mb-2 tracking-tight">RODEO</h1>
-          <p className="text-gray-500 text-sm tracking-wide uppercase">System Zamówień</p>
-        </header>
-
         {currentBanner && !isBannerDismissed && (
           <OccasionBanner
             banner={currentBanner}

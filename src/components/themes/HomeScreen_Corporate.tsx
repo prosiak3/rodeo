@@ -39,24 +39,6 @@ export default function HomeScreen_Corporate({ onNavigate, onVoiceOrder, userRol
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-6xl mx-auto p-8 space-y-8">
-        <div className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-2xl shadow-2xl p-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/10 rounded-xl backdrop-blur-sm flex items-center justify-center border border-white/20">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-bold text-white tracking-tight">RODEO</h1>
-                <p className="text-blue-200 text-sm font-medium">Enterprise Order Management</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-blue-100 text-sm font-medium">Trusted Partner</div>
-              <div className="text-white text-xl font-bold">Since 2024</div>
-            </div>
-          </div>
-        </div>
-
         {currentBanner && !isBannerDismissed && (
           <OccasionBanner
             banner={currentBanner}
