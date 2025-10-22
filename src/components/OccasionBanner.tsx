@@ -23,7 +23,7 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
   const Icon = iconMap[banner.styling.icon] || Tag;
   const animationClass =
     banner.styling.animation === 'pulse' ? 'animate-pulse' :
-    banner.styling.animation === 'bounce' ? 'animate-bounce' : '';
+    banner.styling.animation === 'bounce' ? 'animate-pulse' : '';
 
   const gradientStyle = {
     background: `linear-gradient(to right, ${banner.styling.gradientFrom}, ${banner.styling.gradientTo})`,
