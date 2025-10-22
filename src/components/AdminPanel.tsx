@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck } from 'lucide-react';
+import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, TrendingDown } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresAndGroupsManager from './StoresAndGroupsManager';
@@ -9,6 +9,7 @@ import UsersManager from './UsersManager';
 import AILearningPanel from './AILearningPanel';
 import BannersManager from './BannersManager';
 import SpecialPricesManager from './SpecialPricesManager';
+import PromotionsOverview from './PromotionsOverview';
 import SalespersonAssignments from './SalespersonAssignments';
 import { supabase } from '../lib/supabase';
 
@@ -19,7 +20,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'specialprices' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'specialprices' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -86,6 +87,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Cenniki
           </button>
           <button
+            onClick={() => setActiveTab('promotions')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'promotions'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <TrendingDown className="w-5 h-5" />
+            Promocje
+          </button>
+          <button
             onClick={() => setActiveTab('specialprices')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'specialprices'
@@ -94,7 +106,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             }`}
           >
             <Percent className="w-5 h-5" />
-            Promo
+            Ceny specjalne
           </button>
           <button
             onClick={() => setActiveTab('users')}
@@ -166,6 +178,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'products' && <ProductManager />}
 
         {activeTab === 'pricelists' && <PriceListManager />}
+
+        {activeTab === 'promotions' && <PromotionsOverview />}
 
         {activeTab === 'specialprices' && <SpecialPricesManager />}
 
