@@ -36,7 +36,6 @@ export default function ProductManager() {
     display_category: 'Drób',
     original_category: 'Drób',
     unit: 'kg',
-    base_price: 0,
     min_quantity: 1,
     quantity_step: 1,
     description: '',
@@ -108,7 +107,6 @@ export default function ProductManager() {
     setEditData({
       min_quantity: product.min_quantity,
       quantity_step: product.quantity_step,
-      base_price: product.base_price,
     });
   };
 
@@ -124,31 +122,10 @@ export default function ProductManager() {
         .update({
           min_quantity: editData.min_quantity,
           quantity_step: editData.quantity_step,
-          base_price: editData.base_price,
         })
         .eq('id', productId);
 
       if (productError) throw productError;
-
-      const { data: basePriceList } = await supabase
-        .from('price_lists')
-        .select('id')
-        .eq('name', 'Cennik Bazowy')
-        .single();
-
-      if (basePriceList && editData.base_price !== undefined) {
-        const { error: priceListError } = await supabase
-          .from('price_list_items')
-          .upsert({
-            price_list_id: basePriceList.id,
-            product_id: productId,
-            price: editData.base_price,
-          }, {
-            onConflict: 'price_list_id,product_id'
-          });
-
-        if (priceListError) throw priceListError;
-      }
 
       alert('Produkt zaktualizowany!');
       setEditingId(null);
@@ -192,7 +169,7 @@ export default function ProductManager() {
           display_category: newProduct.display_category,
           original_category: newProduct.original_category,
           unit: newProduct.unit,
-          base_price: newProduct.base_price,
+          base_price: 0,
           min_quantity: newProduct.min_quantity,
           quantity_step: newProduct.quantity_step,
           description: newProduct.description || null,
@@ -211,23 +188,7 @@ export default function ProductManager() {
         return;
       }
 
-      const { data: basePriceList } = await supabase
-        .from('price_lists')
-        .select('id')
-        .eq('name', 'Cennik Bazowy')
-        .single();
-
-      if (basePriceList && insertedProduct) {
-        await supabase
-          .from('price_list_items')
-          .insert({
-            price_list_id: basePriceList.id,
-            product_id: insertedProduct.id,
-            price: newProduct.base_price,
-          });
-      }
-
-      alert('Produkt dodany pomyślnie!');
+      alert('Produkt dodany pomyślnie! Pamiętaj o dodaniu ceny w Cenniku Bazowym.');
       setShowAddForm(false);
       setNewProduct({
         code: '',
@@ -235,7 +196,6 @@ export default function ProductManager() {
         display_category: 'Drób',
         original_category: 'Drób',
         unit: 'kg',
-        base_price: 0,
         min_quantity: 1,
         quantity_step: 1,
         description: '',
@@ -407,7 +367,7 @@ export default function ProductManager() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Jednostka
@@ -421,19 +381,6 @@ export default function ProductManager() {
                       <option value="szt">szt</option>
                       <option value="opak">opak</option>
                     </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cena bazowa (PLN)
-                    </label>
-                    <input
-                      type="number"
-                      value={newProduct.base_price}
-                      onChange={(e) => setNewProduct({ ...newProduct, base_price: parseFloat(e.target.value) })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
-                      step="0.01"
-                      min="0"
-                    />
                   </div>
                   <div className="flex items-center pt-6">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -533,7 +480,7 @@ export default function ProductManager() {
                               <div className="flex items-center gap-3">
                                 <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{product.code}</span>
                                 <span className="text-gray-600">{product.display_category}</span>
-                                <span className="font-medium">{product.base_price.toFixed(2)} / 1{product.unit}</span>
+                                <span className="text-xs text-gray-500">{product.unit}</span>
                               </div>
                             </div>
                             <button
@@ -628,7 +575,6 @@ export default function ProductManager() {
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Kod</th>
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Nazwa</th>
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Kategoria</th>
-                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Cena</th>
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Min. ilość</th>
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Krok</th>
                 <th className="text-center py-3 px-2 text-sm font-semibold text-gray-700">Akcje</th>
@@ -659,19 +605,6 @@ export default function ProductManager() {
                         <span className="text-xs text-gray-400">({product.original_category})</span>
                       )}
                     </div>
-                  </td>
-                  <td className="py-3 px-2 text-sm text-right">
-                    {editingId === product.id ? (
-                      <input
-                        type="number"
-                        value={editData.base_price || ''}
-                        onChange={(e) => setEditData({ ...editData, base_price: parseFloat(e.target.value) })}
-                        className="w-20 p-1 border border-gray-300 rounded text-right"
-                        step="0.01"
-                      />
-                    ) : (
-                      <span>{product.base_price.toFixed(2)} / 1{product.unit}</span>
-                    )}
                   </td>
                   <td className="py-3 px-2 text-sm text-right">
                     {editingId === product.id ? (
@@ -747,6 +680,7 @@ export default function ProductManager() {
         <ul className="space-y-1 text-sm text-blue-800">
           <li>• <strong>Min. ilość</strong> - minimalna ilość zamówienia dla produktu</li>
           <li>• <strong>Krok</strong> - wartość, o którą można zwiększać ilość (np. 1kg, 5kg)</li>
+          <li>• <strong>Ceny produktów</strong> ustalamy w zakładce "Cenniki" - w Cenniku Bazowym lub innych cennikach</li>
           <li>• Zmiany są natychmiast widoczne w systemie zamawiania</li>
         </ul>
       </div>
