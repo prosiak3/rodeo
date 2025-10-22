@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, TrendingDown } from 'lucide-react';
+import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresAndGroupsManager from './StoresAndGroupsManager';
@@ -8,8 +8,7 @@ import SystemSettings from './SystemSettings';
 import UsersManager from './UsersManager';
 import AILearningPanel from './AILearningPanel';
 import BannersManager from './BannersManager';
-import SpecialPricesManager from './SpecialPricesManager';
-import PromotionsOverview from './PromotionsOverview';
+import PromotionsAndPrices from './PromotionsAndPrices';
 import SalespersonAssignments from './SalespersonAssignments';
 import { supabase } from '../lib/supabase';
 
@@ -20,7 +19,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'specialprices' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -94,19 +93,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            <TrendingDown className="w-5 h-5" />
-            Promocje
-          </button>
-          <button
-            onClick={() => setActiveTab('specialprices')}
-            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
-              activeTab === 'specialprices'
-                ? 'text-amber-600 border-b-2 border-amber-600'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
             <Percent className="w-5 h-5" />
-            Ceny specjalne
+            Promocje i ceny
           </button>
           <button
             onClick={() => setActiveTab('users')}
@@ -179,9 +167,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
 
         {activeTab === 'pricelists' && <PriceListManager />}
 
-        {activeTab === 'promotions' && <PromotionsOverview />}
-
-        {activeTab === 'specialprices' && <SpecialPricesManager />}
+        {activeTab === 'promotions' && <PromotionsAndPrices />}
 
         {activeTab === 'users' && <UsersManager />}
 
