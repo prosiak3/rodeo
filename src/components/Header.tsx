@@ -1,4 +1,4 @@
-import { User, ArrowLeft } from 'lucide-react';
+import { User, ArrowLeft, LogOut } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface HeaderProps {
@@ -8,9 +8,11 @@ interface HeaderProps {
   onProfileClick?: () => void;
   showBack?: boolean;
   onBackClick?: () => void;
+  showLogout?: boolean;
+  onLogoutClick?: () => void;
 }
 
-export default function Header({ title, subtitle, showProfile = true, onProfileClick, showBack = false, onBackClick }: HeaderProps) {
+export default function Header({ title, subtitle, showProfile = true, onProfileClick, showBack = false, onBackClick, showLogout = true, onLogoutClick }: HeaderProps) {
   const { colors } = useTheme();
 
   return (
@@ -32,11 +34,21 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
         <div className="flex items-center justify-center">
           <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-16 object-contain" />
         </div>
-        <div className="flex-1 flex justify-end">
+        <div className="flex-1 flex justify-end gap-2">
+          {showLogout && onLogoutClick && (
+            <button
+              onClick={onLogoutClick}
+              className="w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition"
+              title="Wyloguj"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          )}
           {showProfile && onProfileClick && (
             <button
               onClick={onProfileClick}
               className="w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition"
+              title="Profil"
             >
               <User className="w-5 h-5" />
             </button>

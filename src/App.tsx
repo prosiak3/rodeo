@@ -454,6 +454,7 @@ function AppContent() {
           showProfile={activeTab !== 'profile'}
           showBack={activeTab === 'profile'}
           onBackClick={() => setActiveTab(previousTab)}
+          onLogoutClick={signOut}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && <DriverScreen userId={user.id} />}
@@ -485,6 +486,7 @@ function AppContent() {
           showProfile={activeTab !== 'profile'}
           showBack={activeTab === 'profile'}
           onBackClick={() => setActiveTab(previousTab)}
+          onLogoutClick={signOut}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && (
@@ -533,6 +535,7 @@ function AppContent() {
           showProfile={activeTab !== 'profile'}
           showBack={activeTab === 'profile'}
           onBackClick={() => setActiveTab(previousTab)}
+          onLogoutClick={signOut}
         />
         <div className="flex-1 overflow-y-auto pt-20 pb-16">
           {activeTab === 'home' && (() => {
@@ -618,6 +621,7 @@ function AppContent() {
         showProfile={activeTab !== 'profile'}
         showBack={activeTab === 'profile'}
         onBackClick={() => setActiveTab(previousTab)}
+        onLogoutClick={signOut}
       />
       <div className="flex-1 overflow-y-auto pt-20 pb-16">
         {activeTab === 'home' && (() => {
