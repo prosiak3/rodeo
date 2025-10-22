@@ -72,37 +72,52 @@ export default function StoresMap() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Pobierz sklepy z informacjami o grupach
+      // Pobierz wszystkie sklepy
       const { data: storesData, error: storesError } = await supabase
         .from('stores')
-        .select(`
-          id,
-          name,
-          code,
-          address,
-          latitude,
-          longitude,
-          group_id,
-          store_groups (
-            name,
-            color
-          )
-        `)
+        .select('id, name, code, address, latitude, longitude')
         .order('name');
 
       if (storesError) throw storesError;
 
-      const mappedStores = (storesData || []).map((store: any) => ({
-        id: store.id,
-        name: store.name,
-        code: store.code,
-        address: store.address,
-        latitude: store.latitude,
-        longitude: store.longitude,
-        group_id: store.group_id,
-        group_name: store.store_groups?.name || null,
-        group_color: store.store_groups?.color || null,
-      }));
+      // Pobierz wszystkie członkostwa w grupach
+      const { data: membershipsData } = await supabase
+        .from('store_group_members')
+        .select(`
+          store_id,
+          store_groups!inner (
+            id,
+            name,
+            color
+          )
+        `);
+
+      // Mapuj sklepy z informacjami o ich pierwszej grupie
+      const storeGroupMap = new Map();
+      (membershipsData || []).forEach((m: any) => {
+        if (!storeGroupMap.has(m.store_id)) {
+          storeGroupMap.set(m.store_id, {
+            group_id: m.store_groups.id,
+            group_name: m.store_groups.name,
+            group_color: m.store_groups.color,
+          });
+        }
+      });
+
+      const mappedStores = (storesData || []).map((store: any) => {
+        const groupInfo = storeGroupMap.get(store.id);
+        return {
+          id: store.id,
+          name: store.name,
+          code: store.code,
+          address: store.address,
+          latitude: store.latitude,
+          longitude: store.longitude,
+          group_id: groupInfo?.group_id || null,
+          group_name: groupInfo?.group_name || null,
+          group_color: groupInfo?.group_color || null,
+        };
+      });
 
       setStores(mappedStores);
 
