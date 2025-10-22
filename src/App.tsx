@@ -10,7 +10,6 @@ import HomeScreen_Glassmorphism from './components/themes/HomeScreen_Glassmorphi
 import HomeScreen_Minimalist from './components/themes/HomeScreen_Minimalist';
 import HomeScreen_Colorful from './components/themes/HomeScreen_Colorful';
 import HomeScreen_Corporate from './components/themes/HomeScreen_Corporate';
-import HomeScreen_DarkNeon from './components/themes/HomeScreen_DarkNeon';
 import HomeScreen_Material from './components/themes/HomeScreen_Material';
 import HomeScreen_Fluent from './components/themes/HomeScreen_Fluent';
 import VoiceOrderScreen from './components/VoiceOrderScreen';
@@ -41,7 +40,6 @@ const THEME_COMPONENTS = {
   minimalist: HomeScreen_Minimalist,
   colorful: HomeScreen_Colorful,
   corporate: HomeScreen_Corporate,
-  'dark-neon': HomeScreen_DarkNeon,
   material: HomeScreen_Material,
   fluent: HomeScreen_Fluent,
 };

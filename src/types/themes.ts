@@ -3,7 +3,6 @@ export type ThemeStyle =
   | 'minimalist'
   | 'colorful'
   | 'corporate'
-  | 'dark-neon'
   | 'material'
   | 'fluent';
 
@@ -48,14 +47,6 @@ export const THEME_CONFIGS: Record<ThemeStyle, ThemeConfig> = {
     characteristics: ['Professional', 'Trust', 'Stability', 'Elegance'],
     primaryColor: '#1E3A8A',
     secondaryColor: '#64748B',
-  },
-  'dark-neon': {
-    id: 'dark-neon',
-    name: 'Dark Neon',
-    description: 'Nowoczesny tech-savvy z ciemnym tłem i neonowymi akcentami',
-    characteristics: ['Dark background', 'Neon accents', 'High contrast', 'Futuristic'],
-    primaryColor: '#0A0E27',
-    secondaryColor: '#00F0FF',
   },
   material: {
     id: 'material',
