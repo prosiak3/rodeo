@@ -327,10 +327,11 @@ export default function PriceListManager() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setSelectedPriceListId(priceList.id)}
-                    className="p-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition"
-                    title="Zarządzaj produktami"
+                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2 font-medium"
+                    title="Zarządzaj produktami i cenami"
                   >
                     <Package className="w-5 h-5" />
+                    <span>Edytuj ceny</span>
                   </button>
                   <button
                     onClick={() => toggleActive(priceList.id, priceList.is_active)}
