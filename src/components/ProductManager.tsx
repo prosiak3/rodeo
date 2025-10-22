@@ -598,7 +598,7 @@ export default function ProductManager() {
             </thead>
             <tbody>
               {filteredProducts.map((product) => (
-                <tr key={product.id} className={`border-b border-gray-100 hover:bg-gray-50 ${!product.active ? 'opacity-50 bg-gray-50' : ''}`}>
+                <tr key={product.id} className={`border-b border-gray-100 hover:bg-gray-50 ${!product.active ? 'opacity-50 bg-gray-50 line-through' : ''}`}>
                   <td className="py-3 px-2 text-center">
                     <button
                       onClick={() => toggleActive(product.id, product.active)}
