@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, XCircle, Calendar, Link2, Package } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, XCircle, Calendar, Link2, Package, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import PriceListAssignments from './PriceListAssignments';
 import PriceListProductsManager from './PriceListProductsManager';
+import PriceListHistory from './PriceListHistory';
 
 interface PriceList {
   id: string;
@@ -21,6 +22,9 @@ export default function PriceListManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAssignments, setShowAssignments] = useState(false);
   const [selectedPriceListId, setSelectedPriceListId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyPriceListId, setHistoryPriceListId] = useState<string | null>(null);
+  const [historyPriceListName, setHistoryPriceListName] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -326,6 +330,18 @@ export default function PriceListManager() {
 
                 <div className="flex gap-2">
                   <button
+                    onClick={() => {
+                      setHistoryPriceListId(priceList.id);
+                      setHistoryPriceListName(priceList.name);
+                      setShowHistory(true);
+                    }}
+                    className="px-3 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition flex items-center gap-2 font-medium"
+                    title="Zobacz historię zmian"
+                  >
+                    <Clock className="w-5 h-5" />
+                    <span className="hidden sm:inline">Historia</span>
+                  </button>
+                  <button
                     onClick={() => setSelectedPriceListId(priceList.id)}
                     className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition flex items-center gap-2 font-medium"
                     title="Zarządzaj produktami i cenami"
@@ -377,8 +393,21 @@ export default function PriceListManager() {
           <li>Aktywacja nowego cennika automatycznie dezaktywuje poprzedni</li>
           <li>Nie można usunąć aktywnego cennika</li>
           <li>Produkty mogą być przypisane do konkretnych cenników</li>
+          <li><strong>Historia</strong> - każda zmiana w cenniku jest automatycznie rejestrowana</li>
         </ul>
       </div>
+
+      {showHistory && historyPriceListId && (
+        <PriceListHistory
+          priceListId={historyPriceListId}
+          priceListName={historyPriceListName}
+          onClose={() => {
+            setShowHistory(false);
+            setHistoryPriceListId(null);
+            setHistoryPriceListName('');
+          }}
+        />
+      )}
     </div>
   );
 }
