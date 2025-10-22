@@ -84,7 +84,7 @@ export default function HomeScreen_Corporate({ onNavigate, onVoiceOrder, userRol
                 </div>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-                <span>Real-time updates</span>
+                <span>Zobacz zamówienia</span>
               </div>
             </div>
           </button>

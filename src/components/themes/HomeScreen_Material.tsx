@@ -83,7 +83,7 @@ export default function HomeScreen_Material({ onNavigate, onVoiceOrder, userRole
                 </div>
               </div>
               <div className="bg-blue-50 rounded-lg p-3 text-sm text-blue-700 font-medium">
-                Śledzenie statusu w czasie rzeczywistym
+                Zobacz zamówienia
               </div>
             </div>
           </button>
