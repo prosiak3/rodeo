@@ -81,7 +81,21 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
         </div>
 
         <div className="flex-1" style={{ color: banner.styling.textColor }}>
-          <h3 className="font-bold text-base">{banner.title}</h3>
+          <h3 className="font-bold text-base mb-1">{banner.title}</h3>
+
+          {banner.promotion_details && banner.promotion_details.percentage && (
+            <div className="inline-flex items-center gap-1 bg-white/30 backdrop-blur-sm rounded px-2 py-0.5 text-sm font-bold">
+              <span>🔥</span>
+              <span>-{banner.promotion_details.percentage}%</span>
+            </div>
+          )}
+
+          {banner.promotion_details && banner.promotion_details.buy_x_get_y && (
+            <div className="inline-flex items-center gap-1 bg-white/30 backdrop-blur-sm rounded px-2 py-0.5 text-sm font-bold">
+              <span>🎁</span>
+              <span>10+1 GRATIS</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
