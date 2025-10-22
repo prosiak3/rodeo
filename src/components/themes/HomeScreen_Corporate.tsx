@@ -80,7 +80,7 @@ export default function HomeScreen_Corporate({ onNavigate, onVoiceOrder, userRol
                 </div>
                 <div className="text-left">
                   <div className="font-bold text-slate-900 text-lg">My Orders</div>
-                  <div className="text-slate-500 text-sm">Track order status</div>
+                  <div className="text-slate-500 text-sm">Check your orders</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">

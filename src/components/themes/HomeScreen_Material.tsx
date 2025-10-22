@@ -79,7 +79,7 @@ export default function HomeScreen_Material({ onNavigate, onVoiceOrder, userRole
                 </div>
                 <div className="text-left flex-1">
                   <div className="font-bold text-gray-900 text-xl">Moje zamówienia</div>
-                  <div className="text-gray-600">Zobacz aktualne zamówienia</div>
+                  <div className="text-gray-600">Sprawdź swoje zamówienia</div>
                 </div>
               </div>
               <div className="bg-blue-50 rounded-lg p-3 text-sm text-blue-700 font-medium">

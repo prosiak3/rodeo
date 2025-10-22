@@ -59,9 +59,10 @@ export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeS
             </button>
             <button
               onClick={() => onNavigate?.('orders')}
-              className="w-full px-6 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition cursor-pointer text-base"
+              className="w-full px-6 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition cursor-pointer text-left"
             >
-              Pokaż aktualne zamówienia
+              <div className="font-semibold text-base">Moje zamówienia</div>
+              <div className="text-sm text-gray-500 mt-1">Sprawdź swoje zamówienia</div>
             </button>
             {userRole === 'admin' && (
               <button

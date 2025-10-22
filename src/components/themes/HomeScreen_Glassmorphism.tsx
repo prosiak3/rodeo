@@ -92,7 +92,7 @@ export default function HomeScreen_Glassmorphism({ onNavigate, onVoiceOrder, use
                 </div>
                 <div className="text-left flex-1">
                   <div className="font-bold text-white text-lg">Moje zamówienia</div>
-                  <div className="text-white/80 text-sm">Zobacz aktywne zamówienia</div>
+                  <div className="text-white/80 text-sm">Sprawdź swoje zamówienia</div>
                 </div>
               </div>
             </button>

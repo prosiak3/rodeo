@@ -81,7 +81,7 @@ export default function HomeScreen_Fluent({ onNavigate, onVoiceOrder, userRole }
                 </div>
                 <div className="text-left flex-1">
                   <div className="font-bold text-xl text-gray-900">Moje zamówienia</div>
-                  <div className="text-gray-600 text-sm">Zobacz aktualne zamówienia</div>
+                  <div className="text-gray-600 text-sm">Sprawdź swoje zamówienia</div>
                 </div>
                 <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition" />
               </div>

@@ -72,7 +72,7 @@ export default function HomeScreen_Minimalist({ onNavigate, onVoiceOrder, userRo
                 <Package className="w-5 h-5 text-gray-900" />
                 <div>
                   <div className="font-medium text-gray-900">Moje zamówienia</div>
-                  <div className="text-sm text-gray-500">Przeglądaj aktywne</div>
+                  <div className="text-sm text-gray-500">Sprawdź swoje zamówienia</div>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition" />

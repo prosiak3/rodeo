@@ -88,7 +88,7 @@ export default function HomeScreen_Colorful({ onNavigate, onVoiceOrder, userRole
                   <div className="font-black text-xl bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
                     Moje zamówienia
                   </div>
-                  <div className="text-gray-600 font-semibold">Sprawdź status</div>
+                  <div className="text-gray-600 font-semibold">Sprawdź swoje zamówienia</div>
                 </div>
               </div>
             </div>
