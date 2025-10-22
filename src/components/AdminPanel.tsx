@@ -40,10 +40,10 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
   const getTabTitle = () => {
     switch (activeTab) {
       case 'orders': return 'Zamówienia';
-      case 'stores': return 'Sklepy i grupy';
+      case 'stores': return 'Sklepy';
       case 'products': return 'Produkty';
       case 'pricelists': return 'Cenniki';
-      case 'specialprices': return 'Ceny specjalne';
+      case 'specialprices': return 'Promo';
       case 'users': return 'Użytkownicy';
       case 'salesperson_assignments': return 'Przypisania handlowców';
       case 'ai': return 'Panel AI';
@@ -87,7 +87,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             }`}
           >
             <ShoppingBag className="w-5 h-5" />
-            Sklepy i grupy
+            Sklepy
           </button>
           <button
             onClick={() => setActiveTab('products')}
@@ -120,7 +120,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             }`}
           >
             <Percent className="w-5 h-5" />
-            Ceny specjalne
+            Promo
           </button>
           <button
             onClick={() => setActiveTab('users')}
