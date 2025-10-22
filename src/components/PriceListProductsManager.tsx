@@ -460,6 +460,13 @@ export default function PriceListProductsManager({ priceListId, onBack }: PriceL
                             type="number"
                             value={editPrice}
                             onChange={(e) => setEditPrice(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSavePrice(item.id);
+                              } else if (e.key === 'Escape') {
+                                handleCancelEdit();
+                              }
+                            }}
                             className="w-24 px-2 py-1 border border-gray-300 rounded text-right"
                             step="0.01"
                             min="0"
@@ -468,7 +475,11 @@ export default function PriceListProductsManager({ priceListId, onBack }: PriceL
                           <span className="text-sm text-gray-600">/ 1{item.product_unit}</span>
                         </div>
                       ) : (
-                        <span className="text-sm font-medium">
+                        <span
+                          onClick={() => handleEditPrice(item.id, item.price)}
+                          className="text-sm font-medium cursor-pointer hover:text-amber-600 hover:underline transition"
+                          title="Kliknij aby edytować cenę"
+                        >
                           {item.price.toFixed(2)} zł / 1{item.product_unit}
                         </span>
                       )}
@@ -479,27 +490,20 @@ export default function PriceListProductsManager({ priceListId, onBack }: PriceL
                           <button
                             onClick={() => handleSavePrice(item.id)}
                             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
-                            title="Zapisz"
+                            title="Zapisz (Enter)"
                           >
                             <Save className="w-4 h-4" />
                           </button>
                           <button
                             onClick={handleCancelEdit}
                             className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                            title="Anuluj"
+                            title="Anuluj (Esc)"
                           >
                             <X className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
                         <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleEditPrice(item.id, item.price)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                            title="Edytuj cenę"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
                           <button
                             onClick={() => handleDeleteItem(item.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
