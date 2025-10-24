@@ -1,6 +1,12 @@
 # Konfiguracja systemu wysyłki emaili
 
-System RODEO automatycznie wysyła zamówienia na email hurtowni po zmianie statusu na "Wysłane". Poniżej znajdziesz instrukcje konfiguracji.
+System RODEO automatycznie wysyła zamówienia na email hurtowni po zmianie statusu na "Wysłane".
+
+## ⚠️ Obecny status
+
+**Edge Function działa**, ale **emaile nie są wysyłane** - potrzebna jest konfiguracja klucza API Resend.
+
+Poniżej znajdziesz instrukcje konfiguracji.
 
 ## 1. Konfiguracja dostawcy emaili (Resend)
 
@@ -32,29 +38,32 @@ System RODEO automatycznie wysyła zamówienia na email hurtowni po zmianie stat
 
 ## 2. Konfiguracja Supabase Edge Function
 
-### Dodaj klucz API do Supabase Secrets:
+**Twój projekt Supabase:** `zpbhwjnuqiomuufscvho`
+**URL:** `https://zpbhwjnuqiomuufscvho.supabase.co`
 
-1. Otwórz projekt w Supabase Dashboard
-2. Przejdź do "Edge Functions" → "Manage secrets"
-3. Dodaj nowy secret:
+### Opcja A: Masz dostęp do Supabase Dashboard
+
+1. Zaloguj się do: https://supabase.com/dashboard
+2. Znajdź projekt o ID: `zpbhwjnuqiomuufscvho`
+3. Przejdź do "Edge Functions" → "Manage secrets"
+4. Dodaj nowy secret:
    - Nazwa: `RESEND_API_KEY`
-   - Wartość: Twój klucz API z Resend
+   - Wartość: Twój klucz API z Resend (np. `re_123abc...`)
+5. **Powiadom mnie** - wdrożę pełną wersję Edge Function!
 
-### Deploy funkcji Edge Function:
+### Opcja B: NIE widzisz projektu w Dashboard
 
-```bash
-# Zainstaluj Supabase CLI (jeśli jeszcze nie masz)
-npm install -g supabase
+Projekt może być na automatycznym koncie. Masz 2 opcje:
 
-# Zaloguj się do Supabase
-supabase login
+**Opcja B1: Użyj istniejącego projektu**
+- Przekaż mi klucz API Resend
+- Wdrożę Edge Function która będzie go używać
+- System będzie działał normalnie
 
-# Podłącz projekt (użyj ID projektu z dashboardu)
-supabase link --project-ref YOUR_PROJECT_ID
-
-# Deploy funkcji send-order-email
-supabase functions deploy send-order-email
-```
+**Opcja B2: Utwórz nowy projekt**
+- Utworzę nowy projekt na Twoim koncie Supabase
+- Przemigruję wszystkie dane
+- Będziesz miał pełną kontrolę w Dashboard
 
 ## 3. Konfiguracja emaila hurtowni w systemie
 
