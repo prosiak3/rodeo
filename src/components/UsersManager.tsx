@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, Mail, Shield, Building, Eye, EyeOff } from 'lucide-react';
+import { Users, Plus, Trash2, Mail, Shield, Building, Eye, EyeOff, Edit2, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Store {
@@ -33,12 +33,20 @@ export default function UsersManager() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserData | null>(null);
+  const [updating, setUpdating] = useState(false);
 
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
     full_name: '',
     role: 'store_manager' as string,
+    store_id: '',
+  });
+
+  const [editUser, setEditUser] = useState({
+    full_name: '',
+    role: '',
     store_id: '',
   });
 
@@ -168,6 +176,61 @@ export default function UsersManager() {
     } catch (error) {
       console.error('Error deleting user:', error);
       alert('Błąd podczas usuwania użytkownika');
+    }
+  };
+
+  const openEditModal = (user: UserData) => {
+    setEditingUser(user);
+    setEditUser({
+      full_name: user.full_name,
+      role: user.role,
+      store_id: user.store_id || '',
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditingUser(null);
+    setEditUser({
+      full_name: '',
+      role: '',
+      store_id: '',
+    });
+  };
+
+  const updateUser = async () => {
+    if (!editingUser) return;
+
+    if (!editUser.full_name || !editUser.role) {
+      alert('Wypełnij wszystkie wymagane pola');
+      return;
+    }
+
+    if (editUser.role === 'store_manager' && !editUser.store_id) {
+      alert('Ekspedient musi być przypisany do sklepu');
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          full_name: editUser.full_name,
+          role: editUser.role,
+          store_id: editUser.role === 'store_manager' ? editUser.store_id : null,
+        })
+        .eq('id', editingUser.id);
+
+      if (error) throw error;
+
+      alert('Użytkownik zaktualizowany pomyślnie!');
+      closeEditModal();
+      loadData();
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      alert(`Błąd podczas aktualizacji użytkownika: ${error.message}`);
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -377,6 +440,13 @@ export default function UsersManager() {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
                       <button
+                        onClick={() => openEditModal(user)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                        title="Edytuj użytkownika"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => toggleUserActive(user.id, user.active)}
                         className={`px-3 py-1 rounded-lg font-medium transition ${
                           user.active
@@ -405,6 +475,102 @@ export default function UsersManager() {
         <div className="text-center py-12 bg-white rounded-xl shadow">
           <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 text-lg">Brak użytkowników w systemie</p>
+        </div>
+      )}
+
+      {editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-800">
+                  Edytuj użytkownika
+                </h3>
+                <button
+                  onClick={closeEditModal}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">{editingUser.email}</p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Imię i nazwisko *
+                </label>
+                <input
+                  type="text"
+                  value={editUser.full_name}
+                  onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                  placeholder="Jan Kowalski"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rola *
+                </label>
+                <select
+                  value={editUser.role}
+                  onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                >
+                  <option value="store_manager">Ekspedient</option>
+                  <option value="salesperson">Handlowiec</option>
+                  <option value="operator">Hurtownia</option>
+                  <option value="driver">Kierowca</option>
+                  <option value="admin">Administrator</option>
+                  <option value="analyst">Analityk</option>
+                </select>
+              </div>
+
+              {editUser.role === 'store_manager' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sklep *
+                  </label>
+                  <select
+                    value={editUser.store_id}
+                    onChange={(e) => setEditUser({ ...editUser, store_id: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                  >
+                    <option value="">Wybierz sklep</option>
+                    {stores.map((store) => (
+                      <option key={store.id} value={store.id}>
+                        {store.name} ({store.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Uwaga:</strong> Zmiana roli lub sklepu może wpłynąć na uprawnienia użytkownika w systemie.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={closeEditModal}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={updateUser}
+                disabled={updating}
+                className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition disabled:opacity-50"
+              >
+                {updating ? 'Zapisywanie...' : 'Zapisz zmiany'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
