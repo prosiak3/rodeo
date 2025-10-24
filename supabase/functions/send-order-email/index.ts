@@ -244,8 +244,80 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { orderId } = await req.json();
+    const body = await req.json();
+    const { orderId, test, to, subject, message } = body;
 
+    // Tryb testowy - wysyła prosty email testowy
+    if (test) {
+      const resendApiKey = Deno.env.get("RESEND_API_KEY");
+      if (!resendApiKey) {
+        throw new Error("RESEND_API_KEY not configured");
+      }
+
+      if (!to) {
+        throw new Error("Recipient email is required for test mode");
+      }
+
+      // Wysyłamy prosty email testowy
+      const emailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from: "RODEO Zamówienia <zamowienia@rodeo-system.pl>",
+          to: [to],
+          subject: subject || "🧪 Test konfiguracji email - System Rodeo",
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="margin: 0; font-size: 28px;">🧪 Email Testowy</h1>
+                <p style="margin: 10px 0 0 0; font-size: 16px;">System Rodeo</p>
+              </div>
+              <div style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 10px 10px;">
+                <p style="font-size: 18px; color: #1f2937; margin-top: 0;">
+                  ${message || "To jest testowa wiadomość z systemu Rodeo. Jeśli widzisz tę wiadomość, konfiguracja email działa prawidłowo!"}
+                </p>
+                <div style="margin: 30px 0; padding: 20px; background-color: #dcfce7; border-left: 4px solid #10b981; border-radius: 4px;">
+                  <p style="margin: 0; color: #065f46; font-weight: bold;">✅ Konfiguracja email działa poprawnie!</p>
+                  <p style="margin: 10px 0 0 0; color: #047857; font-size: 14px;">
+                    Możesz teraz używać systemu do automatycznego wysyłania zamówień.
+                  </p>
+                </div>
+                <p style="color: #6b7280; font-size: 14px; margin-bottom: 0;">
+                  Wiadomość wygenerowana automatycznie przez system RODEO<br>
+                  Data wysyłki: ${new Date().toLocaleString('pl-PL')}
+                </p>
+              </div>
+            </body>
+            </html>
+          `,
+        }),
+      });
+
+      const emailResult = await emailResponse.json();
+
+      if (!emailResponse.ok) {
+        throw new Error(`Failed to send test email: ${JSON.stringify(emailResult)}`);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Test email sent successfully",
+          emailId: emailResult.id,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Tryb normalny - wysyła zamówienie
     if (!orderId) {
       throw new Error("Order ID is required");
     }

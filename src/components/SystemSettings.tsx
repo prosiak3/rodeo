@@ -110,10 +110,33 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
 
     setTestingEmail(true);
     try {
-      alert(`Funkcja testowa wysyłki emaila zostanie dodana po skonfigurowaniu klucza API Resend.\n\nAdres docelowy: ${settings.wholesale_email}`);
+      // Call the edge function to send test email
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-order-email`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            test: true,
+            to: settings.wholesale_email,
+            subject: '🧪 Test konfiguracji email - System Rodeo',
+            message: 'To jest testowa wiadomość z systemu Rodeo. Jeśli widzisz tę wiadomość, konfiguracja email działa prawidłowo!',
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Błąd podczas wysyłania emaila');
+      }
+
+      alert(`✅ Email testowy został wysłany na adres: ${settings.wholesale_email}\n\nSprawdź swoją skrzynkę pocztową (również folder spam).`);
     } catch (error) {
       console.error('Error testing email:', error);
-      alert('Błąd podczas testowania emaila');
+      alert(`❌ Błąd podczas wysyłania emaila testowego:\n\n${error instanceof Error ? error.message : 'Nieznany błąd'}\n\nUpewnij się że klucz API Resend jest skonfigurowany w ustawieniach Supabase Edge Functions.`);
     } finally {
       setTestingEmail(false);
     }
@@ -154,9 +177,6 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     );
   }
 
-  console.log('[SystemSettings] Rendering with settings:', settings);
-  console.log('[SystemSettings] wholesale_email:', settings.wholesale_email);
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -169,7 +189,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
         </p>
 
         <div className="space-y-6">
-          <div className="bg-gray-50 rounded-lg p-4" style={{ border: '3px solid red' }}>
+          <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Mail className="w-5 h-5 text-amber-600" />
               <h3 className="font-semibold text-lg">Email hurtowni</h3>
