@@ -229,8 +229,39 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
       // Wyślij email do hurtowni
       try {
+        // Pobierz ustawienia systemowe z email hurtowni
+        const { data: settings } = await supabase
+          .from('system_settings')
+          .select('wholesale_email')
+          .eq('id', 1)
+          .maybeSingle();
+
+        const wholesaleEmail = settings?.wholesale_email || 'pcdoctor03@gmail.com';
+
+        // Przygotuj dane zamówienia dla załącznika CSV
+        const orderData = {
+          order_number: order.order_number,
+          store_name: order.store?.name || 'Nieznany sklep',
+          store_code: order.store?.code || 'N/A',
+          items: items.map(item => ({
+            product_name: item.products?.name || 'Nieznany produkt',
+            product_code: item.products?.code || 'N/A',
+            quantity: item.quantity,
+            unit: item.unit,
+            unit_price: item.unit_price,
+            total_price: item.total_price
+          })),
+          total_amount: order.total_amount,
+          notes: order.notes || ''
+        };
+
         const { data, error: emailError } = await supabase.functions.invoke('send-order-email', {
-          body: { orderId }
+          body: {
+            to: wholesaleEmail,
+            subject: `Zamówienie ${order.order_number} - ${order.store?.name}`,
+            message: `Nowe zamówienie z systemu RODEO.<br><br>Zobacz szczegóły poniżej lub otwórz załączony plik CSV.`,
+            orderData
+          }
         });
 
         if (emailError) {
