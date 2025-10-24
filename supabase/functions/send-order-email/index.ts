@@ -50,21 +50,28 @@ function generateOrderEmailHTML(order: Order, items: OrderItem[]): string {
     minute: '2-digit'
   });
 
-  const itemsHTML = items.map((item, index) => `
+  const sourceTypeLabels: Record<string, string> = {
+    manual: '📝 Zamówienie Manualne',
+    voice: '🎤 Zamówienie Głosowe',
+    auto: '🤖 Zamówienie Automatyczne',
+    copy: '📋 Kopiowane',
+  };
+
+  const itemsHTML = items.map(item => `
     <tr>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #6b7280;">${index + 1}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #1f2937;">
-        <strong>${item.products.name}</strong>
-        ${item.products.description ? `<br/><span style="font-size: 12px; color: #6b7280;">${item.products.description}</span>` : ''}
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #374151;">
+        <strong>${item.products.name}</strong><br>
+        <span style="color: #6b7280; font-size: 12px;">Kod: ${item.products.code}</span>
+        ${item.products.description ? `<br><span style="color: #6b7280; font-size: 12px;">${item.products.description}</span>` : ''}
       </td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #1f2937;">
-        <strong>${item.quantity}</strong> ${item.unit}
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #374151;">
+        ${item.quantity} ${item.unit}
       </td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937;">
-        ${item.unit_price.toFixed(2)} PLN
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #374151;">
+        ${item.unit_price.toFixed(2)} zł
       </td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937;">
-        <strong>${item.total_price.toFixed(2)} PLN</strong>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #374151; font-weight: bold;">
+        ${item.total_price.toFixed(2)} zł
       </td>
     </tr>
   `).join('');
@@ -80,110 +87,94 @@ function generateOrderEmailHTML(order: Order, items: OrderItem[]): string {
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6;">
   <table role="presentation" style="width: 100%; border-collapse: collapse;">
     <tr>
-      <td style="padding: 40px 0;">
-        <table role="presentation" style="width: 100%; max-width: 800px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-
+      <td style="padding: 20px 0; text-align: center;">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(to right, #f59e0b, #ea580c); padding: 30px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">
-                🥩 RODEO - Nowe Zamówienie
-              </h1>
-              <p style="margin: 10px 0 0 0; color: #fef3c7; font-size: 16px;">
-                System Zamówień Mięsno-Wędliniarskich
-              </p>
+            <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 40px 20px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: bold;">🥩 RODEO</h1>
+              <p style="margin: 10px 0 0 0; color: #fef3c7; font-size: 16px;">System Zamówień Mięsno-Wędliniarskich</p>
             </td>
           </tr>
 
           <!-- Order Info -->
           <tr>
-            <td style="padding: 30px;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <td style="padding: 30px 20px;">
+              <h2 style="color: #1f2937; font-size: 24px; margin: 0 0 20px 0; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;">
+                📦 Nowe Zamówienie
+              </h2>
+              
+              <table style="width: 100%; margin-bottom: 25px;">
                 <tr>
-                  <td style="padding: 15px; background-color: #fef3c7; border-radius: 8px;">
-                    <table role="presentation" style="width: 100%;">
-                      <tr>
-                        <td style="padding: 5px 0;">
-                          <span style="color: #92400e; font-weight: bold;">Numer zamówienia:</span>
-                          <span style="color: #1f2937; font-weight: bold; font-size: 18px; margin-left: 10px;">${order.order_number}</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 5px 0;">
-                          <span style="color: #92400e; font-weight: bold;">Data złożenia:</span>
-                          <span style="color: #1f2937; margin-left: 10px;">${orderDate}</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 5px 0;">
-                          <span style="color: #92400e; font-weight: bold;">Typ zamówienia:</span>
-                          <span style="color: #1f2937; margin-left: 10px;">${
-                            order.source_type === 'voice' ? 'Głosowe' :
-                            order.source_type === 'manual' ? 'Ręczne' :
-                            order.source_type === 'price_list' ? 'Z cennika' :
-                            order.source_type === 'copy' ? 'Kopiowane' :
-                            order.source_type === 'auto' ? 'Automatyczne' :
-                            'Standardowe'
-                          }</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Numer zamówienia:</td>
+                  <td style="padding: 8px 0; color: #1f2937; font-weight: bold; text-align: right; font-size: 16px;">${order.order_number}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Data złożenia:</td>
+                  <td style="padding: 8px 0; color: #1f2937; text-align: right;">${orderDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Typ zamówienia:</td>
+                  <td style="padding: 8px 0; color: #1f2937; text-align: right;">${sourceTypeLabels[order.source_type] || order.source_type}</td>
                 </tr>
               </table>
 
               <!-- Store Info -->
-              <h2 style="color: #1f2937; font-size: 20px; margin: 0 0 15px 0; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;">
-                📍 Dane sklepu
+              <h2 style="color: #1f2937; font-size: 20px; margin: 30px 0 15px 0; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;">
+                🏪 Dane sklepu
               </h2>
-              <table role="presentation" style="width: 100%; margin-bottom: 30px;">
+              <table style="width: 100%; margin-bottom: 25px; background-color: #f9fafb; padding: 15px; border-radius: 6px;">
                 <tr>
-                  <td style="padding: 10px 0;">
-                    <span style="color: #6b7280; display: inline-block; width: 120px;">Nazwa:</span>
-                    <strong style="color: #1f2937;">${order.store.name}</strong>
-                  </td>
+                  <td style="padding: 5px 0; color: #6b7280; font-size: 14px;">Nazwa:</td>
+                  <td style="padding: 5px 0; color: #1f2937; font-weight: bold; text-align: right;">${order.store.name}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 10px 0;">
-                    <span style="color: #6b7280; display: inline-block; width: 120px;">Kod sklepu:</span>
-                    <strong style="color: #1f2937;">${order.store.code}</strong>
-                  </td>
+                  <td style="padding: 5px 0; color: #6b7280; font-size: 14px;">Kod:</td>
+                  <td style="padding: 5px 0; color: #1f2937; text-align: right;">${order.store.code}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 10px 0;">
-                    <span style="color: #6b7280; display: inline-block; width: 120px;">Adres:</span>
-                    <span style="color: #1f2937;">${order.store.address}</span>
-                  </td>
+                  <td style="padding: 5px 0; color: #6b7280; font-size: 14px;">Adres:</td>
+                  <td style="padding: 5px 0; color: #1f2937; text-align: right;">${order.store.address}</td>
                 </tr>
                 ${order.store.phone ? `
                 <tr>
-                  <td style="padding: 10px 0;">
-                    <span style="color: #6b7280; display: inline-block; width: 120px;">Telefon:</span>
-                    <span style="color: #1f2937;">${order.store.phone}</span>
-                  </td>
+                  <td style="padding: 5px 0; color: #6b7280; font-size: 14px;">Telefon:</td>
+                  <td style="padding: 5px 0; color: #1f2937; text-align: right;">${order.store.phone}</td>
                 </tr>
                 ` : ''}
+              </table>
+
+              <!-- Creator Info -->
+              <h2 style="color: #1f2937; font-size: 20px; margin: 30px 0 15px 0; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;">
+                👤 Osoba składająca zamówienie
+              </h2>
+              <table style="width: 100%; margin-bottom: 25px; background-color: #f9fafb; padding: 15px; border-radius: 6px;">
                 <tr>
-                  <td style="padding: 10px 0;">
-                    <span style="color: #6b7280; display: inline-block; width: 120px;">Złożył:</span>
-                    <strong style="color: #1f2937;">${order.creator.full_name}</strong>
-                    <span style="color: #6b7280; margin-left: 10px;">(${order.creator.email})</span>
-                  </td>
+                  <td style="padding: 5px 0; color: #6b7280; font-size: 14px;">Imię i nazwisko:</td>
+                  <td style="padding: 5px 0; color: #1f2937; font-weight: bold; text-align: right;">${order.creator.full_name}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0; color: #6b7280; font-size: 14px;">Email:</td>
+                  <td style="padding: 5px 0; color: #1f2937; text-align: right;">${order.creator.email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0; color: #6b7280; font-size: 14px;">Rola:</td>
+                  <td style="padding: 5px 0; color: #1f2937; text-align: right;">${order.creator.role}</td>
                 </tr>
               </table>
 
               <!-- Order Items -->
-              <h2 style="color: #1f2937; font-size: 20px; margin: 0 0 15px 0; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;">
-                📦 Pozycje zamówienia (${items.length})
+              <h2 style="color: #1f2937; font-size: 20px; margin: 30px 0 15px 0; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;">
+                📋 Produkty w zamówieniu
               </h2>
-              <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
                 <thead>
                   <tr style="background-color: #f9fafb;">
-                    <th style="padding: 12px; text-align: center; color: #6b7280; font-weight: 600; border-bottom: 2px solid #e5e7eb;">Lp</th>
-                    <th style="padding: 12px; text-align: left; color: #6b7280; font-weight: 600; border-bottom: 2px solid #e5e7eb;">Produkt</th>
-                    <th style="padding: 12px; text-align: center; color: #6b7280; font-weight: 600; border-bottom: 2px solid #e5e7eb;">Ilość</th>
-                    <th style="padding: 12px; text-align: right; color: #6b7280; font-weight: 600; border-bottom: 2px solid #e5e7eb;">Cena jedn.</th>
-                    <th style="padding: 12px; text-align: right; color: #6b7280; font-weight: 600; border-bottom: 2px solid #e5e7eb;">Wartość</th>
+                    <th style="padding: 12px; text-align: left; color: #6b7280; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Produkt</th>
+                    <th style="padding: 12px; text-align: right; color: #6b7280; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Ilość</th>
+                    <th style="padding: 12px; text-align: right; color: #6b7280; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Cena jedn.</th>
+                    <th style="padding: 12px; text-align: right; color: #6b7280; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Wartość</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -191,12 +182,8 @@ function generateOrderEmailHTML(order: Order, items: OrderItem[]): string {
                 </tbody>
                 <tfoot>
                   <tr style="background-color: #fef3c7;">
-                    <td colspan="4" style="padding: 15px; text-align: right; font-weight: bold; color: #92400e; border-top: 2px solid #f59e0b;">
-                      SUMA ZAMÓWIENIA:
-                    </td>
-                    <td style="padding: 15px; text-align: right; font-weight: bold; color: #92400e; font-size: 18px; border-top: 2px solid #f59e0b;">
-                      ${order.total_amount.toFixed(2)} PLN
-                    </td>
+                    <td colspan="3" style="padding: 15px; text-align: right; color: #1f2937; font-weight: bold; font-size: 16px; border-top: 2px solid #f59e0b;">Wartość całkowita:</td>
+                    <td style="padding: 15px; text-align: right; color: #d97706; font-weight: bold; font-size: 18px; border-top: 2px solid #f59e0b;">${order.total_amount.toFixed(2)} zł</td>
                   </tr>
                 </tfoot>
               </table>
@@ -377,7 +364,7 @@ Deno.serve(async (req: Request) => {
 
     // Pobierz email hurtowni z ustawień systemowych
     const settingsResponse = await fetch(
-      `${supabaseUrl}/rest/v1/system_settings?id=eq.1&select=wholesale_email`,
+      `${supabaseUrl}/rest/v1/system_settings?select=wholesale_email`,
       {
         headers: {
           apikey: supabaseServiceKey,
@@ -449,58 +436,24 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({
         success: true,
         message: "Email sent successfully",
-        recipient: wholesaleEmail,
         emailId: emailResult.id,
       }),
       {
         status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error) {
-    console.error("Error sending order email:", error);
-
-    // Spróbuj zapisać błąd w logu
-    try {
-      const { orderId } = await req.clone().json();
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-      await fetch(`${supabaseUrl}/rest/v1/email_notifications`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseServiceKey,
-          Authorization: `Bearer ${supabaseServiceKey}`,
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify({
-          order_id: orderId,
-          recipient_email: "unknown",
-          subject: "Failed to send",
-          status: "failed",
-          error_message: error.message,
-          retry_count: 0,
-        }),
-      });
-    } catch (logError) {
-      console.error("Failed to log error:", logError);
-    }
-
+    console.error("Error in send-order-email function:", error);
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error occurred",
       }),
       {
         status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
