@@ -305,18 +305,53 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           created_at: order.created_at
         };
 
+        // Zapisz log emaila jako pending
+        const emailSubject = `Zamówienie ${order.order_number} - ${order.store?.name}`;
+        const { data: emailLog } = await supabase
+          .from('email_notifications')
+          .insert({
+            order_id: order.id,
+            recipient_email: wholesaleEmail,
+            subject: emailSubject,
+            status: 'pending'
+          })
+          .select()
+          .single();
+
         const { data, error: emailError } = await supabase.functions.invoke('send-order-email', {
           body: {
             to: wholesaleEmail,
-            subject: `Zamówienie ${order.order_number} - ${order.store?.name}`,
-            orderData
+            subject: emailSubject,
+            orderData,
+            emailLogId: emailLog?.id
           }
         });
 
         if (emailError) {
           console.error('Error sending email:', emailError);
+          // Zaktualizuj log jako failed
+          if (emailLog?.id) {
+            await supabase
+              .from('email_notifications')
+              .update({
+                status: 'failed',
+                error_message: emailError.message || 'Unknown error',
+                retry_count: 1
+              })
+              .eq('id', emailLog.id);
+          }
         } else {
           console.log('Email sent successfully:', data);
+          // Zaktualizuj log jako sent
+          if (emailLog?.id) {
+            await supabase
+              .from('email_notifications')
+              .update({
+                status: 'sent',
+                sent_at: new Date().toISOString()
+              })
+              .eq('id', emailLog.id);
+          }
         }
       } catch (emailError) {
         console.error('Failed to send email notification:', emailError);
