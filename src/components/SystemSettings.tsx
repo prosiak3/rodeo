@@ -154,6 +154,9 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     );
   }
 
+  console.log('[SystemSettings] Rendering with settings:', settings);
+  console.log('[SystemSettings] wholesale_email:', settings.wholesale_email);
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -166,7 +169,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
         </p>
 
         <div className="space-y-6">
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-gray-50 rounded-lg p-4" style={{ border: '3px solid red' }}>
             <div className="flex items-center gap-2 mb-3">
               <Mail className="w-5 h-5 text-amber-600" />
               <h3 className="font-semibold text-lg">Email hurtowni</h3>
