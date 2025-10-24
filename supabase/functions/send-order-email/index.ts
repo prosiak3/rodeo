@@ -26,12 +26,42 @@ interface OrderData {
   total_amount: number;
   notes?: string;
   created_at?: string;
+  sent_by?: string;
+  sent_by_phone?: string;
+  sent_at?: string;
 }
 
 function generateCSV(orderData: OrderData): string {
   const lines = [
-    "\ufeffLp;Kod produktu;Nazwa produktu;Ilość;Jednostka;Cena jedn.;Wartość",
+    "\ufeff=== SZCZEGÓŁY ZAMÓWIENIA ===",
+    "",
+    `Numer zamówienia:;${orderData.order_number}`,
+    `Data utworzenia:;${orderData.created_at ? new Date(orderData.created_at).toLocaleString('pl-PL') : 'N/A'}`,
+    `Data wysłania:;${orderData.sent_at ? new Date(orderData.sent_at).toLocaleString('pl-PL') : new Date().toLocaleString('pl-PL')}`,
+    "",
+    "=== SKLEP ===",
+    "",
+    `Nazwa:;${orderData.store_name}`,
+    `Kod sklepu:;${orderData.store_code}`,
   ];
+
+  if (orderData.store_address) {
+    lines.push(`Adres:;${orderData.store_address}`);
+  }
+
+  lines.push("");
+  lines.push("=== OSOBA WYSYŁAJĄCA ===");
+  lines.push("");
+  lines.push(`Imię i nazwisko:;${orderData.sent_by || 'N/A'}`);
+
+  if (orderData.sent_by_phone) {
+    lines.push(`Telefon:;${orderData.sent_by_phone}`);
+  }
+
+  lines.push("");
+  lines.push("=== PRODUKTY ===");
+  lines.push("");
+  lines.push("Lp;Kod produktu;Nazwa produktu;Ilość;Jednostka;Cena jedn.;Wartość");
 
   orderData.items.forEach((item, index) => {
     lines.push(
@@ -40,15 +70,17 @@ function generateCSV(orderData: OrderData): string {
   });
 
   lines.push("");
-  lines.push(`;;;;;SUMA:;${orderData.total_amount.toFixed(2)}`);
-
-  lines.push("");
-  lines.push(`Sklep:;${orderData.store_name} (${orderData.store_code})`);
+  lines.push(`;;;;;SUMA:;${orderData.total_amount.toFixed(2)} zł`);
 
   if (orderData.notes) {
     lines.push("");
-    lines.push(`Uwagi:;${orderData.notes}`);
+    lines.push("=== UWAGI ===");
+    lines.push("");
+    lines.push(`${orderData.notes}`);
   }
+
+  lines.push("");
+  lines.push("=== KONIEC ZAMÓWIENIA ===");
 
   return lines.join("\r\n");
 }
@@ -163,11 +195,20 @@ Deno.serve(async (req: Request) => {
                           <h2 style="margin: 0 0 20px 0; color: #111827; font-size: 24px; font-weight: 700;">Zamówienie ${orderData.order_number}</h2>
 
                           <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-                            <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 16px;">Dane sklepu:</p>
+                            <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 16px;">📍 Dane sklepu:</p>
                             <p style="margin: 0; color: #1e3a8a; font-size: 14px; line-height: 1.6;">
                               <strong>${orderData.store_name}</strong> (${orderData.store_code})<br>
                               ${orderData.store_address ? orderData.store_address + '<br>' : ''}
-                              Data zamówienia: ${orderData.created_at ? new Date(orderData.created_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleDateString('pl-PL')}
+                            </p>
+                          </div>
+
+                          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                            <p style="margin: 0 0 8px 0; color: #92400e; font-weight: 600; font-size: 16px;">👤 Wysłane przez:</p>
+                            <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                              <strong>${orderData.sent_by || 'N/A'}</strong><br>
+                              ${orderData.sent_by_phone ? 'Tel: ' + orderData.sent_by_phone + '<br>' : ''}
+                              Data utworzenia: ${orderData.created_at ? new Date(orderData.created_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}<br>
+                              Data wysłania: ${orderData.sent_at ? new Date(orderData.sent_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
 

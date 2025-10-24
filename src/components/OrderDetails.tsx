@@ -293,6 +293,13 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
         const totalAmount = itemsWithCurrentPrices.reduce((sum, item) => sum + item.total_price, 0);
 
+        // Pobierz dane użytkownika wysyłającego
+        const { data: userData } = await supabase
+          .from('users')
+          .select('first_name, last_name, phone')
+          .eq('id', userId)
+          .maybeSingle();
+
         // Przygotuj dane zamówienia
         const orderData = {
           order_number: order.order_number,
@@ -302,7 +309,10 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           items: itemsWithCurrentPrices,
           total_amount: totalAmount,
           notes: order.notes || '',
-          created_at: order.created_at
+          created_at: order.created_at,
+          sent_by: userData ? `${userData.first_name} ${userData.last_name}` : 'Nieznany użytkownik',
+          sent_by_phone: userData?.phone || '',
+          sent_at: new Date().toISOString()
         };
 
         // Zapisz log emaila jako pending
