@@ -21,9 +21,11 @@ interface OrderData {
   order_number: string;
   store_name: string;
   store_code: string;
+  store_address?: string;
   items: OrderItem[];
   total_amount: number;
   notes?: string;
+  created_at?: string;
 }
 
 function generateCSV(orderData: OrderData): string {
@@ -95,6 +97,41 @@ Deno.serve(async (req: Request) => {
     console.log(`Test mode: ${test ? "yes" : "no"}`);
     console.log(`Has order data: ${orderData ? "yes" : "no"}`);
 
+    const generateOrderItemsTable = (items: OrderItem[]) => {
+      return `
+        <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse: collapse; margin-top: 20px;">
+          <thead>
+            <tr style="background-color: #f3f4f6;">
+              <th style="border: 1px solid #e5e7eb; padding: 10px; text-align: left; font-size: 12px; font-weight: 600; color: #374151;">Lp</th>
+              <th style="border: 1px solid #e5e7eb; padding: 10px; text-align: left; font-size: 12px; font-weight: 600; color: #374151;">Kod</th>
+              <th style="border: 1px solid #e5e7eb; padding: 10px; text-align: left; font-size: 12px; font-weight: 600; color: #374151;">Nazwa produktu</th>
+              <th style="border: 1px solid #e5e7eb; padding: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #374151;">Ilość</th>
+              <th style="border: 1px solid #e5e7eb; padding: 10px; text-align: center; font-size: 12px; font-weight: 600; color: #374151;">Jedn.</th>
+              <th style="border: 1px solid #e5e7eb; padding: 10px; text-align: right; font-size: 12px; font-weight: 600; color: #374151;">Cena jedn.</th>
+              <th style="border: 1px solid #e5e7eb; padding: 10px; text-align: right; font-size: 12px; font-weight: 600; color: #374151;">Wartość</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map((item, index) => `
+              <tr>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 12px; color: #374151;">${index + 1}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 12px; color: #374151;">${item.product_code}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; font-size: 12px; color: #374151;">${item.product_name}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: center; font-size: 12px; color: #374151;">${item.quantity}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: center; font-size: 12px; color: #374151;">${item.unit}</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right; font-size: 12px; color: #374151;">${item.unit_price.toFixed(2)} zł</td>
+                <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: right; font-size: 12px; color: #374151; font-weight: 600;">${item.total_price.toFixed(2)} zł</td>
+              </tr>
+            `).join('')}
+            <tr style="background-color: #fef3c7;">
+              <td colspan="6" style="border: 1px solid #e5e7eb; padding: 10px; text-align: right; font-size: 14px; font-weight: 700; color: #92400e;">SUMA:</td>
+              <td style="border: 1px solid #e5e7eb; padding: 10px; text-align: right; font-size: 14px; font-weight: 700; color: #92400e;">${items.reduce((sum, item) => sum + item.total_price, 0).toFixed(2)} zł</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+    };
+
     const emailPayload: any = {
       from: "RODEO System <onboarding@resend.dev>",
       to: [to],
@@ -111,41 +148,64 @@ Deno.serve(async (req: Request) => {
             <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
               <tr>
                 <td align="center">
-                  <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                  <table width="700" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <tr>
-                      <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-                        <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">🐎 RODEO</h1>
-                        <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 14px;">System Zarządzania Zamówieniami</p>
+                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 25px; text-align: center;">
+                        <img src="https://bolt-rodeo.netlify.app/erasebg-transformed.png" alt="RODEO Logo" style="height: 60px; margin: 0 auto;" />
+                        <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 14px; font-weight: 500;">System Zarządzania Zamówieniami</p>
                       </td>
                     </tr>
-                    <tr>
-                      <td style="padding: 40px 30px;">
-                        <div style="font-size: 16px; line-height: 1.6; color: #333333;">
-                          ${message || "To jest testowa wiadomość z systemu RODEO."}
-                        </div>
-                        ${orderData ? `
-                          <div style="margin-top: 30px; padding: 20px; background-color: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
-                            <p style="margin: 0; color: #1e40af; font-weight: 600;">📦 Zamówienie: ${orderData.order_number}</p>
-                            <p style="margin: 10px 0 0 0; color: #1e3a8a; font-size: 14px;">
-                              Sklep: ${orderData.store_name} (${orderData.store_code})<br>
-                              Liczba pozycji: ${orderData.items.length}<br>
-                              Wartość: ${orderData.total_amount.toFixed(2)} zł
+                    ${orderData ? `
+                      <tr>
+                        <td style="padding: 30px;">
+                          <h2 style="margin: 0 0 20px 0; color: #111827; font-size: 24px; font-weight: 700;">Zamówienie ${orderData.order_number}</h2>
+
+                          <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                            <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 16px;">Dane sklepu:</p>
+                            <p style="margin: 0; color: #1e3a8a; font-size: 14px; line-height: 1.6;">
+                              <strong>${orderData.store_name}</strong> (${orderData.store_code})<br>
+                              ${orderData.store_address ? orderData.store_address + '<br>' : ''}
+                              Data zamówienia: ${orderData.created_at ? new Date(orderData.created_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleDateString('pl-PL')}
                             </p>
                           </div>
-                          <div style="margin-top: 20px; padding: 15px; background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
-                            <p style="margin: 0; color: #92400e; font-size: 14px;">
-                              📎 <strong>Załącznik:</strong> Plik CSV z listą produktów znajduje się w załączniku: <strong>${orderData.order_number}.csv</strong>
+
+                          <h3 style="margin: 30px 0 10px 0; color: #111827; font-size: 18px; font-weight: 600;">Zamówione produkty:</h3>
+                          ${generateOrderItemsTable(orderData.items)}
+
+                          ${orderData.notes ? `
+                            <div style="margin-top: 20px; background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px;">
+                              <p style="margin: 0 0 8px 0; color: #92400e; font-weight: 600; font-size: 14px;">Uwagi do zamówienia:</p>
+                              <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">${orderData.notes}</p>
+                            </div>
+                          ` : ''}
+
+                          <div style="margin-top: 20px; padding: 15px; background-color: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
+                            <p style="margin: 0; color: #065f46; font-size: 13px;">
+                              📎 <strong>Załącznik:</strong> Plik CSV z pełnym zestawieniem znajduje się w załączniku tego emaila: <strong>${orderData.order_number}.csv</strong>
                             </p>
                           </div>
-                        ` : ""}
-                        ${test ? `
-                          <div style="margin-top: 30px; padding: 20px; background-color: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 4px;">
-                            <p style="margin: 0; color: #15803d; font-weight: 600;">✅ Konfiguracja email działa poprawnie!</p>
-                            <p style="margin: 10px 0 0 0; color: #166534; font-size: 14px;">Jeśli widzisz tę wiadomość, system jest gotowy do wysyłki zamówień.</p>
+                        </td>
+                      </tr>
+                    ` : ''}
+                    ${test ? `
+                      <tr>
+                        <td style="padding: 30px;">
+                          <div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px; border-radius: 4px;">
+                            <p style="margin: 0; color: #15803d; font-weight: 600; font-size: 16px;">✅ Konfiguracja email działa poprawnie!</p>
+                            <p style="margin: 10px 0 0 0; color: #166534; font-size: 14px;">Jeśli widzisz tę wiadomość, system jest gotowy do wysłania zamówień.</p>
                           </div>
-                        ` : ""}
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
+                    ` : ''}
+                    ${!orderData && !test ? `
+                      <tr>
+                        <td style="padding: 40px 30px;">
+                          <div style="font-size: 16px; line-height: 1.6; color: #333333;">
+                            ${message || "To jest testowa wiadomość z systemu RODEO."}
+                          </div>
+                        </td>
+                      </tr>
+                    ` : ''}
                     <tr>
                       <td style="background-color: #f9fafb; padding: 20px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
                         <p style="margin: 0; font-size: 12px; color: #6b7280;">Wiadomość wysłana automatycznie z systemu RODEO</p>

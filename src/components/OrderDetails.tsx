@@ -238,28 +238,77 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
         const wholesaleEmail = settings?.wholesale_email || 'pcdoctor03@gmail.com';
 
-        // Przygotuj dane zamówienia dla załącznika CSV
+        // Pobierz aktualny cennik dla sklepu
+        const { data: priceAssignment } = await supabase
+          .from('price_list_assignments')
+          .select('price_list_id')
+          .eq('store_id', order.store_id)
+          .eq('active', true)
+          .order('priority', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // Przygotuj pozycje z aktualnymi cenami
+        const itemsWithCurrentPrices = await Promise.all(
+          items.map(async (item) => {
+            let currentPrice = item.unit_price;
+
+            if (priceAssignment?.price_list_id) {
+              // Pobierz cenę z aktualnego cennika
+              const { data: priceListItem } = await supabase
+                .from('price_list_items')
+                .select('price')
+                .eq('price_list_id', priceAssignment.price_list_id)
+                .eq('product_id', item.product_id)
+                .maybeSingle();
+
+              if (priceListItem?.price) {
+                currentPrice = priceListItem.price;
+              }
+            }
+
+            // Jeśli nie ma w cenniku, użyj ceny bazowej produktu
+            if (currentPrice === item.unit_price) {
+              const { data: product } = await supabase
+                .from('products')
+                .select('base_price')
+                .eq('id', item.product_id)
+                .maybeSingle();
+
+              if (product?.base_price) {
+                currentPrice = product.base_price;
+              }
+            }
+
+            return {
+              product_name: item.products?.name || 'Nieznany produkt',
+              product_code: item.products?.code || 'N/A',
+              quantity: item.quantity,
+              unit: item.unit,
+              unit_price: currentPrice,
+              total_price: currentPrice * item.quantity
+            };
+          })
+        );
+
+        const totalAmount = itemsWithCurrentPrices.reduce((sum, item) => sum + item.total_price, 0);
+
+        // Przygotuj dane zamówienia
         const orderData = {
           order_number: order.order_number,
           store_name: order.store?.name || 'Nieznany sklep',
           store_code: order.store?.code || 'N/A',
-          items: items.map(item => ({
-            product_name: item.products?.name || 'Nieznany produkt',
-            product_code: item.products?.code || 'N/A',
-            quantity: item.quantity,
-            unit: item.unit,
-            unit_price: item.unit_price,
-            total_price: item.total_price
-          })),
-          total_amount: order.total_amount,
-          notes: order.notes || ''
+          store_address: order.store?.address || '',
+          items: itemsWithCurrentPrices,
+          total_amount: totalAmount,
+          notes: order.notes || '',
+          created_at: order.created_at
         };
 
         const { data, error: emailError } = await supabase.functions.invoke('send-order-email', {
           body: {
             to: wholesaleEmail,
             subject: `Zamówienie ${order.order_number} - ${order.store?.name}`,
-            message: `Nowe zamówienie z systemu RODEO.<br><br>Zobacz szczegóły poniżej lub otwórz załączony plik CSV.`,
             orderData
           }
         });
