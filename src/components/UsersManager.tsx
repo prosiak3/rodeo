@@ -15,6 +15,7 @@ interface UserData {
   role: string;
   store_id: string | null;
   active: boolean;
+  profile_picture_url?: string | null;
   store?: Store;
 }
 
@@ -63,6 +64,7 @@ export default function UsersManager() {
         .from('users')
         .select(`
           *,
+          profile_picture_url,
           store:store_id (
             id,
             name,
@@ -394,10 +396,20 @@ export default function UsersManager() {
                 <tr key={user.id} className={user.active ? '' : 'bg-gray-50 opacity-60'}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold text-sm">
-                          {user.full_name.charAt(0).toUpperCase()}
-                        </span>
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
+                        {user.profile_picture_url ? (
+                          <img
+                            src={user.profile_picture_url}
+                            alt={user.full_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-r from-amber-500 to-orange-600 flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {user.full_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{user.full_name}</div>
