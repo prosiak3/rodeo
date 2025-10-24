@@ -150,9 +150,11 @@ Deno.serve(async (req: Request) => {
                 <td align="center">
                   <table width="700" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <tr>
-                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 25px; text-align: center;">
-                        <img src="https://bolt-rodeo.netlify.app/erasebg-transformed.png" alt="RODEO Logo" style="height: 60px; margin: 0 auto;" />
-                        <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 14px; font-weight: 500;">System Zarządzania Zamówieniami</p>
+                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px; text-align: center;">
+                        <div style="background-color: rgba(255,255,255,0.15); display: inline-block; padding: 15px 35px; border-radius: 12px; backdrop-filter: blur(10px);">
+                          <h1 style="margin: 0; color: #ffffff; font-size: 42px; font-weight: 800; font-family: 'Arial Black', Arial, sans-serif; letter-spacing: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">RODEO</h1>
+                        </div>
+                        <p style="margin: 15px 0 0 0; color: #ffffff; font-size: 15px; font-weight: 500; letter-spacing: 1px;">System Zarządzania Zamówieniami</p>
                       </td>
                     </tr>
                     ${orderData ? `
