@@ -12,9 +12,10 @@ interface HeaderProps {
   onLogoutClick?: () => void;
   userName?: string;
   userEmail?: string;
+  userProfilePicture?: string;
 }
 
-export default function Header({ title, subtitle, showProfile = true, onProfileClick, showBack = false, onBackClick, showLogout = true, onLogoutClick, userName, userEmail }: HeaderProps) {
+export default function Header({ title, subtitle, showProfile = true, onProfileClick, showBack = false, onBackClick, showLogout = true, onLogoutClick, userName, userEmail, userProfilePicture }: HeaderProps) {
   const { colors } = useTheme();
 
   const displayName = userName || userEmail?.split('@')[0] || '';
@@ -55,10 +56,20 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
           {showProfile && onProfileClick && (
             <button
               onClick={onProfileClick}
-              className="w-9 h-9 sm:w-10 sm:h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition flex-shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition flex-shrink-0 overflow-hidden"
               title="Profil"
             >
-              <User className="w-4 h-4 sm:w-5 sm:h-5" />
+              {userProfilePicture ? (
+                <img
+                  src={userProfilePicture}
+                  alt="Profil"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : null}
+              {!userProfilePicture && <User className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
           )}
         </div>

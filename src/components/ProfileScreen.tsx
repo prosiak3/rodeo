@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload } from 'lucide-react';
 import { User, supabase, FontSize } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { ThemeStyle, THEME_CONFIGS } from '../types/themes';
@@ -42,6 +42,9 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [showDeleteIcons, setShowDeleteIcons] = useState<boolean>((user as any).show_delete_icons ?? false);
   const [afterAutoLogout, setAfterAutoLogout] = useState<string>((user as any).after_auto_logout_return_to || 'last_location');
   const [saving, setSaving] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string>((user as any).profile_picture_url || '');
+  const [customUrl, setCustomUrl] = useState<string>('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
 
   const handleShowAllFiltersToggle = async () => {
     setSaving(true);
@@ -369,19 +372,102 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
+  const handleProfilePictureUpdate = async (url: string) => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ profile_picture_url: url })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setProfilePicture(url);
+      setShowUrlInput(false);
+      setCustomUrl('');
+      showAlert('Zdjęcie profilowe zostało zaktualizowane!', 'success');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating profile picture:', error);
+      showAlert('Błąd podczas aktualizacji zdjęcia', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="bg-gray-50">
       <div className="p-6 space-y-6">
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
-              <UserIcon className="w-10 h-10 text-white" />
+            <div className="relative">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center overflow-hidden">
+                {profilePicture ? (
+                  <img src={profilePicture} alt="Profil" className="w-full h-full object-cover" />
+                ) : (
+                  <UserIcon className="w-10 h-10 text-white" />
+                )}
+              </div>
+              <button
+                onClick={() => setShowUrlInput(!showUrlInput)}
+                className="absolute -bottom-1 -right-1 w-8 h-8 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center transition shadow-lg"
+                title="Zmień zdjęcie"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-800">{user.full_name}</h3>
               <p className="text-sm text-gray-600">{roleLabels[user.role] || user.role}</p>
             </div>
           </div>
+
+          {showUrlInput && (
+            <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <Upload className="w-5 h-5 text-amber-600" />
+                <h4 className="font-semibold text-gray-800">Zmień zdjęcie profilowe</h4>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">
+                Wklej URL do swojego zdjęcia (np. z Gravatar, LinkedIn lub innego serwisu):
+              </p>
+              <div className="space-y-2">
+                <input
+                  type="url"
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value)}
+                  placeholder="https://example.com/moje-zdjecie.jpg"
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => customUrl && handleProfilePictureUpdate(customUrl)}
+                    disabled={!customUrl || saving}
+                    className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition disabled:opacity-50"
+                  >
+                    {saving ? 'Zapisywanie...' : 'Zapisz zdjęcie'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowUrlInput(false);
+                      setCustomUrl('');
+                    }}
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition"
+                  >
+                    Anuluj
+                  </button>
+                </div>
+              </div>
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-800">
+                  <strong>Wskazówka:</strong> Możesz użyć darmowych avatarów z{' '}
+                  <a href="https://gravatar.com" target="_blank" rel="noopener noreferrer" className="underline">
+                    Gravatar.com
+                  </a>
+                  {' '}lub wkleić link do swojego zdjęcia z mediów społecznościowych.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">

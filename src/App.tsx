@@ -624,6 +624,7 @@ function AppContent() {
         onLogoutClick={signOut}
         userName={user.full_name}
         userEmail={user.email}
+        userProfilePicture={(user as any).profile_picture_url}
       />
       <div className="flex-1 overflow-y-auto pt-[70px] sm:pt-20 pb-14 sm:pb-20">
         {activeTab === 'home' && (() => {
