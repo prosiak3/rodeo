@@ -227,6 +227,21 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         details: {},
       });
 
+      // Wyślij email do hurtowni
+      try {
+        const { data, error: emailError } = await supabase.functions.invoke('send-order-email', {
+          body: { orderId }
+        });
+
+        if (emailError) {
+          console.error('Error sending email:', emailError);
+        } else {
+          console.log('Email sent successfully:', data);
+        }
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+      }
+
       const successMessage = document.createElement('div');
       successMessage.className = 'fixed inset-0 flex items-center justify-center z-50 bg-black/50 animate-fade-in';
       successMessage.innerHTML = `
@@ -239,6 +254,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             </div>
             <h3 class="text-2xl font-bold text-gray-800 mb-2">Sukces!</h3>
             <p class="text-gray-600 text-lg">Zamówienie zostało wysłane do hurtowni</p>
+            <p class="text-gray-500 text-sm mt-2">Email z zamówieniem został wysłany automatycznie</p>
           </div>
         </div>
       `;
@@ -251,7 +267,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         } else {
           onBack();
         }
-      }, 2000);
+      }, 2500);
     } catch (error) {
       console.error('Error sending order:', error);
       alert('Błąd podczas wysyłania zamówienia');

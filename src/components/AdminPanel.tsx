@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck } from 'lucide-react';
+import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, Mail } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresAndGroupsManager from './StoresAndGroupsManager';
@@ -10,6 +10,7 @@ import AILearningPanel from './AILearningPanel';
 import BannersManager from './BannersManager';
 import PromotionsAndPrices from './PromotionsAndPrices';
 import SalespersonAssignments from './SalespersonAssignments';
+import EmailLogsPanel from './EmailLogsPanel';
 import { supabase } from '../lib/supabase';
 
 interface AdminPanelProps {
@@ -19,7 +20,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'email_logs' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -141,6 +142,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Banery
           </button>
           <button
+            onClick={() => setActiveTab('email_logs')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'email_logs'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Mail className="w-5 h-5" />
+            Logi emaili
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'settings'
@@ -176,6 +188,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'ai' && storeId && <AILearningPanel storeId={storeId} />}
 
         {activeTab === 'banners' && <BannersManager />}
+
+        {activeTab === 'email_logs' && <EmailLogsPanel />}
 
         {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>

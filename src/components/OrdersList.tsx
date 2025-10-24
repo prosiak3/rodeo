@@ -95,30 +95,76 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   const loadOrders = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('orders')
-        .select(`
-          *,
-          creator:created_by (
-            full_name,
-            email,
-            role
-          )
-        `)
-        .order('created_at', { ascending: sortAscending });
+      if (userRole === 'salesperson') {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setOrders([]);
+          setLoading(false);
+          return;
+        }
 
-      if (storeId && userRole === 'store_manager') {
-        query = query.eq('store_id', storeId);
+        const { data: assignedStores, error: storesError } = await supabase
+          .from('salesperson_stores')
+          .select('store_id')
+          .eq('salesperson_id', user.id);
+
+        if (storesError) throw storesError;
+
+        const storeIds = (assignedStores || []).map(s => s.store_id);
+
+        if (storeIds.length === 0) {
+          setOrders([]);
+          setLoading(false);
+          return;
+        }
+
+        let query = supabase
+          .from('orders')
+          .select(`
+            *,
+            creator:created_by (
+              full_name,
+              email,
+              role
+            )
+          `)
+          .in('store_id', storeIds)
+          .order('created_at', { ascending: sortAscending });
+
+        if (filter !== 'all') {
+          query = query.eq('status', filter);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        setOrders(data || []);
+      } else {
+        let query = supabase
+          .from('orders')
+          .select(`
+            *,
+            creator:created_by (
+              full_name,
+              email,
+              role
+            )
+          `)
+          .order('created_at', { ascending: sortAscending });
+
+        if (storeId && userRole === 'store_manager') {
+          query = query.eq('store_id', storeId);
+        }
+
+        if (filter !== 'all') {
+          query = query.eq('status', filter);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        setOrders(data || []);
       }
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setOrders(data || []);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {

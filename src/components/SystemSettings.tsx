@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, Users, Filter } from 'lucide-react';
+import { Settings, Save, Users, Filter, Mail, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface SystemSettingsProps {
@@ -10,6 +10,7 @@ interface GlobalSettings {
   default_order_mode: 'quantity' | 'list';
   default_show_all_filters: boolean;
   default_allow_collaboration: boolean;
+  wholesale_email: string;
 }
 
 export default function SystemSettings({ userId }: SystemSettingsProps) {
@@ -17,7 +18,9 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     default_order_mode: 'quantity',
     default_show_all_filters: false,
     default_allow_collaboration: true,
+    wholesale_email: '',
   });
+  const [testingEmail, setTestingEmail] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -42,6 +45,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           default_order_mode: data.default_order_mode || 'quantity',
           default_show_all_filters: data.default_show_all_filters || false,
           default_allow_collaboration: data.default_allow_collaboration ?? true,
+          wholesale_email: data.wholesale_email || '',
         });
       }
     } catch (error) {
@@ -52,6 +56,11 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
   };
 
   const saveSettings = async () => {
+    if (settings.wholesale_email && !isValidEmail(settings.wholesale_email)) {
+      alert('Podaj prawidłowy adres email hurtowni');
+      return;
+    }
+
     setSaving(true);
     try {
       const { data: existing } = await supabase
@@ -80,6 +89,33 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
       alert('Błąd podczas zapisywania ustawień');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const testEmailConfiguration = async () => {
+    if (!settings.wholesale_email) {
+      alert('Najpierw zapisz adres email hurtowni');
+      return;
+    }
+
+    if (!isValidEmail(settings.wholesale_email)) {
+      alert('Podaj prawidłowy adres email');
+      return;
+    }
+
+    setTestingEmail(true);
+    try {
+      alert(`Funkcja testowa wysyłki emaila zostanie dodana po skonfigurowaniu klucza API Resend.\n\nAdres docelowy: ${settings.wholesale_email}`);
+    } catch (error) {
+      console.error('Error testing email:', error);
+      alert('Błąd podczas testowania emaila');
+    } finally {
+      setTestingEmail(false);
     }
   };
 
@@ -130,6 +166,38 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
         </p>
 
         <div className="space-y-6">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Mail className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Email hurtowni</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Adres email, na który będą wysyłane wszystkie zamówienia ze sklepów:
+            </p>
+            <div className="space-y-3">
+              <input
+                type="email"
+                value={settings.wholesale_email}
+                onChange={(e) => setSettings({ ...settings, wholesale_email: e.target.value })}
+                placeholder="hurtownia@example.com"
+                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+              />
+              <button
+                onClick={testEmailConfiguration}
+                disabled={testingEmail || !settings.wholesale_email}
+                className="w-full py-2 bg-blue-50 border-2 border-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+                {testingEmail ? 'Testowanie...' : 'Testuj konfigurację email'}
+              </button>
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Info:</strong> Wszystkie zamówienia będą automatycznie wysyłane na ten adres email po zmianie statusu na "Wysłane".
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Settings className="w-5 h-5 text-amber-600" />
