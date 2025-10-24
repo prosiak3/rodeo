@@ -625,7 +625,7 @@ function AppContent() {
         userName={user.full_name}
         userEmail={user.email}
       />
-      <div className="flex-1 overflow-y-auto pt-24 sm:pt-20 pb-16 sm:pb-20">
+      <div className="flex-1 overflow-y-auto pt-[70px] sm:pt-20 pb-14 sm:pb-20">
         {activeTab === 'home' && (() => {
           const HomeScreenComponent = getHomeScreenComponent();
           return (
