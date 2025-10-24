@@ -622,8 +622,10 @@ function AppContent() {
         showBack={activeTab === 'profile'}
         onBackClick={() => setActiveTab(previousTab)}
         onLogoutClick={signOut}
+        userName={user.full_name}
+        userEmail={user.email}
       />
-      <div className="flex-1 overflow-y-auto pt-20 pb-16">
+      <div className="flex-1 overflow-y-auto pt-24 sm:pt-20 pb-16 sm:pb-20">
         {activeTab === 'home' && (() => {
           const HomeScreenComponent = getHomeScreenComponent();
           return (

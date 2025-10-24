@@ -10,10 +10,14 @@ interface HeaderProps {
   onBackClick?: () => void;
   showLogout?: boolean;
   onLogoutClick?: () => void;
+  userName?: string;
+  userEmail?: string;
 }
 
-export default function Header({ title, subtitle, showProfile = true, onProfileClick, showBack = false, onBackClick, showLogout = true, onLogoutClick }: HeaderProps) {
+export default function Header({ title, subtitle, showProfile = true, onProfileClick, showBack = false, onBackClick, showLogout = true, onLogoutClick, userName, userEmail }: HeaderProps) {
   const { colors } = useTheme();
+
+  const displayName = userName || userEmail || 'Użytkownik';
 
   return (
     <div
@@ -31,8 +35,13 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
             </button>
           )}
         </div>
-        <div className="flex items-center justify-center">
-          <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-16 object-contain" />
+        <div className="flex flex-col items-center justify-center">
+          <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-12 sm:h-16 object-contain" />
+          {displayName && (
+            <div className="text-xs sm:text-sm font-medium text-white/90 mt-1 truncate max-w-[200px]">
+              {displayName}
+            </div>
+          )}
         </div>
         <div className="flex-1 flex justify-end gap-2">
           {showLogout && onLogoutClick && (
