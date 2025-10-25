@@ -93,7 +93,7 @@ export default function SessionsBrowserPanel() {
         return;
       }
 
-      const storeIds = [...new Set(data.map((s: any) => s.users.store_id).filter(Boolean))];
+      const storeIds = [...new Set(data.map((s: any) => s.users?.store_id).filter(Boolean))];
 
       const storesMap: Record<string, string> = {};
       if (storeIds.length > 0) {
@@ -112,9 +112,9 @@ export default function SessionsBrowserPanel() {
       const formattedSessions: Session[] = data.map((session: any) => ({
         id: session.id,
         user_id: session.user_id,
-        user_name: session.users.full_name,
-        user_role: session.users.role,
-        store_name: session.users.store_id ? (storesMap[session.users.store_id] || 'N/A') : 'N/A',
+        user_name: session.users?.full_name || 'Unknown User',
+        user_role: session.users?.role || 'Unknown',
+        store_name: session.users?.store_id ? (storesMap[session.users.store_id] || 'N/A') : 'N/A',
         session_start: session.session_start,
         session_end: session.session_end,
         device_type: session.device_type,
