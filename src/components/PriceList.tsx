@@ -514,10 +514,38 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       if (itemError) throw itemError;
 
+      // Play success sound
+      playAddSound();
+
       console.log('✅ Successfully added to order, reloading notebook items');
       await loadNotebookItems(orderId);
     } catch (error) {
       console.error('❌ Error adding to notebook:', error);
+    }
+  };
+
+  const playAddSound = () => {
+    try {
+      // Create a short, pleasant "pop" sound
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Configuration for a pleasant "pop" sound
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // Start frequency
+      oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1); // Descending tone
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime); // Start volume
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15); // Fade out
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.15);
+    } catch (error) {
+      // Silently fail if audio is not supported
+      console.debug('Audio playback not supported:', error);
     }
   };
 
