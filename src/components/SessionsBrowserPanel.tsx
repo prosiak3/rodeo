@@ -325,6 +325,50 @@ export default function SessionsBrowserPanel() {
     }
   };
 
+  const getSessionStatus = (session: Session) => {
+    const now = new Date();
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+
+    if (session.can_reconnect === false) {
+      return {
+        label: 'Zabita',
+        color: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
+        icon: <X className="w-3 h-3" />
+      };
+    }
+
+    if (session.disconnected_by) {
+      return {
+        label: 'Rozłączona',
+        color: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200',
+        icon: <Power className="w-3 h-3" />
+      };
+    }
+
+    if (!session.session_end) {
+      return {
+        label: 'Aktywna',
+        color: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
+        icon: <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+      };
+    }
+
+    const endDate = new Date(session.session_end);
+    if (endDate >= thirtyMinutesAgo) {
+      return {
+        label: 'Możliwy powrót',
+        color: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
+        icon: <div className="w-2 h-2 bg-blue-500 rounded-full" />
+      };
+    }
+
+    return {
+      label: 'Zakończona',
+      color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200',
+      icon: <div className="w-2 h-2 bg-gray-500 rounded-full" />
+    };
+  };
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString('pl-PL', {
       day: '2-digit',
@@ -706,26 +750,29 @@ export default function SessionsBrowserPanel() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-900">
                   <tr>
+                    <th className="px-4 py-3 text-left w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedSessions.size === groupSessions.length && groupSessions.length > 0}
+                        onChange={toggleSelectAll}
+                        className="rounded border-gray-300 dark:border-gray-600 cursor-pointer"
+                        title="Zaznacz wszystkie"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       Użytkownik
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      IP Address
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       Urządzenie
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      System
+                      System / Przeglądarka
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Przeglądarka
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Rozdzielczość
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Interakcja
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      Tryb
+                      Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       Czas trwania
@@ -733,90 +780,113 @@ export default function SessionsBrowserPanel() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       Rozpoczęcie
                     </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      Akcje
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {groupSessions.map((session) => (
-                    <tr key={session.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 text-sm">
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white">{session.user_name}</div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">{session.store_name}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-900 dark:text-white">
-                          {getDeviceIcon(session.device_type)}
+                  {groupSessions.map((session) => {
+                    const status = getSessionStatus(session);
+                    const isSelected = selectedSessions.has(session.id);
+
+                    return (
+                      <tr
+                        key={session.id}
+                        className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                      >
+                        <td className="px-4 py-4">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSessionSelection(session.id)}
+                            className="rounded border-gray-300 dark:border-gray-600 cursor-pointer"
+                          />
+                        </td>
+                        <td className="px-6 py-4 text-sm">
                           <div>
-                            <div className="font-medium">{session.device_type || 'Unknown'}</div>
-                            {session.device_vendor && (
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
-                                {session.device_vendor} {session.device_model}
-                              </div>
+                            <div className="font-medium text-gray-900 dark:text-white">{session.user_name}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">{session.user_role}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="font-mono text-xs text-gray-700 dark:text-gray-300">
+                            {session.ip_address || <span className="text-gray-400">N/A</span>}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="flex items-center gap-2 text-gray-900 dark:text-white">
+                            {getDeviceIcon(session.device_type)}
+                            <div>
+                              <div className="font-medium">{session.device_type || 'Unknown'}</div>
+                              {session.is_pwa && (
+                                <span className="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">PWA</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-600 dark:text-gray-400 text-xs">OS:</span>
+                              <span>{session.os_name || 'Unknown'} {session.os_version}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Chrome className="w-3 h-3 text-gray-400" />
+                              <span className="text-xs">{session.browser_name || 'Unknown'} {session.browser_version}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.color}`}>
+                            {status.icon}
+                            <span>{status.label}</span>
+                          </div>
+                          {session.disconnect_reason && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1" title={session.disconnect_reason}>
+                              {session.disconnect_reason.substring(0, 30)}...
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="text-gray-900 dark:text-white font-medium">
+                            {formatDuration(session.session_start, session.session_end)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                          {formatDate(session.session_start)}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="flex items-center justify-center gap-2">
+                            {!session.session_end && (
+                              <>
+                                <button
+                                  onClick={() => disconnectSession(session.id)}
+                                  className="p-1.5 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded transition-colors"
+                                  title="Rozłącz sesję"
+                                >
+                                  <Power className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => killSession(session.id)}
+                                  className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                  title="Zabij sesję"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                            {session.session_end && session.can_reconnect !== false && (
+                              <span className="text-xs text-gray-400">Zakończona</span>
+                            )}
+                            {session.can_reconnect === false && (
+                              <span className="text-xs text-red-500 font-medium">Zabita</span>
                             )}
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {session.os_name || 'Unknown'}
-                        {session.os_version && <span className="text-gray-600 dark:text-gray-400"> {session.os_version}</span>}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        <div className="flex items-center gap-2">
-                          <Chrome className="w-4 h-4" />
-                          {session.browser_name || 'Unknown'}
-                          {session.browser_version && <span className="text-gray-600 dark:text-gray-400"> {session.browser_version}</span>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {session.screen_resolution || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {session.interaction_type === 'touch' ? (
-                          <div className="flex items-center gap-1">
-                            <Hand className="w-4 h-4 text-blue-500" />
-                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium">
-                              Dotyk
-                            </span>
-                          </div>
-                        ) : session.interaction_type === 'mouse' ? (
-                          <div className="flex items-center gap-1">
-                            <MousePointer className="w-4 h-4 text-purple-500" />
-                            <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-xs font-medium">
-                              Mysz
-                            </span>
-                          </div>
-                        ) : session.interaction_type === 'mixed' ? (
-                          <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full text-xs font-medium">
-                            Mieszane
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-xs font-medium">
-                            N/A
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {session.is_pwa ? (
-                          <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-xs font-medium">
-                            PWA
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full text-xs font-medium">
-                            Browser
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="text-gray-900 dark:text-white font-medium">
-                          {formatDuration(session.session_start, session.session_end)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                        {formatDate(session.session_start)}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
