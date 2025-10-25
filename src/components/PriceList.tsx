@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp, ArrowDown, ArrowLeft, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDeviceType } from '../hooks/useDeviceType';
 
 interface Product {
   id: string;
@@ -33,6 +34,7 @@ interface PriceListProps {
 
 export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListProps = {}) {
   const { colors } = useTheme();
+  const deviceType = useDeviceType();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -361,6 +363,17 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
     setSwipedProduct(productId);
     setTouchStart(e.clientX);
     setTouchCurrent(e.clientX);
+  };
+
+  const handleDoubleClick = async (product: Product) => {
+    if (deviceType !== 'desktop') return;
+
+    const isPriceZero = product.base_price === 0 && (!product.your_price || product.your_price === 0) && (!product.promo_price || product.promo_price === 0);
+    const isInNotebook = notebookItems.includes(product.id);
+
+    if (isPriceZero || isInNotebook) return;
+
+    await addToNotebook(product);
   };
 
   useEffect(() => {
@@ -704,12 +717,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               return (
                 <div
                   key={product.id}
-                  className={`relative ${isInNotebook ? 'bg-green-50' : hasAnyPromo ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-400' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+                  className={`relative ${isInNotebook ? 'bg-green-50' : hasAnyPromo ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-400' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : deviceType === 'desktop' ? 'cursor-pointer hover:bg-blue-50' : 'cursor-grab active:cursor-grabbing'}`}
                   style={{ overflow: swipeOffset > 0 ? 'hidden' : 'visible', touchAction: isDisabled ? 'auto' : 'pan-y' }}
                   onTouchStart={isDisabled ? undefined : (e) => handleTouchStart(e, product.id)}
                   onTouchMove={isDisabled ? undefined : handleTouchMove}
                   onTouchEnd={isDisabled ? undefined : () => handleTouchEnd(product)}
-                  onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
+                  onMouseDown={isDisabled || deviceType === 'desktop' ? undefined : (e) => handleMouseDown(e, product.id)}
+                  onDoubleClick={isDisabled ? undefined : () => handleDoubleClick(product)}
                 >
                     <div
                       className={`px-3 py-3 sm:py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
