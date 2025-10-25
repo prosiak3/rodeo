@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload, Smartphone, Tablet, Monitor } from 'lucide-react';
 import { User, supabase, FontSize } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { ThemeStyle, THEME_CONFIGS } from '../types/themes';
 import { showAlert } from '../lib/alerts';
 import { useFontSize } from '../contexts/FontSizeContext';
+import { useDeviceType } from '../hooks/useDeviceType';
 
 interface ProfileScreenProps {
   user: User;
@@ -22,6 +23,7 @@ const roleLabels: Record<string, string> = {
 export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const { theme, setTheme, uiTheme, setUiTheme } = useTheme();
   const { fontSize, setFontSize } = useFontSize();
+  const deviceType = useDeviceType();
   const [showAllFilters, setShowAllFilters] = useState<boolean>(user.show_all_order_filters || false);
   const [allowCollaboration, setAllowCollaboration] = useState<boolean>((user as any).allow_collaborative_editing ?? true);
   const [showDescription, setShowDescription] = useState<boolean>((user as any).show_product_description ?? true);
@@ -45,6 +47,38 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [profilePicture, setProfilePicture] = useState<string>((user as any).profile_picture_url || '');
   const [customUrl, setCustomUrl] = useState<string>('');
   const [showUrlInput, setShowUrlInput] = useState(false);
+
+  const saveDevicePreference = async (field: string, value: any) => {
+    try {
+      const { data: currentData } = await supabase
+        .from('users')
+        .select('device_preferences')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const currentPrefs = currentData?.device_preferences || {};
+      const devicePrefs = currentPrefs[deviceType] || {};
+
+      const updatedPrefs = {
+        ...currentPrefs,
+        [deviceType]: {
+          ...devicePrefs,
+          [field]: value,
+        },
+      };
+
+      const { error } = await supabase
+        .from('users')
+        .update({ device_preferences: updatedPrefs })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error saving device preference:', error);
+      return false;
+    }
+  };
 
   const handleShowAllFiltersToggle = async () => {
     setSaving(true);
@@ -192,14 +226,11 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const handleOrderModeLayoutChange = async (layout: 'list' | 'grid') => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ order_mode_layout: layout })
-        .eq('id', user.id);
+      const success = await saveDevicePreference('order_mode_layout', layout);
+      if (!success) throw new Error('Failed to save');
 
-      if (error) throw error;
       setOrderModeLayout(layout);
-      showAlert('Ustawienia zapisane!', 'success');
+      showAlert(`Ustawienia zapisane dla urządzenia: ${deviceNames[deviceType]}!`, 'success');
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -394,9 +425,39 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     }
   };
 
+  const deviceIcons = {
+    mobile: Smartphone,
+    tablet: Tablet,
+    desktop: Monitor,
+  };
+
+  const deviceNames = {
+    mobile: 'Telefon',
+    tablet: 'Tablet',
+    desktop: 'Komputer',
+  };
+
+  const DeviceIcon = deviceIcons[deviceType];
+
   return (
     <div className="bg-gray-50">
       <div className="p-6 space-y-6">
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <DeviceIcon className="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-900 mb-1">
+                Ustawienia dla urządzenia: {deviceNames[deviceType]}
+              </h3>
+              <p className="text-sm text-blue-700">
+                Twoje preferencje są zapisywane osobno dla każdego typu urządzenia.
+                Możesz mieć inne ustawienia na telefonie, tablecie i komputerze -
+                będą automatycznie przełączane gdy zmienisz urządzenie.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="relative">
