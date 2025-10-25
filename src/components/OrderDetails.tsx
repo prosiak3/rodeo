@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, Edit, Trash2, Copy, FileEdit, Plus, Truck, ChevronDown, ChevronUp, Minus, ArrowRight } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Package, Clock, PlayCircle, CreditCard as Edit, Trash2, Copy, File as FileEdit, Plus, Truck, ChevronDown, ChevronUp, Minus, ArrowRight } from 'lucide-react';
 import { supabase, Order, OrderItem, OrderHistory } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
 import { formatPriceDisplay } from '../lib/priceCalculations';
