@@ -57,7 +57,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
       if (error) {
         if (error.code === '42703' || error.message?.includes('column')) {
           // Columns don't exist, use defaults
-          setStatusExpanded(true);
+          setStatusExpanded(false);
           setShowButtonLabels(true);
           setShowDeleteIcons(false);
         }
@@ -77,7 +77,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
       }
     } catch (error) {
       // Silently fail and use defaults
-      setStatusExpanded(true);
+      setStatusExpanded(false);
       setShowButtonLabels(true);
       setShowDeleteIcons(false);
     }
