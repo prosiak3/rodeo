@@ -78,6 +78,16 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
         const ua = navigator.userAgent;
         const deviceInfo = parseUserAgent(ua);
 
+        // Get IP address (best effort - może być null jeśli blokowane)
+        let ipAddress: string | null = null;
+        try {
+          const ipResponse = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(2000) });
+          const ipData = await ipResponse.json();
+          ipAddress = ipData.ip || null;
+        } catch (ipError) {
+          console.debug('[Tracking] Could not fetch IP address');
+        }
+
         const { error } = await supabase
           .from('user_sessions')
           .insert({
@@ -94,6 +104,7 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
             is_pwa: isPWA(),
             screen_resolution: getScreenResolution(),
             user_agent: ua,
+            ip_address: ipAddress,
           });
 
         if (!error) {

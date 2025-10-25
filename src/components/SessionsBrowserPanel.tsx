@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Monitor, Smartphone, Tablet, Chrome, Filter, ChevronDown, ChevronUp, MousePointer, Hand } from 'lucide-react';
+import { Monitor, Smartphone, Tablet, Chrome, Filter, ChevronDown, ChevronUp, MousePointer, Hand, Power, X, Trash2, CheckSquare, Square } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Session {
   id: string;
@@ -21,6 +22,10 @@ interface Session {
   screen_resolution: string | null;
   interaction_type: string | null;
   event_count: number;
+  ip_address: string | null;
+  disconnected_by: string | null;
+  disconnect_reason: string | null;
+  can_reconnect: boolean | null;
 }
 
 interface FilterOptions {
@@ -29,6 +34,7 @@ interface FilterOptions {
   browserName: string;
   isPWA: string;
   userRole: string;
+  sessionStatus: string;
 }
 
 interface GroupedSessions {
@@ -36,17 +42,20 @@ interface GroupedSessions {
 }
 
 export default function SessionsBrowserPanel() {
+  const { user } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupBy, setGroupBy] = useState<'none' | 'device' | 'os' | 'browser' | 'pwa' | 'role'>('none');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [selectedSessions, setSelectedSessions] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<FilterOptions>({
     deviceType: 'all',
     osName: 'all',
     browserName: 'all',
     isPWA: 'all',
-    userRole: 'all'
+    userRole: 'all',
+    sessionStatus: 'all'
   });
 
   useEffect(() => {
@@ -118,7 +127,11 @@ export default function SessionsBrowserPanel() {
         is_pwa: session.is_pwa,
         screen_resolution: session.screen_resolution,
         interaction_type: session.interaction_type,
-        event_count: 0
+        event_count: 0,
+        ip_address: session.ip_address,
+        disconnected_by: session.disconnected_by,
+        disconnect_reason: session.disconnect_reason,
+        can_reconnect: session.can_reconnect
       }));
 
       console.log('Loaded sessions:', formattedSessions.length);
@@ -131,6 +144,91 @@ export default function SessionsBrowserPanel() {
     }
   };
 
+
+  const disconnectSession = async (sessionId: string, reason: string = 'Ręczne rozłączenie przez administratora') => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase.rpc('disconnect_session', {
+        p_session_id: sessionId,
+        p_admin_user_id: user.id,
+        p_reason: reason
+      });
+
+      if (error) throw error;
+
+      alert('Sesja została rozłączona');
+      loadSessions();
+    } catch (error) {
+      console.error('Error disconnecting session:', error);
+      alert('Błąd podczas rozłączania sesji: ' + (error as Error).message);
+    }
+  };
+
+  const killSession = async (sessionId: string) => {
+    if (!user?.id) return;
+
+    if (!confirm('Czy na pewno chcesz ZABIĆ tę sesję? Użytkownik nie będzie mógł do niej powrócić.')) {
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('kill_session', {
+        p_session_id: sessionId,
+        p_admin_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      alert('Sesja została zabita');
+      loadSessions();
+    } catch (error) {
+      console.error('Error killing session:', error);
+      alert('Błąd podczas zabijania sesji: ' + (error as Error).message);
+    }
+  };
+
+  const disconnectMultipleSessions = async () => {
+    if (!user?.id || selectedSessions.size === 0) return;
+
+    const reason = prompt('Podaj powód rozłączenia sesji:', 'Masowe rozłączenie przez administratora');
+    if (!reason) return;
+
+    try {
+      const { data, error } = await supabase.rpc('disconnect_multiple_sessions', {
+        p_session_ids: Array.from(selectedSessions),
+        p_admin_user_id: user.id,
+        p_reason: reason
+      });
+
+      if (error) throw error;
+
+      alert(`Rozłączono ${data} sesji`);
+      setSelectedSessions(new Set());
+      loadSessions();
+    } catch (error) {
+      console.error('Error disconnecting multiple sessions:', error);
+      alert('Błąd podczas rozłączania sesji: ' + (error as Error).message);
+    }
+  };
+
+  const toggleSessionSelection = (sessionId: string) => {
+    const newSelection = new Set(selectedSessions);
+    if (newSelection.has(sessionId)) {
+      newSelection.delete(sessionId);
+    } else {
+      newSelection.add(sessionId);
+    }
+    setSelectedSessions(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedSessions.size === filteredSessions.length) {
+      setSelectedSessions(new Set());
+    } else {
+      setSelectedSessions(new Set(filteredSessions.map(s => s.id)));
+    }
+  };
 
   const applyFilters = () => {
     let filtered = [...sessions];
@@ -150,6 +248,22 @@ export default function SessionsBrowserPanel() {
     }
     if (filters.userRole !== 'all') {
       filtered = filtered.filter(s => s.user_role === filters.userRole);
+    }
+    if (filters.sessionStatus !== 'all') {
+      const now = new Date();
+      const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+
+      if (filters.sessionStatus === 'active') {
+        filtered = filtered.filter(s => !s.session_end);
+      } else if (filters.sessionStatus === 'inactive') {
+        filtered = filtered.filter(s => s.session_end && new Date(s.session_end) < thirtyMinutesAgo);
+      } else if (filters.sessionStatus === 'reconnectable') {
+        filtered = filtered.filter(s => s.session_end && s.can_reconnect !== false && new Date(s.session_end) >= thirtyMinutesAgo);
+      } else if (filters.sessionStatus === 'disconnected') {
+        filtered = filtered.filter(s => s.disconnected_by !== null);
+      } else if (filters.sessionStatus === 'killed') {
+        filtered = filtered.filter(s => s.can_reconnect === false);
+      }
     }
 
     setFilteredSessions(filtered);
@@ -510,7 +624,42 @@ export default function SessionsBrowserPanel() {
               ))}
             </select>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Status sesji
+            </label>
+            <select
+              value={filters.sessionStatus}
+              onChange={(e) => setFilters({ ...filters, sessionStatus: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="all">Wszystkie</option>
+              <option value="active">Aktywne</option>
+              <option value="reconnectable">Rozłączone (możliwy powrót)</option>
+              <option value="inactive">Nieaktywne</option>
+              <option value="disconnected">Ręcznie rozłączone</option>
+              <option value="killed">Zabite (bez powrotu)</option>
+            </select>
+          </div>
         </div>
+
+        {selectedSessions.size > 0 && (
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                Zaznaczono: {selectedSessions.size} {selectedSessions.size === 1 ? 'sesję' : 'sesji'}
+              </span>
+              <button
+                onClick={disconnectMultipleSessions}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+              >
+                <Power className="w-4 h-4" />
+                Rozłącz zaznaczone
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
