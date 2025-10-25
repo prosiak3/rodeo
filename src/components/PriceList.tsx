@@ -684,7 +684,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                   onMouseDown={isDisabled ? undefined : (e) => handleMouseDown(e, product.id)}
                 >
                     <div
-                      className={`px-3 py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
+                      className={`px-3 py-3 sm:py-2 pr-14 ${isDisabled ? '' : 'hover:bg-gray-50'} transition`}
                       style={{
                         transform: isDisabled ? 'none' : `translateX(${swipeOffset}px)`,
                         transition: swipeOffset === 0 ? 'transform 0.3s ease-out' : 'none'
@@ -698,37 +698,37 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                               {product.index}
                             </span>
                           )}
-                          <span className="font-medium text-sm text-gray-800 truncate">
+                          <span className="font-medium text-base sm:text-sm text-gray-800 truncate">
                             {product.name}
                           </span>
-                          <span className="text-xs text-gray-500 flex-shrink-0">({product.unit})</span>
+                          <span className="text-sm sm:text-xs text-gray-500 flex-shrink-0">({product.unit})</span>
                           {isInNotebook && (
-                            <span className="text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">W NOTATNIKU</span>
+                            <span className="text-xs sm:text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded font-medium">W NOTATNIKU</span>
                           )}
                           {hasDiscountPromo && (
-                            <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold animate-pulse">-{discountPercent}%</span>
+                            <span className="text-xs sm:text-[10px] bg-red-600 text-white px-1.5 py-0.5 rounded font-bold animate-pulse">-{discountPercent}%</span>
                           )}
                           {is10Plus1 && (
-                            <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">10+1 GRATIS</span>
+                            <span className="text-xs sm:text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">10+1 GRATIS</span>
                           )}
                         </div>
                         {showDescription && product.description && (
-                          <p className="text-xs text-gray-600 truncate ml-9">{product.description}</p>
+                          <p className="text-sm sm:text-xs text-gray-600 truncate ml-9">{product.description}</p>
                         )}
                       </div>
                       {priceLayout === 'horizontal' ? (
                         <div className="flex items-center gap-2 flex-shrink-0" style={{ marginRight: '-60px' }}>
                           {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
-                              <span className="text-xs line-through text-gray-400">
+                              <span className="text-sm sm:text-xs line-through text-gray-400">
                                 {(product.your_price || product.base_price).toFixed(2)}
                               </span>
-                              <span className="text-base font-bold text-red-600 animate-pulse">
+                              <span className="text-lg sm:text-base font-bold text-red-600 animate-pulse">
                                 {product.promo_price.toFixed(2)}
                               </span>
                             </>
                           ) : (
-                            <span className="text-sm font-bold" style={{ color: colors.text }}>
+                            <span className="text-base sm:text-sm font-bold" style={{ color: colors.text }}>
                               {(product.your_price || product.base_price).toFixed(2)}
                             </span>
                           )}
@@ -737,15 +737,15 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
                         <div className="flex flex-col items-end gap-1 flex-shrink-0" style={{ marginRight: '-60px' }}>
                           {product.promo_price && product.promo_price > 0 && product.promo_price < (product.your_price || product.base_price) ? (
                             <>
-                              <span className="text-sm line-through text-gray-400">
+                              <span className="text-base sm:text-sm line-through text-gray-400">
                                 {(product.your_price || product.base_price).toFixed(2)}
                               </span>
-                              <span className="text-base font-bold text-red-600 animate-pulse">
+                              <span className="text-lg sm:text-base font-bold text-red-600 animate-pulse">
                                 {product.promo_price.toFixed(2)}
                               </span>
                             </>
                           ) : (
-                            <span className="text-base font-bold" style={{ color: colors.text }}>
+                            <span className="text-lg sm:text-base font-bold" style={{ color: colors.text }}>
                               {(product.your_price || product.base_price).toFixed(2)}
                             </span>
                           )}
