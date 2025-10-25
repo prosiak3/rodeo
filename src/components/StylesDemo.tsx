@@ -2,23 +2,25 @@ import { useState } from 'react';
 import { Eye, Grid, Maximize2, Check, Star, X } from 'lucide-react';
 import { ThemeStyle, THEME_CONFIGS } from '../types/themes';
 import { useTheme } from '../contexts/ThemeContext';
+import HomeScreen from './HomeScreen';
 
-import HomeScreen_Glassmorphism from './themes/HomeScreen_Glassmorphism';
-import HomeScreen_Minimalist from './themes/HomeScreen_Minimalist';
-import HomeScreen_Colorful from './themes/HomeScreen_Colorful';
-import HomeScreen_Corporate from './themes/HomeScreen_Corporate';
-import HomeScreen_Material from './themes/HomeScreen_Material';
-import HomeScreen_Fluent from './themes/HomeScreen_Fluent';
+// Theme components temporarily disabled - folder doesn't exist
+// import HomeScreen_Glassmorphism from './themes/HomeScreen_Glassmorphism';
+// import HomeScreen_Minimalist from './themes/HomeScreen_Minimalist';
+// import HomeScreen_Colorful from './themes/HomeScreen_Colorful';
+// import HomeScreen_Corporate from './themes/HomeScreen_Corporate';
+// import HomeScreen_Material from './themes/HomeScreen_Material';
+// import HomeScreen_Fluent from './themes/HomeScreen_Fluent';
 
 type ViewMode = 'grid' | 'single' | 'comparison';
 
-const THEME_COMPONENTS = {
-  glassmorphism: HomeScreen_Glassmorphism,
-  minimalist: HomeScreen_Minimalist,
-  colorful: HomeScreen_Colorful,
-  corporate: HomeScreen_Corporate,
-  material: HomeScreen_Material,
-  fluent: HomeScreen_Fluent,
+const THEME_COMPONENTS: Record<ThemeStyle, any> = {
+  glassmorphism: HomeScreen,
+  minimalist: HomeScreen,
+  colorful: HomeScreen,
+  corporate: HomeScreen,
+  material: HomeScreen,
+  fluent: HomeScreen,
 };
 
 export default function StylesDemo() {

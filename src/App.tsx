@@ -5,13 +5,6 @@ import { FontSizeProvider } from './contexts/FontSizeContext';
 import LoginScreen from './components/LoginScreen';
 import StylesDemo from './components/StylesDemo';
 import HomeScreen from './components/HomeScreen';
-
-import HomeScreen_Glassmorphism from './components/themes/HomeScreen_Glassmorphism';
-import HomeScreen_Minimalist from './components/themes/HomeScreen_Minimalist';
-import HomeScreen_Colorful from './components/themes/HomeScreen_Colorful';
-import HomeScreen_Corporate from './components/themes/HomeScreen_Corporate';
-import HomeScreen_Material from './components/themes/HomeScreen_Material';
-import HomeScreen_Fluent from './components/themes/HomeScreen_Fluent';
 import VoiceOrderScreen from './components/VoiceOrderScreen';
 import ManualOrderScreen from './components/ManualOrderScreen';
 import CopyOrderScreen from './components/CopyOrderScreen';
@@ -36,15 +29,6 @@ import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import { Grid3x3, List } from 'lucide-react';
 
-const THEME_COMPONENTS = {
-  glassmorphism: HomeScreen_Glassmorphism,
-  minimalist: HomeScreen_Minimalist,
-  colorful: HomeScreen_Colorful,
-  corporate: HomeScreen_Corporate,
-  material: HomeScreen_Material,
-  fluent: HomeScreen_Fluent,
-};
-
 function AppContent() {
   const { session, user, loading, signIn, signOut, savedLocation } = useAuth();
   const { uiTheme } = useTheme();
@@ -62,9 +46,6 @@ function AppContent() {
   };
 
   const getHomeScreenComponent = () => {
-    if (uiTheme && THEME_COMPONENTS[uiTheme]) {
-      return THEME_COMPONENTS[uiTheme];
-    }
     return HomeScreen;
   };
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
