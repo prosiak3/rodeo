@@ -208,10 +208,10 @@ Deno.serve(async (req: Request) => {
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr>
                             <td style="width: 50%; text-align: left; vertical-align: middle;">
-                              ${orderData ? `<h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">${orderData.order_number}</h2>` : ''}
+                              ${orderData ? `<h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Zamówienie ${orderData.order_number}</h2>` : ''}
                             </td>
                             <td style="width: 50%; text-align: right; vertical-align: middle;">
-                              <img src="https://pcdr.pl/wp-content/uploads/2025/10/erasebg-transformed.png" alt="RODEO" style="height: 70px; width: auto; display: inline-block;" />
+                              <img src="https://pcdr.pl/wp-content/uploads/2025/10/erasebg-transformed.png" alt="RODEO" style="height: 100px; width: 100px; display: inline-block;" />
                             </td>
                           </tr>
                         </table>
@@ -248,6 +248,18 @@ Deno.serve(async (req: Request) => {
                               <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">${orderData.notes}</p>
                             </div>
                           ` : ''}
+
+                          <div style="margin-top: 30px; text-align: center; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
+                            <p style="margin: 0 0 15px 0; color: #374151; font-weight: 600; font-size: 14px;">Kody zamówienia:</p>
+                            <div style="display: inline-block; margin: 0 20px;">
+                              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">Kod kreskowy (Code128)</p>
+                              <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(orderData.order_number)}&scale=3&height=10&includetext" alt="Barcode" style="max-width: 300px; height: auto;" />
+                            </div>
+                            <div style="display: inline-block; margin: 0 20px;">
+                              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">Kod QR</p>
+                              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(orderData.order_number)}" alt="QR Code" style="width: 150px; height: 150px;" />
+                            </div>
+                          </div>
 
                           <div style="margin-top: 20px; padding: 15px; background-color: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
                             <p style="margin: 0; color: #065f46; font-size: 13px;">
