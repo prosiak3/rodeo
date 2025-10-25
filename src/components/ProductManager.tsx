@@ -16,6 +16,7 @@ interface Product {
   active: boolean;
   description?: string;
   index?: string;
+  default_quantity_on_add?: number;
 }
 
 export default function ProductManager() {
@@ -51,7 +52,7 @@ export default function ProductManager() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, code, display_category, original_category, unit, base_price, min_quantity, quantity_step, active, description, index')
+        .select('id, name, code, display_category, original_category, unit, base_price, min_quantity, quantity_step, active, description, index, default_quantity_on_add')
         .order('display_category', { ascending: true })
         .order('name', { ascending: true });
 
@@ -107,6 +108,7 @@ export default function ProductManager() {
     setEditData({
       min_quantity: product.min_quantity,
       quantity_step: product.quantity_step,
+      default_quantity_on_add: product.default_quantity_on_add,
     });
   };
 
@@ -122,6 +124,7 @@ export default function ProductManager() {
         .update({
           min_quantity: editData.min_quantity,
           quantity_step: editData.quantity_step,
+          default_quantity_on_add: editData.default_quantity_on_add,
         })
         .eq('id', productId);
 
@@ -577,6 +580,7 @@ export default function ProductManager() {
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700">Kategoria</th>
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Min. ilość</th>
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700">Krok</th>
+                <th className="text-center py-3 px-2 text-sm font-semibold text-gray-700">Domyślna ilość</th>
                 <th className="text-center py-3 px-2 text-sm font-semibold text-gray-700">Akcje</th>
               </tr>
             </thead>
@@ -632,6 +636,23 @@ export default function ProductManager() {
                       />
                     ) : (
                       <span>{product.quantity_step} {product.unit}</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-2 text-center">
+                    {editingId === product.id ? (
+                      <select
+                        value={editData.default_quantity_on_add || 5}
+                        onChange={(e) => setEditData({ ...editData, default_quantity_on_add: parseInt(e.target.value) })}
+                        className="w-16 p-1 border border-gray-300 rounded"
+                      >
+                        <option value={1}>1</option>
+                        <option value={3}>3</option>
+                        <option value={5}>5</option>
+                        <option value={7}>7</option>
+                        <option value={10}>10</option>
+                      </select>
+                    ) : (
+                      <span className="text-amber-600 font-semibold">{product.default_quantity_on_add || 5}</span>
                     )}
                   </td>
                   <td className="py-3 px-2 text-center">

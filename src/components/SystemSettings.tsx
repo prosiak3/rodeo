@@ -16,6 +16,7 @@ interface GlobalSettings {
   session_disconnect_kill_minutes: number;
   session_max_duration_minutes: number;
   session_settings_enabled: boolean;
+  default_quantity_on_add: number;
 }
 
 const TIME_OPTIONS = [
@@ -51,6 +52,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     session_disconnect_kill_minutes: 30,
     session_max_duration_minutes: 480,
     session_settings_enabled: true,
+    default_quantity_on_add: 5,
   });
   const [newEmail, setNewEmail] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
@@ -84,6 +86,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           session_disconnect_kill_minutes: data.session_disconnect_kill_minutes || 30,
           session_max_duration_minutes: data.session_max_duration_minutes || 480,
           session_settings_enabled: data.session_settings_enabled ?? true,
+          default_quantity_on_add: data.default_quantity_on_add || 5,
         });
       }
     } catch (error) {
@@ -360,6 +363,27 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
                 <div className="text-sm text-gray-600">Budujesz listę produktów, potem podajesz ilości i zapisujesz jako szkic</div>
               </button>
             </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Settings className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Domyślna ilość produktu</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Domyślna ilość produktu przy dodawaniu z cennika (może być nadpisana dla pojedynczych produktów):
+            </p>
+            <select
+              value={settings.default_quantity_on_add}
+              onChange={(e) => setSettings({ ...settings, default_quantity_on_add: parseInt(e.target.value) })}
+              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+            >
+              <option value={1}>1</option>
+              <option value={3}>3</option>
+              <option value={5}>5</option>
+              <option value={7}>7</option>
+              <option value={10}>10</option>
+            </select>
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">

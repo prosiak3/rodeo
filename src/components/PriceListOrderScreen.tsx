@@ -19,6 +19,7 @@ interface Product {
   promo_price?: number;
   final_price: number;
   average_weight?: number;
+  default_quantity_on_add?: number;
 }
 
 type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
@@ -146,7 +147,9 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
 
   const selectProduct = (product: Product) => {
     setSelectedProduct(product);
-    setQuantity(product.min_quantity.toString());
+    // Użyj domyślnej ilości produktu, jeśli jest ustawiona, w przeciwnym razie minimum
+    const defaultQty = product.default_quantity_on_add || product.min_quantity;
+    setQuantity(defaultQty.toString());
   };
 
   const adjustQuantity = (delta: number) => {
