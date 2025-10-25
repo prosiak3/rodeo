@@ -117,11 +117,11 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
   return (
     <button
       onClick={handleKeepAlive}
-      className={`flex items-center gap-2 px-3 py-1.5 text-white rounded-lg font-medium transition text-sm ${getButtonColor(percentage)}`}
+      className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 text-white rounded-lg font-medium transition text-xs sm:text-sm ${getButtonColor(percentage)}`}
       title="Kliknij aby przedłużyć sesję"
     >
-      <RefreshCw className="w-4 h-4" />
-      <span>{formatTime(remainingTime)}</span>
+      <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+      <span className="whitespace-nowrap">{formatTime(remainingTime)}</span>
     </button>
   );
 }
