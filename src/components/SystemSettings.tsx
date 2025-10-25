@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, Users, Filter, Mail, Send } from 'lucide-react';
+import { Settings, Save, Users, Filter, Mail, Send, Plus, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface SystemSettingsProps {
@@ -10,7 +10,7 @@ interface GlobalSettings {
   default_order_mode: 'quantity' | 'list';
   default_show_all_filters: boolean;
   default_allow_collaboration: boolean;
-  wholesale_email: string;
+  wholesale_emails: string[];
 }
 
 export default function SystemSettings({ userId }: SystemSettingsProps) {
@@ -18,8 +18,9 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     default_order_mode: 'quantity',
     default_show_all_filters: false,
     default_allow_collaboration: true,
-    wholesale_email: '',
+    wholesale_emails: [],
   });
+  const [newEmail, setNewEmail] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           default_order_mode: data.default_order_mode || 'quantity',
           default_show_all_filters: data.default_show_all_filters || false,
           default_allow_collaboration: data.default_allow_collaboration ?? true,
-          wholesale_email: data.wholesale_email || '',
+          wholesale_emails: data.wholesale_emails || [],
         });
       }
     } catch (error) {
@@ -56,9 +57,12 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
   };
 
   const saveSettings = async () => {
-    if (settings.wholesale_email && !isValidEmail(settings.wholesale_email)) {
-      alert('Podaj prawidłowy adres email hurtowni');
-      return;
+    // Waliduj wszystkie adresy email
+    for (const email of settings.wholesale_emails) {
+      if (!isValidEmail(email)) {
+        alert(`Nieprawidłowy adres email: ${email}`);
+        return;
+      }
     }
 
     setSaving(true);
@@ -97,14 +101,37 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     return emailRegex.test(email);
   };
 
-  const testEmailConfiguration = async () => {
-    if (!settings.wholesale_email) {
-      alert('Najpierw zapisz adres email hurtowni');
+  const addEmail = () => {
+    const email = newEmail.trim();
+    if (!email) return;
+
+    if (!isValidEmail(email)) {
+      alert('Niepoprawny format adresu email');
       return;
     }
 
-    if (!isValidEmail(settings.wholesale_email)) {
-      alert('Podaj prawidłowy adres email');
+    if (settings.wholesale_emails.includes(email)) {
+      alert('Ten adres email już istnieje na liście');
+      return;
+    }
+
+    setSettings({
+      ...settings,
+      wholesale_emails: [...settings.wholesale_emails, email],
+    });
+    setNewEmail('');
+  };
+
+  const removeEmail = (emailToRemove: string) => {
+    setSettings({
+      ...settings,
+      wholesale_emails: settings.wholesale_emails.filter(e => e !== emailToRemove),
+    });
+  };
+
+  const testEmailConfiguration = async () => {
+    if (settings.wholesale_emails.length === 0) {
+      alert('Najpierw dodaj przynajmniej jeden adres email hurtowni');
       return;
     }
 
@@ -121,7 +148,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           },
           body: JSON.stringify({
             test: true,
-            to: settings.wholesale_email,
+            to: settings.wholesale_emails,
             subject: '🧪 Test konfiguracji email - System Rodeo',
             message: 'To jest testowa wiadomość z systemu Rodeo. Jeśli widzisz tę wiadomość, konfiguracja email działa prawidłowo!',
           }),
@@ -133,7 +160,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
         throw new Error(errorData.error || 'Błąd podczas wysyłania emaila');
       }
 
-      alert(`✅ Email testowy został wysłany na adres: ${settings.wholesale_email}\n\nSprawdź swoją skrzynkę pocztową (również folder spam).`);
+      alert(`✅ Email testowy został wysłany na ${settings.wholesale_emails.length} adres${settings.wholesale_emails.length === 1 ? '' : settings.wholesale_emails.length < 5 ? 'y' : 'ów'}:\n\n${settings.wholesale_emails.join('\n')}\n\nSprawdź skrzynki pocztowe (również foldery spam).`);
     } catch (error) {
       console.error('Error testing email:', error);
       alert(`❌ Błąd podczas wysyłania emaila testowego:\n\n${error instanceof Error ? error.message : 'Nieznany błąd'}\n\nUpewnij się że klucz API Resend jest skonfigurowany w ustawieniach Supabase Edge Functions.`);
@@ -192,30 +219,75 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Mail className="w-5 h-5 text-amber-600" />
-              <h3 className="font-semibold text-lg">Email hurtowni</h3>
+              <h3 className="font-semibold text-lg">Adresy Email Hurtowni</h3>
             </div>
             <p className="text-sm text-gray-600 mb-3">
-              Adres email, na który będą wysyłane wszystkie zamówienia ze sklepów:
+              Adresy email, na które będą wysyłane wszystkie zamówienia ze sklepów:
             </p>
             <div className="space-y-3">
-              <input
-                type="email"
-                value={settings.wholesale_email}
-                onChange={(e) => setSettings({ ...settings, wholesale_email: e.target.value })}
-                placeholder="hurtownia@example.com"
-                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addEmail()}
+                  placeholder="nowy@email.com"
+                  className="flex-1 p-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                />
+                <button
+                  onClick={addEmail}
+                  className="px-4 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Dodaj
+                </button>
+              </div>
+
+              {settings.wholesale_emails.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">
+                    Lista adresów ({settings.wholesale_emails.length}):
+                  </p>
+                  {settings.wholesale_emails.map((email, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-white p-3 rounded-lg border-2 border-gray-200"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-700">{email}</span>
+                      </div>
+                      <button
+                        onClick={() => removeEmail(email)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                        title="Usuń adres"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {settings.wholesale_emails.length === 0 && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                  <p className="text-sm text-yellow-800">
+                    Brak adresów email. Dodaj przynajmniej jeden adres powyżej.
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={testEmailConfiguration}
-                disabled={testingEmail || !settings.wholesale_email}
+                disabled={testingEmail || settings.wholesale_emails.length === 0}
                 className="w-full py-2 bg-blue-50 border-2 border-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-100 transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
-                {testingEmail ? 'Testowanie...' : 'Testuj konfigurację email'}
+                {testingEmail ? 'Testowanie...' : `Testuj wysyłkę (${settings.wholesale_emails.length} ${settings.wholesale_emails.length === 1 ? 'adres' : settings.wholesale_emails.length < 5 ? 'adresy' : 'adresów'})`}
               </button>
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Info:</strong> Wszystkie zamówienia będą automatycznie wysyłane na ten adres email po zmianie statusu na "Wysłane".
+                  <strong>Info:</strong> Wszystkie zamówienia będą automatycznie wysyłane na te adresy email po zmianie statusu na "Wysłane".
                 </p>
               </div>
             </div>

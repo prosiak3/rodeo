@@ -236,18 +236,17 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           .eq('id', order.store_id)
           .maybeSingle();
 
-        // Jeśli sklep nie ma adresów, użyj domyślnego z ustawień
+        // Jeśli sklep nie ma adresów, użyj domyślnych z ustawień
         let emailRecipients: string[] = storeData?.email_addresses || [];
 
         if (emailRecipients.length === 0) {
           const { data: settings } = await supabase
             .from('system_settings')
-            .select('wholesale_email')
+            .select('wholesale_emails')
             .eq('id', 1)
             .maybeSingle();
 
-          const wholesaleEmail = settings?.wholesale_email || 'pcdoctor03@gmail.com';
-          emailRecipients = [wholesaleEmail];
+          emailRecipients = settings?.wholesale_emails || ['pcdoctor03@gmail.com'];
         }
 
         // Pobierz aktualny cennik dla sklepu
