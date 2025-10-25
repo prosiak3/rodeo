@@ -59,15 +59,25 @@ export default function SessionsBrowserPanel() {
   });
 
   useEffect(() => {
-    loadSessions();
+    loadSessions(true);
+
+    // Auto-refresh every 15 seconds
+    const intervalId = setInterval(() => {
+      loadSessions(false); // Don't show loading spinner on auto-refresh
+    }, 15000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
     applyFilters();
   }, [sessions, filters]);
 
-  const loadSessions = async () => {
-    setLoading(true);
+  const loadSessions = async (showLoading = true) => {
+    if (showLoading) {
+      setLoading(true);
+    }
     try {
       const { data, error } = await supabase
         .from('user_sessions')
@@ -140,7 +150,9 @@ export default function SessionsBrowserPanel() {
       console.error('Error loading sessions:', error);
       setSessions([]);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
