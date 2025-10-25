@@ -37,7 +37,7 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     try {
       const { data } = await supabase
         .from('user_sessions')
-        .select('session_start')
+        .select('session_start, last_activity_at')
         .eq('user_id', user.id)
         .is('session_end', null)
         .order('session_start', { ascending: false })
@@ -45,7 +45,9 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
         .single();
 
       if (data) {
-        setSessionStart(new Date(data.session_start));
+        // Use last_activity_at if available, otherwise fall back to session_start
+        const referenceTime = data.last_activity_at || data.session_start;
+        setSessionStart(new Date(referenceTime));
       }
     } catch (error) {
       console.error('Error loading session info:', error);
