@@ -307,7 +307,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
         // Pobierz dane użytkownika wysyłającego
         const { data: userData } = await supabase
           .from('users')
-          .select('first_name, last_name, phone')
+          .select('full_name, phone')
           .eq('id', userId)
           .maybeSingle();
 
@@ -321,7 +321,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           total_amount: totalAmount,
           notes: order.notes || '',
           created_at: order.created_at,
-          sent_by: userData ? `${userData.first_name} ${userData.last_name}` : 'Nieznany użytkownik',
+          sent_by: userData?.full_name || 'Nieznany użytkownik',
           sent_by_phone: userData?.phone || '',
           sent_at: new Date().toISOString()
         };
