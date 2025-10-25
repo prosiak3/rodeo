@@ -9,27 +9,25 @@ interface SessionTimerProps {
 
 export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
   const { user } = useAuth();
-  const [sessionDuration, setSessionDuration] = useState(0);
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
-  const [maxDuration, setMaxDuration] = useState(480); // Default 8 hours
+  const [maxDuration, setMaxDuration] = useState(480); // Default 8 hours in minutes
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     if (!user?.id) return;
 
     loadSessionInfo();
     loadSystemSettings();
+  }, [user?.id]);
 
-    // Update timer every second
+  // Separate interval for updating current time
+  useEffect(() => {
     const interval = setInterval(() => {
-      if (sessionStart) {
-        const now = new Date();
-        const elapsedSeconds = Math.floor((now.getTime() - sessionStart.getTime()) / 1000);
-        setSessionDuration(elapsedSeconds);
-      }
+      setCurrentTime(new Date());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [user?.id, sessionStart]);
+  }, []);
 
   const loadSessionInfo = async () => {
     if (!user?.id) return;
@@ -37,7 +35,7 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     try {
       const { data } = await supabase
         .from('user_sessions')
-        .select('session_start, last_activity_at')
+        .select('session_start')
         .eq('user_id', user.id)
         .is('session_end', null)
         .order('session_start', { ascending: false })
@@ -45,9 +43,7 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
         .single();
 
       if (data) {
-        // Use last_activity_at if available, otherwise fall back to session_start
-        const referenceTime = data.last_activity_at || data.session_start;
-        setSessionStart(new Date(referenceTime));
+        setSessionStart(new Date(data.session_start));
       }
     } catch (error) {
       console.error('Error loading session info:', error);
@@ -99,10 +95,7 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     return `${secs}s`;
   };
 
-  const getButtonColor = (): string => {
-    const maxDurationSeconds = maxDuration * 60;
-    const percentage = (sessionDuration / maxDurationSeconds) * 100;
-
+  const getButtonColor = (percentage: number): string => {
     if (percentage < 50) return 'bg-green-600 hover:bg-green-700';
     if (percentage < 75) return 'bg-yellow-600 hover:bg-yellow-700';
     if (percentage < 90) return 'bg-orange-600 hover:bg-orange-700';
@@ -111,13 +104,20 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
 
   if (!sessionStart) return null;
 
+  // Calculate elapsed time in seconds
+  const elapsedSeconds = Math.floor((currentTime.getTime() - sessionStart.getTime()) / 1000);
+
+  // Calculate remaining time
   const maxDurationSeconds = maxDuration * 60;
-  const remainingTime = Math.max(maxDurationSeconds - sessionDuration, 0);
+  const remainingTime = Math.max(maxDurationSeconds - elapsedSeconds, 0);
+
+  // Calculate percentage for color
+  const percentage = (elapsedSeconds / maxDurationSeconds) * 100;
 
   return (
     <button
       onClick={handleKeepAlive}
-      className={`flex items-center gap-2 px-3 py-1.5 text-white rounded-lg font-medium transition text-sm ${getButtonColor()}`}
+      className={`flex items-center gap-2 px-3 py-1.5 text-white rounded-lg font-medium transition text-sm ${getButtonColor(percentage)}`}
       title="Kliknij aby przedłużyć sesję"
     >
       <RefreshCw className="w-4 h-4" />
