@@ -24,9 +24,11 @@ import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SessionCleanupService from './components/SessionCleanupService';
 import UserNotifications from './components/UserNotifications';
+import RealtimeOrderNotifications from './components/RealtimeOrderNotifications';
 import { supabase, OrderStatus } from './lib/supabase';
 import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
+import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import { Grid3x3, List } from 'lucide-react';
 
 function AppContent() {
@@ -66,6 +68,33 @@ function AppContent() {
     selectedOrderId ? 'order-details' :
     activeTab === 'new-order' && orderMode ? orderMode :
     activeTab
+  );
+
+  // Keyboard shortcuts (tylko dla zalogowanych użytkowników)
+  useKeyboardShortcuts(
+    {
+      'h': () => {
+        if (session) setActiveTab('home');
+      },
+      'n': () => {
+        if (session) setActiveTab('new-order');
+      },
+      'o': () => {
+        if (session) setActiveTab('orders');
+      },
+      'c': () => {
+        if (session) setActiveTab('prices');
+      },
+      'p': () => {
+        if (session) setActiveTab('profile');
+      },
+      'a': () => {
+        if (session && (user?.role === 'admin' || user?.role === 'analyst')) {
+          setActiveTab('admin');
+        }
+      },
+    },
+    { enabled: !!session }
   );
 
   // Load auto-logout timeout from system settings
@@ -640,6 +669,9 @@ function AppContent() {
 
       {/* User notifications for system announcements */}
       <UserNotifications />
+
+      {/* Real-time order status notifications */}
+      <RealtimeOrderNotifications />
 
       <Header
         title={header.title}

@@ -733,6 +733,35 @@ Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do autom
     - Fallback na obecny czas w razie błędu
     - Lepsze komentarze w kodzie
 
+11. **Error Boundary:**
+    - Zabezpieczenie przed crashem całej aplikacji
+    - Przyjazny ekran błędu zamiast białej strony
+    - Logowanie błędów do konsoli (gotowe na Sentry)
+    - Przycisk odświeżenia i reset
+
+12. **Loading Skeletons:**
+    - Skeleton.tsx - uniwersalny komponent placeholder
+    - SkeletonCard, SkeletonList, SkeletonTable
+    - Animacja shimmer podczas ładowania
+    - Lepsza percepcja wydajności
+
+13. **Keyboard Shortcuts:**
+    - Ctrl/Cmd + N - Nowe zamówienie
+    - Ctrl/Cmd + H - Home
+    - Ctrl/Cmd + O - Lista zamówień
+    - Ctrl/Cmd + C - Cennik
+    - Ctrl/Cmd + P - Profil
+    - Ctrl/Cmd + A - Admin panel (tylko admin/analyst)
+    - Nie działa gdy focus jest na input/textarea
+
+14. **Real-time Order Notifications:**
+    - Supabase Realtime dla zmian statusów zamówień
+    - Toast notifications w prawym górnym rogu
+    - Dźwięk powiadomienia dla każdego typu
+    - Różne kolory i ikony (success, error, warning, info)
+    - Auto-znikanie po 5 sekundach
+    - Animacja slide-in-right
+
 ### Nowe funkcje w v1.3:
 
 1. **System grup sklepów:**
