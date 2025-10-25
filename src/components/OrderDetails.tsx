@@ -304,12 +304,19 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
         const totalAmount = itemsWithCurrentPrices.reduce((sum, item) => sum + item.total_price, 0);
 
-        // Pobierz dane użytkownika wysyłającego
-        const { data: userData } = await supabase
+        // Pobierz dane aktualnie zalogowanego użytkownika (wysyłającego)
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+        const { data: userData, error: userError } = await supabase
           .from('users')
           .select('full_name, phone')
-          .eq('id', userId)
+          .eq('id', currentUser?.id || userId)
           .maybeSingle();
+
+        console.log('🔵 Wysyłanie zamówienia - userId:', userId);
+        console.log('🔵 Zalogowany użytkownik:', currentUser?.id);
+        console.log('🔵 Dane użytkownika:', userData);
+        console.log('🔵 Błąd pobierania użytkownika:', userError);
 
         // Przygotuj dane zamówienia
         const orderData = {
@@ -325,6 +332,11 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           sent_by_phone: userData?.phone || '',
           sent_at: new Date().toISOString()
         };
+
+        console.log('🔵 Dane zamówienia dla emaila:', {
+          sent_by: orderData.sent_by,
+          sent_by_phone: orderData.sent_by_phone
+        });
 
         // Zapisz logi emaila dla każdego adresu jako pending
         const emailSubject = `Zamówienie ${order.order_number} - ${order.store?.name}`;
