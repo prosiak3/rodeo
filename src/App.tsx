@@ -1,35 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { FontSizeProvider } from './contexts/FontSizeContext';
 import LoginScreen from './components/LoginScreen';
-import StylesDemo from './components/StylesDemo';
 import HomeScreen from './components/HomeScreen';
-import VoiceOrderScreen from './components/VoiceOrderScreen';
-import ManualOrderScreen from './components/ManualOrderScreen';
-import CopyOrderScreen from './components/CopyOrderScreen';
-import PriceListOrderScreen from './components/PriceListOrderScreen';
-import PriceListOrderListMode from './components/PriceListOrderListMode';
-import AutoOrderScreen from './components/AutoOrderScreen';
-import OrdersList from './components/OrdersList';
-import OrderDetails from './components/OrderDetails';
-import EditDraftOrderScreen from './components/EditDraftOrderScreen';
-import ProfileScreen from './components/ProfileScreen';
-import AdminPanel from './components/AdminPanel';
-import AnalyticsPanel from './components/AnalyticsPanel';
-import SalesAnalyticsPanel from './components/SalesAnalyticsPanel';
-import PriceList from './components/PriceList';
-import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SessionCleanupService from './components/SessionCleanupService';
 import UserNotifications from './components/UserNotifications';
 import RealtimeOrderNotifications from './components/RealtimeOrderNotifications';
+import { SkeletonList } from './components/Skeleton';
 import { supabase, OrderStatus } from './lib/supabase';
 import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import { Grid3x3, List } from 'lucide-react';
+
+// Lazy load heavy components for better performance
+const StylesDemo = lazy(() => import('./components/StylesDemo'));
+const VoiceOrderScreen = lazy(() => import('./components/VoiceOrderScreen'));
+const ManualOrderScreen = lazy(() => import('./components/ManualOrderScreen'));
+const CopyOrderScreen = lazy(() => import('./components/CopyOrderScreen'));
+const PriceListOrderScreen = lazy(() => import('./components/PriceListOrderScreen'));
+const PriceListOrderListMode = lazy(() => import('./components/PriceListOrderListMode'));
+const AutoOrderScreen = lazy(() => import('./components/AutoOrderScreen'));
+const OrdersList = lazy(() => import('./components/OrdersList'));
+const OrderDetails = lazy(() => import('./components/OrderDetails'));
+const EditDraftOrderScreen = lazy(() => import('./components/EditDraftOrderScreen'));
+const ProfileScreen = lazy(() => import('./components/ProfileScreen'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const AnalyticsPanel = lazy(() => import('./components/AnalyticsPanel'));
+const SalesAnalyticsPanel = lazy(() => import('./components/SalesAnalyticsPanel'));
+const PriceList = lazy(() => import('./components/PriceList'));
+const DriverScreen = lazy(() => import('./components/DriverScreen'));
 
 function AppContent() {
   const { session, user, loading, signIn, signOut, savedLocation } = useAuth();
@@ -686,6 +689,7 @@ function AppContent() {
         userProfilePicture={(user as any).profile_picture_url}
       />
       <div className="flex-1 overflow-y-auto pt-[70px] sm:pt-20 pb-14 sm:pb-20">
+        <Suspense fallback={<div className="p-6"><SkeletonList items={5} /></div>}>
         {activeTab === 'home' && (() => {
           const HomeScreenComponent = getHomeScreenComponent();
           return (
@@ -968,6 +972,7 @@ function AppContent() {
         )}
 
         {activeTab === 'profile' && <ProfileScreen user={user} onSignOut={signOut} />}
+        </Suspense>
       </div>
 
       <BottomNav activeTab={activeTab} onTabChange={(tab) => {

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { ThemeStyle } from '../types/themes';
 
 export type Theme = 'amber' | 'blue' | 'green' | 'red' | 'purple';
+export type ColorMode = 'light' | 'dark' | 'auto';
 
 interface ThemeColors {
   primary: string;
@@ -98,6 +99,9 @@ interface ThemeContextType {
   colors: ThemeColors;
   uiTheme: ThemeStyle | null;
   setUiTheme: (theme: ThemeStyle | null) => Promise<void>;
+  colorMode: ColorMode;
+  setColorMode: (mode: ColorMode) => Promise<void>;
+  isDarkMode: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -105,10 +109,31 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('amber');
   const [uiTheme, setUiThemeState] = useState<ThemeStyle | null>(null);
+  const [colorMode, setColorModeState] = useState<ColorMode>('light');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     loadTheme();
+    setupDarkModeListener();
   }, []);
+
+  // Nasłuchuj zmian preferencji systemowych
+  const setupDarkModeListener = () => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (colorMode === 'auto') {
+        applyDarkMode(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  };
+
+  useEffect(() => {
+    applyColorMode(colorMode);
+  }, [colorMode]);
 
   const loadTheme = async () => {
     try {
@@ -117,7 +142,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
       const { data } = await supabase
         .from('users')
-        .select('theme, ui_theme')
+        .select('theme, ui_theme, color_mode')
         .eq('id', user.id)
         .single();
 
@@ -128,6 +153,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
       if (data?.ui_theme) {
         setUiThemeState(data.ui_theme as ThemeStyle);
+      }
+
+      if (data?.color_mode) {
+        setColorModeState(data.color_mode as ColorMode);
+        applyColorMode(data.color_mode as ColorMode);
+      } else {
+        // Domyślnie light mode
+        applyColorMode('light');
       }
     } catch (error) {
       console.error('Error loading theme:', error);
@@ -170,6 +203,45 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setColorMode = async (mode: ColorMode) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from('users')
+        .update({ color_mode: mode })
+        .eq('id', user.id);
+
+      setColorModeState(mode);
+      applyColorMode(mode);
+    } catch (error) {
+      console.error('Error saving color mode:', error);
+    }
+  };
+
+  const applyColorMode = (mode: ColorMode) => {
+    let isDark = false;
+
+    if (mode === 'dark') {
+      isDark = true;
+    } else if (mode === 'auto') {
+      isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    applyDarkMode(isDark);
+  };
+
+  const applyDarkMode = (isDark: boolean) => {
+    setIsDarkMode(isDark);
+
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
   const applyTheme = (theme: Theme) => {
     const colors = themeColors[theme];
     document.documentElement.style.setProperty('--color-primary', colors.primary);
@@ -185,7 +257,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, colors: themeColors[theme], uiTheme, setUiTheme }}>
+    <ThemeContext.Provider value={{
+      theme,
+      setTheme,
+      colors: themeColors[theme],
+      uiTheme,
+      setUiTheme,
+      colorMode,
+      setColorMode,
+      isDarkMode
+    }}>
       {children}
     </ThemeContext.Provider>
   );
