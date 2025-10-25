@@ -982,6 +982,79 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           )}
         </div>
 
+        {canEdit && onEdit && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={onEdit}
+                className="py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow"
+              >
+                <Edit className="w-5 h-5" />
+                Edytuj zamówienie
+              </button>
+              <button
+                onClick={sendOrder}
+                className="py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
+              >
+                <Truck className="w-5 h-5" />
+                Zamów w hurtowni
+              </button>
+            </div>
+          </div>
+        )}
+
+        {canUseAsTemplate && onUseAsTemplate && order.status !== 'draft' && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <button
+              onClick={useAsTemplate}
+              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <Copy className="w-5 h-5" />
+              Użyj jako szablon
+            </button>
+          </div>
+        )}
+
+        {canStartProgress && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <button
+              onClick={startProgress}
+              className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition flex items-center justify-center gap-2 shadow"
+            >
+              <PlayCircle className="w-5 h-5" />
+              Rozpocznij realizację
+            </button>
+          </div>
+        )}
+
+        {canConfirm && (
+          <div className="bg-white rounded-lg shadow p-3">
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => confirmOrder(true)}
+                className="py-2 bg-green-600 text-white rounded font-medium hover:bg-green-700 transition flex items-center justify-center gap-1 text-sm"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>Potwierdź</span>
+              </button>
+              <button
+                onClick={() => confirmOrder(false)}
+                className="py-2 bg-amber-600 text-white rounded font-medium hover:bg-amber-700 transition flex items-center justify-center gap-1 text-sm"
+              >
+                <Clock className="w-4 h-4" />
+                <span>Częściowo</span>
+              </button>
+              <button
+                onClick={rejectOrder}
+                className="py-2 bg-red-600 text-white rounded font-medium hover:bg-red-700 transition flex items-center justify-center gap-1 text-sm"
+              >
+                <XCircle className="w-4 h-4" />
+                <span>Odrzuć</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow">
           <button
             onClick={() => setStatusExpanded(!statusExpanded)}
@@ -1142,79 +1215,6 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           </div>
           )}
         </div>
-
-        {canEdit && onEdit && (
-          <div className="bg-white rounded-lg shadow p-3">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={onEdit}
-                className="py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow"
-              >
-                <Edit className="w-5 h-5" />
-                Edytuj zamówienie
-              </button>
-              <button
-                onClick={sendOrder}
-                className="py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow"
-              >
-                <Truck className="w-5 h-5" />
-                Zamów w hurtowni
-              </button>
-            </div>
-          </div>
-        )}
-
-        {canUseAsTemplate && onUseAsTemplate && order.status !== 'draft' && (
-          <div className="bg-white rounded-lg shadow p-3">
-            <button
-              onClick={useAsTemplate}
-              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition flex items-center justify-center gap-2 shadow"
-            >
-              <Copy className="w-5 h-5" />
-              Użyj jako szablon
-            </button>
-          </div>
-        )}
-
-        {canStartProgress && (
-          <div className="bg-white rounded-lg shadow p-3">
-            <button
-              onClick={startProgress}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition flex items-center justify-center gap-2 shadow"
-            >
-              <PlayCircle className="w-5 h-5" />
-              Rozpocznij realizację
-            </button>
-          </div>
-        )}
-
-        {canConfirm && (
-          <div className="bg-white rounded-lg shadow p-3">
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => confirmOrder(true)}
-                className="py-2 bg-green-600 text-white rounded font-medium hover:bg-green-700 transition flex items-center justify-center gap-1 text-sm"
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span>Potwierdź</span>
-              </button>
-              <button
-                onClick={() => confirmOrder(false)}
-                className="py-2 bg-amber-600 text-white rounded font-medium hover:bg-amber-700 transition flex items-center justify-center gap-1 text-sm"
-              >
-                <Clock className="w-4 h-4" />
-                <span>Częściowo</span>
-              </button>
-              <button
-                onClick={rejectOrder}
-                className="py-2 bg-red-600 text-white rounded font-medium hover:bg-red-700 transition flex items-center justify-center gap-1 text-sm"
-              >
-                <XCircle className="w-4 h-4" />
-                <span>Odrzuć</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {history.length > 0 && (
           <div className="bg-white rounded-lg shadow">
