@@ -189,7 +189,7 @@ Deno.serve(async (req: Request) => {
     const emailPayload: any = {
       from: "RODEO System <onboarding@resend.dev>",
       to: emailRecipients,
-      subject: subject || "Test Email - RODEO System",
+      subject: orderData ? `Zamówienie RODEO ${orderData.order_number}` : (subject || "Test Email - RODEO System"),
       html: `
         <!DOCTYPE html>
         <html>
