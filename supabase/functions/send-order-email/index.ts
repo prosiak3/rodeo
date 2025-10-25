@@ -211,7 +211,7 @@ Deno.serve(async (req: Request) => {
                               ${orderData ? `<h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">${orderData.order_number}</h2>` : ''}
                             </td>
                             <td style="width: 50%; text-align: right; vertical-align: middle;">
-                              <img src="https://zpbhwjnuqiomuufscvho.supabase.co/storage/v1/object/public/public-assets/erasebg-transformed.png" alt="RODEO" style="height: 60px; width: auto; display: inline-block;" />
+                              <img src="https://pcdr.pl/wp-content/uploads/2025/10/erasebg-transformed.png" alt="RODEO" style="height: 70px; width: auto; display: inline-block;" />
                             </td>
                           </tr>
                         </table>
