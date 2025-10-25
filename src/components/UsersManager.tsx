@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, Mail, Shield, Building, Eye, EyeOff, Edit2, X } from 'lucide-react';
+import { Users, Plus, Trash2, Mail, Shield, Building, Eye, EyeOff, Edit2, X, MapPin, Phone, ExternalLink } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import StoreEmailManager from './StoreEmailManager';
 
 interface Store {
   id: string;
   name: string;
   code: string;
+  address?: string | null;
+  phone?: string | null;
+  email_addresses?: string[] | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  active?: boolean;
 }
 
 interface UserData {
@@ -36,6 +43,7 @@ export default function UsersManager() {
   const [creating, setCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
 
   const [newUser, setNewUser] = useState({
     email: '',
@@ -57,6 +65,22 @@ export default function UsersManager() {
     loadData();
   }, []);
 
+  const openStoreDetails = async (storeId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('stores')
+        .select('*')
+        .eq('id', storeId)
+        .single();
+
+      if (error) throw error;
+      setSelectedStore(data);
+    } catch (error) {
+      console.error('Error loading store details:', error);
+      alert('Błąd podczas ładowania szczegółów sklepu');
+    }
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -68,7 +92,13 @@ export default function UsersManager() {
           store:store_id (
             id,
             name,
-            code
+            code,
+            address,
+            phone,
+            email_addresses,
+            latitude,
+            longitude,
+            active
           )
         `)
         .order('created_at', { ascending: false });
@@ -430,10 +460,15 @@ export default function UsersManager() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {user.store ? (
-                      <div className="flex items-center gap-2">
-                        <Building className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{user.store.name}</span>
-                      </div>
+                      <button
+                        onClick={() => openStoreDetails(user.store!.id)}
+                        className="flex items-center gap-2 hover:bg-amber-50 px-2 py-1 rounded transition group"
+                        title="Kliknij aby zobaczyć szczegóły sklepu"
+                      >
+                        <Building className="w-4 h-4 text-gray-400 group-hover:text-amber-600" />
+                        <span className="text-sm text-gray-900 group-hover:text-amber-600 font-medium">{user.store.name}</span>
+                        <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-amber-600 opacity-0 group-hover:opacity-100 transition" />
+                      </button>
                     ) : (
                       <span className="text-sm text-gray-400">-</span>
                     )}
@@ -580,6 +615,98 @@ export default function UsersManager() {
                 className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition disabled:opacity-50"
               >
                 {updating ? 'Zapisywanie...' : 'Zapisz zmiany'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedStore && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-amber-500 to-orange-600 text-white p-6 rounded-t-2xl flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold">{selectedStore.name}</h2>
+                <p className="text-amber-100 mt-1">Kod: {selectedStore.code}</p>
+              </div>
+              <button
+                onClick={() => setSelectedStore(null)}
+                className="p-2 hover:bg-white/20 rounded-lg transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  selectedStore.active
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                }`}>
+                  {selectedStore.active ? 'Aktywny' : 'Nieaktywny'}
+                </div>
+              </div>
+
+              {selectedStore.address && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-gray-800 mb-1">Adres</h3>
+                      <p className="text-gray-700">{selectedStore.address}</p>
+                      {selectedStore.latitude && selectedStore.longitude && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          GPS: {selectedStore.latitude}, {selectedStore.longitude}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedStore.phone && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-gray-800 mb-1">Telefon</h3>
+                      <a
+                        href={`tel:${selectedStore.phone}`}
+                        className="text-green-700 hover:text-green-800 font-medium"
+                      >
+                        {selectedStore.phone}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Mail className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-800 mb-3">Adresy Email</h3>
+                    <StoreEmailManager
+                      storeId={selectedStore.id}
+                      storeName={selectedStore.name}
+                      emailAddresses={selectedStore.email_addresses}
+                      onUpdate={() => {
+                        openStoreDetails(selectedStore.id);
+                        loadData();
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end">
+              <button
+                onClick={() => setSelectedStore(null)}
+                className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition"
+              >
+                Zamknij
               </button>
             </div>
           </div>
