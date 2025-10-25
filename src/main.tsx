@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
+import { initWebVitals } from './lib/webVitals';
 import './index.css';
 
 // Rejestracja Service Worker dla PWA
@@ -17,6 +18,11 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+
+// Inicjalizuj Web Vitals monitoring
+window.addEventListener('load', () => {
+  initWebVitals(); // User ID zostanie dodany po zalogowaniu
+});
 
 const rootElement = document.getElementById('root');
 

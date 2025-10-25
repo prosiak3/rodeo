@@ -9,6 +9,7 @@ import Header from './components/Header';
 import SessionCleanupService from './components/SessionCleanupService';
 import UserNotifications from './components/UserNotifications';
 import RealtimeOrderNotifications from './components/RealtimeOrderNotifications';
+import OfflineIndicator from './components/OfflineIndicator';
 import { SkeletonList } from './components/Skeleton';
 import { supabase, OrderStatus } from './lib/supabase';
 import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
@@ -675,6 +676,9 @@ function AppContent() {
 
       {/* Real-time order status notifications */}
       <RealtimeOrderNotifications />
+
+      {/* Offline indicator and sync status */}
+      <OfflineIndicator />
 
       <Header
         title={header.title}
