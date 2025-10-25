@@ -23,8 +23,8 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     const interval = setInterval(() => {
       if (sessionStart) {
         const now = new Date();
-        const elapsed = Math.floor((now.getTime() - sessionStart.getTime()) / 1000 / 60);
-        setSessionDuration(elapsed);
+        const elapsedSeconds = Math.floor((now.getTime() - sessionStart.getTime()) / 1000);
+        setSessionDuration(elapsedSeconds);
       }
     }, 1000);
 
@@ -83,18 +83,23 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     }
   };
 
-  const formatTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
 
     if (hours > 0) {
-      return `${hours}h ${mins}m`;
+      return `${hours}h ${mins}m ${secs}s`;
     }
-    return `${mins}m`;
+    if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    }
+    return `${secs}s`;
   };
 
   const getButtonColor = (): string => {
-    const percentage = (sessionDuration / maxDuration) * 100;
+    const maxDurationSeconds = maxDuration * 60;
+    const percentage = (sessionDuration / maxDurationSeconds) * 100;
 
     if (percentage < 50) return 'bg-green-600 hover:bg-green-700';
     if (percentage < 75) return 'bg-yellow-600 hover:bg-yellow-700';
@@ -104,7 +109,8 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
 
   if (!sessionStart) return null;
 
-  const remainingTime = Math.max(maxDuration - sessionDuration, 0);
+  const maxDurationSeconds = maxDuration * 60;
+  const remainingTime = Math.max(maxDurationSeconds - sessionDuration, 0);
 
   return (
     <button
