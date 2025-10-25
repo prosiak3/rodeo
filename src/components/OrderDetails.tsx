@@ -229,14 +229,26 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
       // Wyślij email do hurtowni
       try {
-        // Pobierz ustawienia systemowe z email hurtowni
-        const { data: settings } = await supabase
-          .from('system_settings')
-          .select('wholesale_email')
-          .eq('id', 1)
+        // Pobierz adresy email sklepu
+        const { data: storeData } = await supabase
+          .from('stores')
+          .select('email_addresses')
+          .eq('id', order.store_id)
           .maybeSingle();
 
-        const wholesaleEmail = settings?.wholesale_email || 'pcdoctor03@gmail.com';
+        // Jeśli sklep nie ma adresów, użyj domyślnego z ustawień
+        let emailRecipients: string[] = storeData?.email_addresses || [];
+
+        if (emailRecipients.length === 0) {
+          const { data: settings } = await supabase
+            .from('system_settings')
+            .select('wholesale_email')
+            .eq('id', 1)
+            .maybeSingle();
+
+          const wholesaleEmail = settings?.wholesale_email || 'pcdoctor03@gmail.com';
+          emailRecipients = [wholesaleEmail];
+        }
 
         // Pobierz aktualny cennik dla sklepu
         const { data: priceAssignment } = await supabase
@@ -315,53 +327,64 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           sent_at: new Date().toISOString()
         };
 
-        // Zapisz log emaila jako pending
+        // Zapisz logi emaila dla każdego adresu jako pending
         const emailSubject = `Zamówienie ${order.order_number} - ${order.store?.name}`;
-        const { data: emailLog } = await supabase
-          .from('email_notifications')
-          .insert({
-            order_id: order.id,
-            recipient_email: wholesaleEmail,
-            subject: emailSubject,
-            status: 'pending'
-          })
-          .select()
-          .single();
+        const emailLogs = await Promise.all(
+          emailRecipients.map(email =>
+            supabase
+              .from('email_notifications')
+              .insert({
+                order_id: order.id,
+                recipient_email: email,
+                subject: emailSubject,
+                status: 'pending'
+              })
+              .select()
+              .single()
+          )
+        );
 
         const { data, error: emailError } = await supabase.functions.invoke('send-order-email', {
           body: {
-            to: wholesaleEmail,
+            to: emailRecipients,
             subject: emailSubject,
-            orderData,
-            emailLogId: emailLog?.id
+            orderData
           }
         });
 
         if (emailError) {
           console.error('Error sending email:', emailError);
-          // Zaktualizuj log jako failed
-          if (emailLog?.id) {
-            await supabase
-              .from('email_notifications')
-              .update({
-                status: 'failed',
-                error_message: emailError.message || 'Unknown error',
-                retry_count: 1
-              })
-              .eq('id', emailLog.id);
-          }
+          // Zaktualizuj wszystkie logi jako failed
+          await Promise.all(
+            emailLogs.map(log => {
+              if (log.data?.id) {
+                return supabase
+                  .from('email_notifications')
+                  .update({
+                    status: 'failed',
+                    error_message: emailError.message || 'Unknown error',
+                    retry_count: 1
+                  })
+                  .eq('id', log.data.id);
+              }
+            })
+          );
         } else {
-          console.log('Email sent successfully:', data);
-          // Zaktualizuj log jako sent
-          if (emailLog?.id) {
-            await supabase
-              .from('email_notifications')
-              .update({
-                status: 'sent',
-                sent_at: new Date().toISOString()
-              })
-              .eq('id', emailLog.id);
-          }
+          console.log(`Email sent successfully to ${emailRecipients.length} recipient(s):`, data);
+          // Zaktualizuj wszystkie logi jako sent
+          await Promise.all(
+            emailLogs.map(log => {
+              if (log.data?.id) {
+                return supabase
+                  .from('email_notifications')
+                  .update({
+                    status: 'sent',
+                    sent_at: new Date().toISOString()
+                  })
+                  .eq('id', log.data.id);
+              }
+            })
+          );
         }
       } catch (emailError) {
         console.error('Failed to send email notification:', emailError);

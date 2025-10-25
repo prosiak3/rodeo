@@ -111,11 +111,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (!to || !to.includes("@")) {
+    let emailRecipients: string[] = [];
+
+    if (typeof to === 'string') {
+      emailRecipients = [to];
+    } else if (Array.isArray(to)) {
+      emailRecipients = to;
+    } else {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Invalid email address",
+          error: "Invalid email address format. Provide a string or array of email addresses.",
         }),
         {
           status: 400,
@@ -124,7 +130,23 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log(`Sending email to: ${to}`);
+    for (const email of emailRecipients) {
+      if (!email || !email.includes("@")) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Invalid email address: ${email}`,
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    console.log(`Sending email to: ${emailRecipients.join(', ')}`);
+    console.log(`Number of recipients: ${emailRecipients.length}`);
     console.log(`Subject: ${subject}`);
     console.log(`Test mode: ${test ? "yes" : "no"}`);
     console.log(`Has order data: ${orderData ? "yes" : "no"}`);
@@ -166,7 +188,7 @@ Deno.serve(async (req: Request) => {
 
     const emailPayload: any = {
       from: "RODEO System <onboarding@resend.dev>",
-      to: [to],
+      to: emailRecipients,
       subject: subject || "Test Email - RODEO System",
       html: `
         <!DOCTYPE html>
@@ -309,7 +331,8 @@ Deno.serve(async (req: Request) => {
         success: true,
         message: "Email sent successfully",
         id: resendData.id,
-        recipient: to,
+        recipients: emailRecipients,
+        recipientCount: emailRecipients.length,
         hasAttachment: !!orderData,
       }),
       {

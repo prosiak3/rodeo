@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingBag, MapPin, Phone, CheckCircle, XCircle, Grid3x3, List } from 'lucide-react';
+import { ShoppingBag, MapPin, Phone, CheckCircle, XCircle, Grid3x3, List, Mail, Plus, X, Save } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface Store {
@@ -8,6 +8,7 @@ interface Store {
   code: string;
   address: string | null;
   phone: string | null;
+  email_addresses: string[] | null;
   active: boolean;
   created_at: string;
 }
@@ -17,6 +18,9 @@ export default function StoresManager() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
+  const [editedEmails, setEditedEmails] = useState<string[]>([]);
+  const [newEmail, setNewEmail] = useState('');
 
   useEffect(() => {
     loadStores();
@@ -51,6 +55,61 @@ export default function StoresManager() {
       console.error('Error toggling store status:', error);
       alert('Wystąpił błąd podczas zmiany statusu sklepu');
     }
+  };
+
+  const startEditingEmails = (store: Store) => {
+    setEditingStoreId(store.id);
+    setEditedEmails(store.email_addresses || []);
+    setNewEmail('');
+  };
+
+  const addEmail = () => {
+    const email = newEmail.trim();
+    if (!email) return;
+
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      alert('Niepoprawny format adresu email');
+      return;
+    }
+
+    if (editedEmails.includes(email)) {
+      alert('Ten adres email już istnieje');
+      return;
+    }
+
+    setEditedEmails([...editedEmails, email]);
+    setNewEmail('');
+  };
+
+  const removeEmail = (emailToRemove: string) => {
+    setEditedEmails(editedEmails.filter(e => e !== emailToRemove));
+  };
+
+  const saveEmails = async (storeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('stores')
+        .update({ email_addresses: editedEmails })
+        .eq('id', storeId);
+
+      if (error) throw error;
+
+      setEditingStoreId(null);
+      setEditedEmails([]);
+      setNewEmail('');
+      loadStores();
+      alert('Adresy email zostały zaktualizowane');
+    } catch (error) {
+      console.error('Error updating emails:', error);
+      alert('Wystąpił błąd podczas zapisywania adresów email');
+    }
+  };
+
+  const cancelEditingEmails = () => {
+    setEditingStoreId(null);
+    setEditedEmails([]);
+    setNewEmail('');
   };
 
   const filteredStores = stores.filter(store =>
