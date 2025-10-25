@@ -199,19 +199,19 @@ Deno.serve(async (req: Request) => {
             <title>${subject || "Email z RODEO"}</title>
           </head>
           <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 7px;">
               <tr>
                 <td align="center">
                   <table width="700" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <tr>
-                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px;">
+                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 12px 15px;">
                         <table width="100%" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td style="width: 50%; text-align: left; vertical-align: middle;">
-                              ${orderData ? `<h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Zamówienie ${orderData.order_number}</h2>` : ''}
+                            <td style="text-align: center; vertical-align: middle;">
+                              ${orderData ? `<h2 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 700; display: inline-block;">Zamówienie ${orderData.order_number}</h2>` : ''}
                             </td>
-                            <td style="width: 50%; text-align: right; vertical-align: middle;">
-                              <img src="https://pcdr.pl/wp-content/uploads/2025/10/erasebg-transformed.png" alt="RODEO" style="height: 100px; width: 100px; display: inline-block;" />
+                            <td style="width: 125px; text-align: right; vertical-align: middle;">
+                              <img src="https://pcdr.pl/wp-content/uploads/2025/10/erasebg-transformed.png" alt="RODEO" style="height: 125px; width: 125px; display: block;" />
                             </td>
                           </tr>
                         </table>
@@ -219,38 +219,45 @@ Deno.serve(async (req: Request) => {
                     </tr>
                     ${orderData ? `
                       <tr>
-                        <td style="padding: 30px;">
+                        <td style="padding: 10px;">
 
-                          <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-                            <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 16px;">📍 Dane sklepu:</p>
-                            <p style="margin: 0; color: #1e3a8a; font-size: 14px; line-height: 1.6;">
-                              <strong>${orderData.store_name}</strong> (${orderData.store_code})<br>
-                              ${orderData.store_address ? orderData.store_address + '<br>' : ''}
-                            </p>
-                          </div>
+                          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 15px;">
+                            <tr>
+                              <td style="width: 50%; vertical-align: top; padding-right: 5px;">
+                                <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 10px; border-radius: 4px; height: 100%;">
+                                  <p style="margin: 0 0 6px 0; color: #1e40af; font-weight: 600; font-size: 14px;">📍 Dane sklepu:</p>
+                                  <p style="margin: 0; color: #1e3a8a; font-size: 13px; line-height: 1.5;">
+                                    <strong>${orderData.store_name}</strong> (${orderData.store_code})<br>
+                                    ${orderData.store_address ? orderData.store_address : ''}
+                                  </p>
+                                </div>
+                              </td>
+                              <td style="width: 50%; vertical-align: top; padding-left: 5px;">
+                                <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px; border-radius: 4px; height: 100%;">
+                                  <p style="margin: 0 0 6px 0; color: #92400e; font-weight: 600; font-size: 14px;">👤 Wysłane przez:</p>
+                                  <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.5;">
+                                    <strong>${orderData.sent_by || 'Nieznany użytkownik'}</strong><br>
+                                    ${orderData.sent_by_phone ? 'Tel: ' + orderData.sent_by_phone + '<br>' : ''}
+                                    Utworzono: ${orderData.created_at ? new Date(orderData.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}<br>
+                                    Wysłano: ${orderData.sent_at ? new Date(orderData.sent_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                  </p>
+                                </div>
+                              </td>
+                            </tr>
+                          </table>
 
-                          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-                            <p style="margin: 0 0 8px 0; color: #92400e; font-weight: 600; font-size: 16px;">👤 Wysłane przez:</p>
-                            <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
-                              <strong>${orderData.sent_by || 'N/A'}</strong><br>
-                              ${orderData.sent_by_phone ? 'Tel: ' + orderData.sent_by_phone + '<br>' : ''}
-                              Data utworzenia: ${orderData.created_at ? new Date(orderData.created_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}<br>
-                              Data wysłania: ${orderData.sent_at ? new Date(orderData.sent_at).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-
-                          <h3 style="margin: 30px 0 10px 0; color: #111827; font-size: 18px; font-weight: 600;">Zamówione produkty:</h3>
+                          <h3 style="margin: 15px 0 8px 0; color: #111827; font-size: 16px; font-weight: 600;">Zamówione produkty:</h3>
                           ${generateOrderItemsTable(orderData.items)}
 
                           ${orderData.notes ? `
-                            <div style="margin-top: 20px; background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px;">
-                              <p style="margin: 0 0 8px 0; color: #92400e; font-weight: 600; font-size: 14px;">Uwagi do zamówienia:</p>
-                              <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">${orderData.notes}</p>
+                            <div style="margin-top: 10px; background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px; border-radius: 4px;">
+                              <p style="margin: 0 0 6px 0; color: #92400e; font-weight: 600; font-size: 13px;">Uwagi do zamówienia:</p>
+                              <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.5;">${orderData.notes}</p>
                             </div>
                           ` : ''}
 
-                          <div style="margin-top: 30px; text-align: center; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
-                            <p style="margin: 0 0 15px 0; color: #374151; font-weight: 600; font-size: 14px;">Kody zamówienia:</p>
+                          <div style="margin-top: 15px; text-align: center; padding: 12px; background-color: #f9fafb; border-radius: 6px;">
+                            <p style="margin: 0 0 10px 0; color: #374151; font-weight: 600; font-size: 13px;">Kody zamówienia:</p>
                             <div style="display: inline-block; margin: 0 20px;">
                               <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">Kod kreskowy (Code128)</p>
                               <img src="https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(orderData.order_number)}&scale=3&height=10&includetext" alt="Barcode" style="max-width: 300px; height: auto;" />
@@ -261,8 +268,8 @@ Deno.serve(async (req: Request) => {
                             </div>
                           </div>
 
-                          <div style="margin-top: 20px; padding: 15px; background-color: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
-                            <p style="margin: 0; color: #065f46; font-size: 13px;">
+                          <div style="margin-top: 10px; padding: 10px; background-color: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
+                            <p style="margin: 0; color: #065f46; font-size: 12px;">
                               📎 <strong>Załącznik:</strong> Plik CSV z pełnym zestawieniem znajduje się w załączniku tego emaila: <strong>${orderData.order_number}.csv</strong>
                             </p>
                           </div>
@@ -270,14 +277,14 @@ Deno.serve(async (req: Request) => {
                       </tr>
                     ` : `
                       <tr>
-                        <td style="padding: 30px;">
-                          ${message ? `<p style="margin: 0; color: #374151; font-size: 16px; line-height: 1.6;">${message}</p>` : '<p style="margin: 0; color: #374151; font-size: 16px;">To jest testowy email z systemu RODEO.</p>'}
+                        <td style="padding: 10px;">
+                          ${message ? `<p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.5;">${message}</p>` : '<p style="margin: 0; color: #374151; font-size: 14px;">To jest testowy email z systemu RODEO.</p>'}
                         </td>
                       </tr>
                     `}
                     <tr>
-                      <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0; color: #6b7280; font-size: 12px;">© 2024 RODEO System. Wszystkie prawa zastrzeżone.</p>
+                      <td style="background-color: #f9fafb; padding: 10px; text-align: center; border-top: 1px solid #e5e7eb;">
+                        <p style="margin: 0; color: #6b7280; font-size: 11px;">© ${new Date().getFullYear()} RODEO System. Wszystkie prawa zastrzeżone.</p>
                       </td>
                     </tr>
                   </table>
