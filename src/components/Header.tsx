@@ -36,33 +36,26 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
             </button>
           )}
           {showSessionTimer && (
-            <div className="hidden md:block">
-              <SessionTimer />
-            </div>
+            <SessionTimer />
           )}
         </div>
         <div className="flex items-center justify-center flex-shrink-0">
           <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-12 sm:h-16 object-contain" />
         </div>
-        <div className="flex-1 flex justify-end items-center gap-1 sm:gap-2">
-          {showSessionTimer && (
-            <div className="block md:hidden">
-              <SessionTimer />
-            </div>
-          )}
+        <div className="flex-1 flex justify-end items-center gap-2 sm:gap-3">
           {showLogout && onLogoutClick && (
             <button
               onClick={onLogoutClick}
-              className="w-9 h-9 sm:w-10 sm:h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition flex-shrink-0"
+              className="w-10 h-10 sm:w-10 sm:h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition flex-shrink-0"
               title="Wyloguj"
             >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+              <LogOut className="w-5 h-5 sm:w-5 sm:h-5" />
             </button>
           )}
           {showProfile && onProfileClick && (
             <button
               onClick={onProfileClick}
-              className="w-9 h-9 sm:w-10 sm:h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition flex-shrink-0 overflow-hidden"
+              className="w-10 h-10 sm:w-10 sm:h-10 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full flex items-center justify-center transition flex-shrink-0 overflow-hidden"
               title="Profil"
             >
               {userProfilePicture ? (
@@ -75,7 +68,7 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
                   }}
                 />
               ) : null}
-              {!userProfilePicture && <User className="w-4 h-4 sm:w-5 sm:h-5" />}
+              {!userProfilePicture && <User className="w-5 h-5 sm:w-5 sm:h-5" />}
             </button>
           )}
         </div>
