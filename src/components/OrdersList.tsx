@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3, ArrowUpDown } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, PlayCircle, FileText, Send, Trash2, Edit3, ArrowUpDown, CheckSquare, Square } from 'lucide-react';
 import { supabase, Order, OrderStatus } from '../lib/supabase';
 import { useConfirm } from '../hooks/useConfirm';
+import BulkActionBar, { useBulkSelection } from './BulkActionBar';
 
 interface OrdersListProps {
   storeId?: string;
@@ -33,6 +34,18 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   const [sortAscending, setSortAscending] = useState(false);
   const [initialFilterSet, setInitialFilterSet] = useState(false);
   const [showDeleteIcons, setShowDeleteIcons] = useState(false);
+
+  // Bulk selection
+  const {
+    selectedIds,
+    selectedCount,
+    isSelected,
+    toggleSelect,
+    toggleSelectAll,
+    clearSelection,
+    isAllSelected,
+    isSomeSelected,
+  } = useBulkSelection(orders);
 
   useEffect(() => {
     loadUserPreferences();
@@ -197,6 +210,41 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
     }
   };
 
+  // Bulk operations
+  const handleBulkDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .in('id', Array.from(selectedIds));
+
+      if (error) throw error;
+
+      clearSelection();
+      loadOrders();
+    } catch (error) {
+      console.error('Error bulk deleting orders:', error);
+      alert('Błąd podczas usuwania zamówień');
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .in('id', Array.from(selectedIds));
+
+      if (error) throw error;
+
+      clearSelection();
+      loadOrders();
+    } catch (error) {
+      console.error('Error bulk status change:', error);
+      alert('Błąd podczas zmiany statusu');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pl-PL', {
@@ -277,8 +325,43 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
   return (
     <>
       <ConfirmComponent />
+
+      {/* Bulk Action Bar */}
+      {selectedCount > 0 && (
+        <BulkActionBar
+          selectedCount={selectedCount}
+          onDelete={handleBulkDelete}
+          onChangeStatus={handleBulkStatusChange}
+          onCancel={clearSelection}
+          statusOptions={[
+            { value: 'sent', label: 'Wysłane', color: '#1d4ed8' },
+            { value: 'confirmed', label: 'Potwierdzone', color: '#15803d' },
+            { value: 'rejected', label: 'Odrzucone', color: '#b91c1c' },
+            { value: 'archived', label: 'Archiwum', color: '#4b5563' },
+          ]}
+          deleteLabel="Usuń zaznaczone"
+        />
+      )}
+
       <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
+        {/* Select All Checkbox */}
+        {orders.length > 0 && (
+          <button
+            onClick={toggleSelectAll}
+            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            aria-label={isAllSelected ? 'Odznacz wszystkie' : 'Zaznacz wszystkie'}
+          >
+            {isAllSelected ? (
+              <CheckSquare className="w-5 h-5 text-amber-600" />
+            ) : isSomeSelected ? (
+              <CheckSquare className="w-5 h-5 text-amber-400" />
+            ) : (
+              <Square className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+        )}
+
         <div className={showLimitedFilters ? "flex gap-3 flex-1" : "flex gap-2 overflow-x-auto pb-2 flex-1"}>
           {showLimitedFilters ? (
             <>
@@ -364,11 +447,30 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
             return (
               <div
                 key={order.id}
-                onClick={() => onSelectOrder(order.id)}
-                className="bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition cursor-pointer"
+                className="bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition cursor-pointer relative"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                {/* Checkbox */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSelect(order.id);
+                  }}
+                  className="absolute top-3 left-3 p-1 hover:bg-gray-100 rounded z-10"
+                  aria-label={isSelected(order.id) ? 'Odznacz' : 'Zaznacz'}
+                >
+                  {isSelected(order.id) ? (
+                    <CheckSquare className="w-5 h-5 text-amber-600" />
+                  ) : (
+                    <Square className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
+
+                <div
+                  onClick={() => onSelectOrder(order.id)}
+                  className="pl-8"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <span className="font-bold text-lg text-gray-800">{order.order_number}</span>
                       <div
@@ -410,6 +512,7 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
                     )}
                     <ChevronRight className="w-6 h-6 text-gray-400" />
                   </div>
+                </div>
                 </div>
               </div>
             );
