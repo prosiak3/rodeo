@@ -204,16 +204,22 @@ Deno.serve(async (req: Request) => {
                 <td align="center">
                   <table width="700" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <tr>
-                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 12px; text-align: center;">
-                        <div style="background-color: rgba(255,255,255,0.15); display: inline-block; padding: 6px 18px; border-radius: 8px; backdrop-filter: blur(10px);">
-                          <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 800; font-family: 'Arial Black', Arial, sans-serif; letter-spacing: 2px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">RODEO</h1>
-                        </div>
+                      <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="width: 50%; text-align: left; vertical-align: middle;">
+                              ${orderData ? `<h2 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">${orderData.order_number}</h2>` : ''}
+                            </td>
+                            <td style="width: 50%; text-align: right; vertical-align: middle;">
+                              <img src="https://zpbhwjnuqiomuufscvho.supabase.co/storage/v1/object/public/public-assets/erasebg-transformed.png" alt="RODEO" style="height: 60px; width: auto; display: inline-block;" />
+                            </td>
+                          </tr>
+                        </table>
                       </td>
                     </tr>
                     ${orderData ? `
                       <tr>
                         <td style="padding: 30px;">
-                          <h2 style="margin: 0 0 20px 0; color: #111827; font-size: 24px; font-weight: 700;">Zamówienie ${orderData.order_number}</h2>
 
                           <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
                             <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 16px;">📍 Dane sklepu:</p>
@@ -250,30 +256,16 @@ Deno.serve(async (req: Request) => {
                           </div>
                         </td>
                       </tr>
-                    ` : ''}
-                    ${test ? `
+                    ` : `
                       <tr>
                         <td style="padding: 30px;">
-                          <div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px; border-radius: 4px;">
-                            <p style="margin: 0; color: #15803d; font-weight: 600; font-size: 16px;">✅ Konfiguracja email działa poprawnie!</p>
-                            <p style="margin: 10px 0 0 0; color: #166534; font-size: 14px;">Jeśli widzisz tę wiadomość, system jest gotowy do wysłania zamówień.</p>
-                          </div>
+                          ${message ? `<p style="margin: 0; color: #374151; font-size: 16px; line-height: 1.6;">${message}</p>` : '<p style="margin: 0; color: #374151; font-size: 16px;">To jest testowy email z systemu RODEO.</p>'}
                         </td>
                       </tr>
-                    ` : ''}
-                    ${!orderData && !test ? `
-                      <tr>
-                        <td style="padding: 40px 30px;">
-                          <div style="font-size: 16px; line-height: 1.6; color: #333333;">
-                            ${message || "To jest testowa wiadomość z systemu RODEO."}
-                          </div>
-                        </td>
-                      </tr>
-                    ` : ''}
+                    `}
                     <tr>
-                      <td style="background-color: #f9fafb; padding: 20px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0; font-size: 12px; color: #6b7280;">Wiadomość wysłana automatycznie z systemu RODEO</p>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #9ca3af;">${new Date().toLocaleString("pl-PL")}</p>
+                      <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                        <p style="margin: 0; color: #6b7280; font-size: 12px;">© 2024 RODEO System. Wszystkie prawa zastrzeżone.</p>
                       </td>
                     </tr>
                   </table>
@@ -297,24 +289,27 @@ Deno.serve(async (req: Request) => {
       ];
     }
 
+    console.log("Sending email via Resend API...");
+
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify(emailPayload),
     });
 
-    const resendData = await resendResponse.json();
+    const responseText = await resendResponse.text();
+    console.log("Resend API response status:", resendResponse.status);
+    console.log("Resend API response:", responseText);
 
     if (!resendResponse.ok) {
-      console.error("Resend API error:", resendData);
       return new Response(
         JSON.stringify({
           success: false,
-          error: resendData.message || "Failed to send email",
-          details: resendData,
+          error: `Email service error: ${responseText}`,
+          status: resendResponse.status,
         }),
         {
           status: resendResponse.status,
@@ -323,30 +318,24 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("Email sent successfully:", resendData);
-
     return new Response(
       JSON.stringify({
         success: true,
         message: "Email sent successfully",
-        id: resendData.id,
-        recipients: emailRecipients,
-        recipientCount: emailRecipients.length,
-        hasAttachment: !!orderData,
+        recipients: emailRecipients.length,
+        response: responseText,
       }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
-
   } catch (error) {
     console.error("Error in send-order-email function:", error);
-
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred",
+        error: error.message || "Unknown error occurred",
       }),
       {
         status: 500,
