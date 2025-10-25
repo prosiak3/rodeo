@@ -19,7 +19,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
             className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600 min-w-0"
             style={activeTab === 'home' ? { color: colors.primary } : {}}
           >
-            <Settings className="w-4 h-4 sm:w-7 sm:h-7 flex-shrink-0" />
+            <Settings className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
             <span className="text-[10px] sm:text-sm mt-0.5 sm:mt-1 leading-tight">Panel</span>
           </button>
         </div>
@@ -36,7 +36,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
             className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600 min-w-0"
             style={activeTab === 'home' ? { color: colors.primary } : {}}
           >
-            <Home className="w-4 h-4 sm:w-7 sm:h-7 flex-shrink-0" />
+            <Home className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
             <span className="text-[10px] sm:text-sm mt-0.5 sm:mt-1 leading-tight">Główna</span>
           </button>
 
@@ -45,7 +45,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
             className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600 min-w-0"
             style={activeTab === 'orders' ? { color: colors.primary } : {}}
           >
-            <Package className="w-4 h-4 sm:w-7 sm:h-7 flex-shrink-0" />
+            <Package className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
             <span className="text-[10px] sm:text-sm mt-0.5 sm:mt-1 leading-tight truncate w-full">Zamówienia</span>
           </button>
 
@@ -54,7 +54,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
             className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600 min-w-0"
             style={activeTab === 'prices' ? { color: colors.primary } : {}}
           >
-            <Tag className="w-4 h-4 sm:w-7 sm:h-7 flex-shrink-0" />
+            <Tag className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
             <span className="text-[10px] sm:text-sm mt-0.5 sm:mt-1 leading-tight">Cennik</span>
           </button>
         </div>
@@ -70,7 +70,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
           className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600 min-w-0"
           style={activeTab === 'home' ? { color: colors.primary } : {}}
         >
-          <Home className="w-4 h-4 sm:w-7 sm:h-7 flex-shrink-0" />
+          <Home className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
           <span className="text-[10px] sm:text-sm mt-0.5 sm:mt-1 leading-tight">Główna</span>
         </button>
 
@@ -79,7 +79,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
           className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600 min-w-0"
           style={activeTab === 'new-order' ? { color: colors.primary } : {}}
         >
-          <Plus className="w-4 h-4 sm:w-7 sm:h-7 flex-shrink-0" />
+          <Plus className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
           <span className="text-[10px] sm:text-sm mt-0.5 sm:mt-1 leading-tight">Nowe</span>
         </button>
 
@@ -88,7 +88,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
           className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600 min-w-0"
           style={activeTab === 'orders' ? { color: colors.primary } : {}}
         >
-          <Package className="w-4 h-4 sm:w-7 sm:h-7 flex-shrink-0" />
+          <Package className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
           <span className="text-[10px] sm:text-sm mt-0.5 sm:mt-1 leading-tight truncate w-full">Zamówienia</span>
         </button>
 
@@ -97,7 +97,7 @@ export default function BottomNav({ activeTab, onTabChange, userRole }: BottomNa
           className="flex flex-col items-center justify-center flex-1 h-full transition text-gray-600 min-w-0"
           style={activeTab === 'prices' ? { color: colors.primary } : {}}
         >
-          <Tag className="w-4 h-4 sm:w-7 sm:h-7 flex-shrink-0" />
+          <Tag className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
           <span className="text-[10px] sm:text-sm mt-0.5 sm:mt-1 leading-tight">Cennik</span>
         </button>
       </div>
