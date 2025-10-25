@@ -4,18 +4,15 @@ import App from './App.tsx';
 import './index.css';
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    registrations.forEach((registration) => {
-      registration.unregister();
-      console.log('[SW] Unregistered old service worker');
-    });
-  });
-
-  caches.keys().then((cacheNames) => {
-    cacheNames.forEach((cacheName) => {
-      caches.delete(cacheName);
-      console.log('[SW] Deleted cache:', cacheName);
-    });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        console.log('[SW] Service Worker registered successfully:', registration.scope);
+      })
+      .catch((error) => {
+        console.error('[SW] Service Worker registration failed:', error);
+      });
   });
 }
 
