@@ -309,7 +309,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
         const { data: userData, error: userError } = await supabase
           .from('users')
-          .select('full_name, phone')
+          .select('full_name, phone, contact_email')
           .eq('id', currentUser?.id || userId)
           .maybeSingle();
 
@@ -330,12 +330,14 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           created_at: order.created_at,
           sent_by: userData?.full_name || 'Nieznany użytkownik',
           sent_by_phone: userData?.phone || '',
+          sent_by_email: userData?.contact_email || '',
           sent_at: new Date().toISOString()
         };
 
         console.log('🔵 Dane zamówienia dla emaila:', {
           sent_by: orderData.sent_by,
-          sent_by_phone: orderData.sent_by_phone
+          sent_by_phone: orderData.sent_by_phone,
+          sent_by_email: orderData.sent_by_email
         });
 
         // Zapisz logi emaila dla każdego adresu jako pending

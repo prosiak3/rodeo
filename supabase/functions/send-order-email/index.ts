@@ -28,6 +28,7 @@ interface OrderData {
   created_at?: string;
   sent_by?: string;
   sent_by_phone?: string;
+  sent_by_email?: string;
   sent_at?: string;
 }
 
@@ -56,6 +57,10 @@ function generateCSV(orderData: OrderData): string {
 
   if (orderData.sent_by_phone) {
     lines.push(`Telefon:;${orderData.sent_by_phone}`);
+  }
+
+  if (orderData.sent_by_email) {
+    lines.push(`Email:;${orderData.sent_by_email}`);
   }
 
   lines.push("");
@@ -224,20 +229,22 @@ Deno.serve(async (req: Request) => {
                           <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 15px;">
                             <tr>
                               <td style="width: 50%; vertical-align: top; padding-right: 5px;">
-                                <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 10px; border-radius: 4px; height: 100%;">
-                                  <p style="margin: 0 0 6px 0; color: #1e40af; font-weight: 600; font-size: 14px;">📍 Dane sklepu:</p>
-                                  <p style="margin: 0; color: #1e3a8a; font-size: 13px; line-height: 1.5;">
-                                    <strong>${orderData.store_name}</strong> (${orderData.store_code})<br>
+                                <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; min-height: 140px;">
+                                  <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 14px;">📍 Dane sklepu:</p>
+                                  <p style="margin: 0; color: #1e3a8a; font-size: 13px; line-height: 1.8;">
+                                    <strong>${orderData.store_name}</strong><br>
+                                    Kod: ${orderData.store_code}<br>
                                     ${orderData.store_address ? orderData.store_address : ''}
                                   </p>
                                 </div>
                               </td>
                               <td style="width: 50%; vertical-align: top; padding-left: 5px;">
-                                <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px; border-radius: 4px; height: 100%;">
-                                  <p style="margin: 0 0 6px 0; color: #92400e; font-weight: 600; font-size: 14px;">👤 Wysłane przez:</p>
-                                  <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.5;">
+                                <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 4px; min-height: 140px;">
+                                  <p style="margin: 0 0 8px 0; color: #92400e; font-weight: 600; font-size: 14px;">👤 Wysłane przez:</p>
+                                  <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.8;">
                                     <strong>${orderData.sent_by || 'Nieznany użytkownik'}</strong><br>
-                                    ${orderData.sent_by_phone ? 'Tel: ' + orderData.sent_by_phone + '<br>' : ''}
+                                    ${orderData.sent_by_phone ? '📞 <a href="tel:' + orderData.sent_by_phone + '" style="color: #92400e; text-decoration: none; font-weight: 600;">' + orderData.sent_by_phone + '</a><br>' : ''}
+                                    ${orderData.sent_by_email ? '✉️ <a href="mailto:' + orderData.sent_by_email + '" style="color: #92400e; text-decoration: none; font-weight: 600;">' + orderData.sent_by_email + '</a><br>' : ''}
                                     Utworzono: ${orderData.created_at ? new Date(orderData.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}<br>
                                     Wysłano: ${orderData.sent_at ? new Date(orderData.sent_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                   </p>
