@@ -16,6 +16,7 @@ interface Product {
   index?: string;
   min_quantity: number;
   quantity_step: number;
+  default_quantity_on_add?: number;
   your_price?: number;
   promo_price?: number;
   tags?: string[];
@@ -159,7 +160,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       const { data, error } = await supabase
         .from('products')
         .select(`
-          id, code, name, display_category, original_category, unit, base_price, description, index, min_quantity, quantity_step, tags, promo_10_plus_1,
+          id, code, name, display_category, original_category, unit, base_price, description, index, min_quantity, quantity_step, default_quantity_on_add, tags, promo_10_plus_1,
           special_prices!left (
             your_price,
             promo_price
@@ -513,15 +514,20 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
         }
       }
 
+      // Use default_quantity_on_add if set, otherwise use min_quantity, fallback to 0
+      const defaultQty = product.default_quantity_on_add && product.default_quantity_on_add > 0
+        ? product.default_quantity_on_add
+        : product.min_quantity || 0;
+
       const { error: itemError } = await supabase
         .from('order_items')
         .insert({
           order_id: orderId,
           product_id: product.id,
-          quantity: 0,
+          quantity: defaultQty,
           unit: product.unit,
           unit_price: product.base_price,
-          total_price: 0,
+          total_price: defaultQty * product.base_price,
           status: 'pending',
         });
 
