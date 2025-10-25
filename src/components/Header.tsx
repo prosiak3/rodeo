@@ -1,5 +1,6 @@
 import { User, ArrowLeft, LogOut } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import SessionTimer from './SessionTimer';
 
 interface HeaderProps {
   title: string;
@@ -13,9 +14,10 @@ interface HeaderProps {
   userName?: string;
   userEmail?: string;
   userProfilePicture?: string;
+  showSessionTimer?: boolean;
 }
 
-export default function Header({ title, subtitle, showProfile = true, onProfileClick, showBack = false, onBackClick, showLogout = true, onLogoutClick, userName, userEmail, userProfilePicture }: HeaderProps) {
+export default function Header({ title, subtitle, showProfile = true, onProfileClick, showBack = false, onBackClick, showLogout = true, onLogoutClick, userName, userEmail, userProfilePicture, showSessionTimer = true }: HeaderProps) {
   const { colors } = useTheme();
 
   const displayName = userName || userEmail?.split('@')[0] || '';
@@ -26,7 +28,7 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
       style={{ background: colors.gradient }}
     >
       <div className="flex items-center justify-between gap-1 sm:gap-2">
-        <div className="flex-1 flex items-center">
+        <div className="flex-1 flex items-center gap-2">
           {showBack && onBackClick ? (
             <button
               onClick={onBackClick}
@@ -39,11 +41,21 @@ export default function Header({ title, subtitle, showProfile = true, onProfileC
               {displayName}
             </div>
           ) : null}
+          {showSessionTimer && (
+            <div className="hidden sm:block">
+              <SessionTimer />
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-center flex-shrink-0">
           <img src="/erasebg-transformed.png" alt="RODEO Logo" className="h-12 sm:h-16 object-contain" />
         </div>
         <div className="flex-1 flex justify-end gap-1 sm:gap-2">
+          {showSessionTimer && (
+            <div className="block sm:hidden">
+              <SessionTimer />
+            </div>
+          )}
           {showLogout && onLogoutClick && (
             <button
               onClick={onLogoutClick}
