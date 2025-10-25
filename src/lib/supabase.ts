@@ -52,6 +52,8 @@ export interface User {
   auto_order_analysis_days?: number;
   show_sort_buttons?: boolean;
   font_size_preference?: FontSize;
+  phone?: string;
+  contact_email?: string;
 }
 
 export interface Product {

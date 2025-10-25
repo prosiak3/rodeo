@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload, Smartphone, Tablet, Monitor } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload, Smartphone, Tablet, Monitor, Phone, Save, X } from 'lucide-react';
 import { User, supabase, FontSize } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { ThemeStyle, THEME_CONFIGS } from '../types/themes';
@@ -47,6 +47,9 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [profilePicture, setProfilePicture] = useState<string>((user as any).profile_picture_url || '');
   const [customUrl, setCustomUrl] = useState<string>('');
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [phone, setPhone] = useState<string>(user.phone || '');
+  const [contactEmail, setContactEmail] = useState<string>(user.contact_email || '');
+  const [isEditingContact, setIsEditingContact] = useState(false);
 
   const saveDevicePreference = async (field: string, value: any) => {
     try {
@@ -77,6 +80,28 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
     } catch (error) {
       console.error('Error saving device preference:', error);
       return false;
+    }
+  };
+
+  const handleSaveContactInfo = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          phone: phone || null,
+          contact_email: contactEmail || null
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setIsEditingContact(false);
+      showAlert('Dane kontaktowe zapisane!', 'success');
+    } catch (error) {
+      console.error('Error updating contact info:', error);
+      showAlert('Błąd podczas zapisywania danych', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -534,10 +559,90 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <Mail className="w-5 h-5 text-gray-600" />
               <div>
-                <p className="text-xs text-gray-600">Email</p>
+                <p className="text-xs text-gray-600">Email (logowanie)</p>
                 <p className="font-medium text-gray-800">{user.email}</p>
               </div>
             </div>
+
+            <div className="border-t border-gray-200 my-4"></div>
+
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-sm text-gray-700">Dane kontaktowe</h4>
+              {!isEditingContact && (
+                <button
+                  onClick={() => setIsEditingContact(true)}
+                  className="flex items-center gap-1 px-3 py-1 text-xs bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition"
+                >
+                  <Edit className="w-3 h-3" />
+                  Edytuj
+                </button>
+              )}
+            </div>
+
+            {isEditingContact ? (
+              <div className="space-y-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Telefon kontaktowy</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="np. +48 123 456 789"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Email kontaktowy (w zamówieniach)</label>
+                  <input
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="np. kontakt@example.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveContactInfo}
+                    disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    Zapisz
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingContact(false);
+                      setPhone(user.phone || '');
+                      setContactEmail(user.contact_email || '');
+                    }}
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition text-sm"
+                  >
+                    <X className="w-4 h-4" />
+                    Anuluj
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Phone className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <p className="text-xs text-gray-600">Telefon</p>
+                    <p className="font-medium text-gray-800">{phone || 'Nie podano'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <Mail className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <p className="text-xs text-gray-600">Email kontaktowy</p>
+                    <p className="font-medium text-gray-800">{contactEmail || 'Nie podano'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-gray-200 my-4"></div>
 
             {user.store_id && (
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
