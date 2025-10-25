@@ -1,56 +1,59 @@
-# RODEO - Manifest Backupu v1.3
+# RODEO - Manifest Backupu v1.4
 
-**Data utworzenia:** 2025-10-21 21:55:11
-**Plik archiwum:** `rodeo_backup_20251021_215511.tar.gz`
-**Rozmiar skompresowany:** 96 MB
-**Rozmiar nieskompresowany:** ~364 MB
-**Liczba plików:** 14,134
-**Commit źródłowy:** `68f46f048f1d920d84c7e4ee39a9fa349df7b02a` (GitHub)
+**Data utworzenia:** 2025-10-25 14:45:00
+**Plik archiwum:** `backup-project-20251025.tar.gz`
+**Rozmiar skompresowany:** 428 KB
+**Liczba plików:** ~300+ (bez node_modules i dist)
 
 ---
 
 ## Statystyki projektu
 
 ### Kod źródłowy
-- **React komponenty:** 38 plików (.tsx)
-- **Hooki:** 4 pliki
-- **Context providers:** 2 pliki (Auth, Theme)
+- **React komponenty:** 70+ plików (.tsx)
+- **Hooki:** 7 plików (useAutoLogout, useConfirm, useDevicePreferences, useDeviceType, useModal, useUserPreferences, useUserTracking)
+- **Context providers:** 3 pliki (AuthContext, FontSizeContext, ThemeContext)
 - **Utilities:** 6 plików bibliotecznych
-- **Migracje SQL:** 107 plików
-- **Edge Functions:** 2 funkcje Supabase
+- **Migracje SQL:** 172 pliki
+- **Edge Functions:** 3 funkcje Supabase
 
 ### Struktura bazy danych
 
 #### Główne tabele
-1. `users` - użytkownicy z rolami (user, admin, driver, analyst) + preferencje UI
-2. `stores` - sklepy z lokalizacjami GPS i współrzędnymi na mapie
+1. `users` - użytkownicy z rolami (user, admin, driver, analyst, warehouse) + preferencje UI + dane kontaktowe
+2. `stores` - 124 sklepy z lokalizacjami GPS i wieloma adresami email
 3. `store_groups` - grupy sklepów (regionalne, typowe)
 4. `store_group_assignments` - przypisania sklepów do grup
-5. `products` - produkty z jednostkami i cenami
-6. `orders` - zamówienia ze statusami
+5. `products` - produkty z jednostkami, cenami i domyślnymi ilościami
+6. `orders` - zamówienia ze statusami i źródłem (manual/voice/auto/copy)
 7. `order_items` - pozycje zamówień
-8. `price_lists` - cenniki dla sklepów
-9. `special_prices` - ceny specjalne i promocje
-10. `tags` - tagi produktów
-11. `user_sessions` - sesje użytkowników z trackingiem
-12. `session_paths` - ścieżki nawigacji w sesjach
-13. `user_session_gaps` - przerwy między sesjami
-14. `order_history` - historia zmian zamówień
-15. `occasion_banners` - banery okolicznościowe z harmonogramem
+8. `price_lists` - cenniki dla sklepów z priorytetami
+9. `price_list_assignments` - przypisania cenników do sklepów/grup/handlowców
+10. `price_list_items` - pozycje w cennikach (ceny niestandardowe)
+11. `price_list_history` - historia zmian cenników
+12. `special_prices` - ceny specjalne i promocje
+13. `tags` - tagi produktów
+14. `occasion_banners` - banery okolicznościowe z harmonogramem
+15. `system_announcements` - ogłoszenia systemowe dla użytkowników
+
+#### Tabele sesji i analityki
+16. `user_sessions` - sesje użytkowników z trackingiem (device, browser, interaction_type, geolocation)
+17. `session_paths` - ścieżki nawigacji w sesjach
+18. `user_session_gaps` - przerwy między sesjami
+19. `user_analytics_events` - zdarzenia użytkowników (click, view, error, order, etc)
+20. `push_notification_subscriptions` - subskrypcje push
+21. `campaigns` - kampanie marketingowe
+22. `email_notifications` - kolejka i logi wysyłki emaili
+23. `device_preferences` - preferencje per urządzenie (layout, sortowanie, widoki)
 
 #### Tabele AI i uczenia maszynowego
-13. `voice_learning_corrections` - korekty rozpoznawania głosowego (per-user + global)
-14. `voice_phrase_mappings` - automatyczne mapowania fraz (synonimów)
-15. `voice_recognition_attempts` - tracking wszystkich prób rozpoznawania
-16. `ai_metrics` - metryki operacji AI (embeddings, similarity search)
-17. `ai_model_performance` - agregacje wydajności modelu
-
-#### Tabele analityczne
-18. `profanity_words` - słowa wulgarne do filtrowania
-19. `profanity_attempts` - logi prób użycia wulgaryzmów
-20. `user_analytics_events` - zdarzenia użytkowników
-21. `push_notification_subscriptions` - subskrypcje push
-22. `campaigns` - kampanie marketingowe
+24. `voice_learning_corrections` - korekty rozpoznawania głosowego (per-user + global)
+25. `voice_phrase_mappings` - automatyczne mapowania fraz (synonimów)
+26. `voice_recognition_attempts` - tracking wszystkich prób rozpoznawania z accuracy
+27. `ai_metrics` - metryki operacji AI (embeddings, similarity search)
+28. `ai_model_performance` - agregacje wydajności modelu
+29. `profanity_words` - słowa wulgarne do filtrowania
+30. `profanity_attempts` - logi prób użycia wulgaryzmów
 
 #### Widoki analityczne (Views)
 - `problem_products_view` - produkty z największą liczbą korekt
@@ -59,25 +62,72 @@
 - `ai_model_performance` - wydajność modelu AI
 
 #### Funkcje bazy danych
-- `smart_product_match` - inteligentne dopasowanie produktów z uczeniem
+- `smart_product_match` - inteligentne dopasowanie produktów z uczeniem (zwraca również unit)
 - `get_learned_product_match` - matching oparty o historię korekt
 - `analyze_and_create_phrase_mappings` - auto-analiza wzorców
 - `apply_phrase_mapping` - aplikacja mapowań przed matchingiem
-- `calculate_auto_order_suggestions` - sugestie zamówień
+- `calculate_auto_order_suggestions` - sugestie zamówień z konfigurowalnymi okresami
 - `clean_profanity` / `contains_profanity` - filtrowanie wulgaryzmów
 - `normalize_spoken_phrase` - normalizacja fraz głosowych
+- `keep_session_alive` - przedłużanie sesji użytkownika
+- `cleanup_inactive_sessions` - automatyczne czyszczenie nieaktywnych sesji
 
 ---
 
-## Nowe funkcje w wersji 1.3
+## Nowe funkcje w wersji 1.4
 
-### Zmiany od wersji 1.2:
-1. **Grupy sklepów** - system grupowania sklepów regionalnie lub tematycznie
-2. **Mapa sklepów z koordynatami** - wizualizacja 124 sklepów na mapie Polski północno-wschodniej
-3. **Menedżer banerów okolicznościowych** - system wyświetlania banerów świątecznych z harmonogramem
-4. **Rozbudowane preferencje użytkownika** - font size, UI theme, layout preferences
-5. **Uprawnienia zarządzania produktami** - szczegółowe RLS dla admin i user
-6. **Poprawki bezpieczeństwa RLS** - security definer functions dla złożonych zapytań
+### Zmiany od wersji 1.3:
+1. **System cenników z priorytetami** - cenniki dla sklepów, grup i handlowców z logiką priorytetową
+2. **Historia zmian cenników** - audyt wszystkich zmian w cenach
+3. **Multiple email addresses** - wiele adresów email dla sklepów (wholesale_emails jako array)
+4. **Preferencje per urządzenie** - różne ustawienia dla desktop/mobile/tablet
+5. **System ogłoszeń** - komunikaty dla użytkowników z kontrolą wyświetlania
+6. **Zarządzanie sesjami** - konfigurowalne timeouty, automatyczne czyszczenie, przedłużanie
+7. **Email notifications** - system kolejkowania i wysyłki emaili z zamówieniami
+8. **Dane kontaktowe w emailach** - telefon i email jako klikalne linki (tel:, mailto:)
+9. **Profile pictures** - zdjęcia profilowe użytkowników
+10. **Domyślne ilości produktów** - globalny i per-produkt default quantity
+11. **Naprawiona ikona przedłużenia sesji** - zawsze widoczna, retry logic, lepsze ładowanie
+12. **FontSize Context** - zmiana rozmiaru czcionki w całej aplikacji
+
+---
+
+## Funkcje z wersji 1.3
+
+### 1. Grupy sklepów
+**Lokalizacja kodu:**
+- `supabase/migrations/20251021201056_add_store_groups_system.sql`
+- `src/components/StoreGroupsManager.tsx`
+
+**Funkcjonalność:**
+- Tworzenie grup regionalnych (np. "Warmia", "Mazury")
+- Grupowanie tematyczne (np. "Duże sklepy", "Sieci")
+- Przypisywanie sklepów do wielu grup
+- Filtrowanie i sortowanie w zarządzaniu
+
+### 2. Mapa sklepów
+**Lokalizacja kodu:**
+- `src/components/StoresMap.tsx`
+- `supabase/migrations/20251022192400_add_gps_coordinates_to_all_stores.sql`
+
+**Funkcjonalność:**
+- Interaktywna mapa z React Leaflet
+- 124 sklepy z rzeczywistymi współrzędnymi GPS
+- Markery z popup'ami (nazwa, kod, adres)
+- Klastry dla lepszej wydajności
+
+### 3. Banery okolicznościowe
+**Lokalizacja kodu:**
+- `src/components/BannersManager.tsx`
+- `src/components/OccasionBanner.tsx`
+- `supabase/migrations/20251021130452_fix_occasion_banners_schema.sql`
+
+**Funkcjonalność:**
+- Harmonogram wyświetlania (start_date, end_date)
+- 4 typy animacji: bounce, slide, pulse, none
+- 5 kolorów: blue, green, yellow, red, purple
+- Priorytet wyświetlania
+- CRUD w panelu admina
 
 ---
 
@@ -87,7 +137,7 @@
 **Lokalizacja kodu:**
 - `supabase/migrations/20251015114010_add_voice_learning_system.sql`
 - `supabase/migrations/20251015114634_add_phrase_mapping_system.sql`
-- `src/components/VoiceOrderScreen.tsx` (linie 976-1116)
+- `src/components/VoiceOrderScreen.tsx`
 
 **Jak działa:**
 1. Użytkownik mówi "karkow" → system sugeruje produkty
@@ -105,7 +155,9 @@
 **Lokalizacja kodu:**
 - `src/components/AIMetricsPanel.tsx` - główny panel metryki AI
 - `src/components/VoiceLearningPanel.tsx` - panel nauki głosowej
-- `supabase/migrations/20251017010313_add_voice_recognition_accuracy_tracking.sql`
+- `src/components/AnalyticsPanel.tsx` - analiza sesji
+- `src/components/SalesAnalyticsPanel.tsx` - analiza sprzedaży
+- `src/components/StoreAnalyticsPanel.tsx` - analiza per sklep
 
 **Zakładki w AIMetricsPanel:**
 1. **Metryki** - operacje AI, czas wykonania, success rate
@@ -140,19 +192,76 @@
 3. **AutoOrderScreen** - sugestie oparte o historię
 4. **PriceListOrderScreen** - zamówienia z cennika
 5. **CopyOrderScreen** - kopiowanie poprzednich zamówień
+6. **EditDraftOrderScreen** - edycja draft/notatnik
 
 ### Panele administracyjne
-6. **AdminPanel** - zarządzanie (użytkownicy, produkty, sklepy)
-7. **AnalyticsPanel** - analityka (sesje, rankingi, top produkty)
-8. **AIMetricsPanel** - metryki AI (4 zakładki)
-9. **VoiceLearningPanel** - analiza nauki systemu
+7. **AdminPanel** - zarządzanie (użytkownicy, produkty, sklepy, cenniki)
+8. **AnalyticsPanel** - analityka (sesje, rankingi, top produkty, sales, store)
+9. **AIMetricsPanel** - metryki AI (4 zakładki)
+10. **VoiceLearningPanel** - analiza nauki systemu
+11. **AILearningPanel** - clustering ścieżek, similarity analysis
+12. **SystemSettings** - ustawienia globalne (timeouty, domyślne wartości, logowanie)
 
 ### Zarządzanie danymi
-10. **ProductManager** - CRUD produktów
-11. **UsersManager** - CRUD użytkowników
-12. **StoresManager** - CRUD sklepów
-13. **TagsManager** - zarządzanie tagami
-14. **PriceListManager** - cenniki i promocje
+13. **ProductManager** - CRUD produktów + domyślne ilości
+14. **UsersManager** - CRUD użytkowników
+15. **StoresManager** - CRUD sklepów + multiple emails
+16. **StoreGroupsManager** - CRUD grup sklepów
+17. **TagsManager** - zarządzanie tagami
+18. **PriceListManager** - cenniki i promocje z priorytetami
+19. **PriceListAssignments** - przypisywanie cenników
+20. **BannersManager** - zarządzanie banerami okolicznościowymi
+21. **AnnouncementsManager** - ogłoszenia systemowe
+22. **StoreEmailManager** - zarządzanie emailami sklepów
+
+### User Experience
+23. **SessionTimer** - timer sesji z przedłużaniem (zawsze widoczny)
+24. **SessionCleanupService** - automatyczne czyszczenie sesji
+25. **UserNotifications** - powiadomienia dla użytkowników
+26. **ProfileScreen** - profil użytkownika z edycją danych kontaktowych
+27. **OccasionBanner** - wyświetlanie banerów okolicznościowych
+
+---
+
+## Edge Functions (Supabase)
+
+### 1. send-order-email
+**Lokalizacja:** `supabase/functions/send-order-email/index.ts`
+
+**Funkcjonalność:**
+- Wysyłka emaili z zamówieniami przez Resend API
+- Generowanie HTML z tabelką produktów
+- Kody kreskowe (Code128) i QR dla numeru zamówienia
+- Załącznik CSV z pełnym zestawieniem
+- Dane kontaktowe jako klikalne linki (tel:, mailto:)
+- CORS headers dla wszystkich requestów
+
+**Parametry:**
+```typescript
+{
+  to: string | string[],  // email(e) odbiorcy
+  subject: string,
+  orderData: OrderData,   // pełne dane zamówienia
+  test?: boolean         // tryb testowy
+}
+```
+
+### 2. auto-order-suggestion
+**Lokalizacja:** `supabase/functions/auto-order-suggestion/index.ts`
+
+**Funkcjonalność:**
+- Generowanie sugestii zamówień na podstawie historii
+- Analiza sezonowa i trendów
+- Konfigurowalne okresy analizy (30/60/90 dni)
+- Kalkulacja średnich ilości
+
+### 3. auto-order-refresh-scheduler
+**Lokalizacja:** `supabase/functions/auto-order-refresh-scheduler/index.ts`
+
+**Funkcjonalność:**
+- Automatyczne odświeżanie sugestii co 24h
+- Scheduler dla batch processing
+- Aktualizacja dla wszystkich aktywnych użytkowników
 
 ---
 
@@ -160,7 +269,7 @@
 
 ### Krok 1: Rozpakowanie
 ```bash
-tar -xzf rodeo-backup-20251020-105751.tar.gz
+tar -xzf backup-project-20251025.tar.gz
 cd project
 ```
 
@@ -193,13 +302,20 @@ supabase db push
 ### Krok 5: Deploy Edge Functions
 ```bash
 # Przez Supabase CLI
+supabase functions deploy send-order-email
 supabase functions deploy auto-order-suggestion
 supabase functions deploy auto-order-refresh-scheduler
 
 # Lub przez Dashboard → Edge Functions → Deploy
 ```
 
-### Krok 6: Uruchomienie
+### Krok 6: Konfiguracja Resend API
+```bash
+# W Supabase Dashboard → Project Settings → Edge Functions → Secrets
+# Dodaj: RESEND_API_KEY = re_xxxxx
+```
+
+### Krok 7: Uruchomienie
 ```bash
 # Development
 npm run dev
@@ -216,13 +332,16 @@ npm run preview
 - [ ] Archiwum rozpakowane
 - [ ] Zależności npm zainstalowane
 - [ ] Plik .env skonfigurowany
-- [ ] Wszystkie 107 migracji wykonane w kolejności
+- [ ] Wszystkie 172 migracje wykonane w kolejności
 - [ ] Edge Functions wdrożone
+- [ ] RESEND_API_KEY skonfigurowany
 - [ ] Aplikacja uruchomiona bez błędów
 - [ ] Test logowania (admin@example.com / admin123)
 - [ ] Test zamówienia głosowego
+- [ ] Test wysyłki emaila z zamówieniem
 - [ ] Sprawdzenie panelu analitycznego
 - [ ] Weryfikacja AI Metrics Panel
+- [ ] Test ikony przedłużenia sesji (mobile)
 
 ---
 
@@ -233,25 +352,31 @@ npm run preview
 SELECT COUNT(*) FROM users;
 SELECT COUNT(*) FROM products;
 SELECT COUNT(*) FROM stores;
+SELECT COUNT(*) FROM price_lists;
 ```
 
 ### 2. Sprawdź funkcje
 ```sql
 SELECT smart_product_match('schab', 'store-uuid', 5);
 SELECT * FROM problem_products_view LIMIT 10;
+SELECT * FROM price_list_history LIMIT 10;
 ```
 
 ### 3. Sprawdź Edge Functions
 - Otwórz: Dashboard → Edge Functions
 - Status powinien być "Active"
+- Test wysyłki emaila z zamówieniem
 
 ### 4. Test funkcjonalności
 1. Zaloguj się (admin@example.com / admin123)
 2. Przejdź do zamówień głosowych
 3. Nagraj testową frazę: "trzy kg schab"
 4. Sprawdź czy system automatycznie dopasował produkt
-5. Otwórz AI Metrics Panel → Nauka głosowa
-6. Sprawdź czy korekta została zapisana
+5. Wyślij zamówienie emailem
+6. Sprawdź czy email dotarł z właściwym formatowaniem
+7. Otwórz AI Metrics Panel → Nauka głosowa
+8. Sprawdź czy korekta została zapisana
+9. Sprawdź ikonę przedłużenia sesji (mobile)
 
 ---
 
@@ -278,6 +403,18 @@ npm install
 - Sprawdź Network tab - czy pobieranie modelu zakończyło się sukcesem
 - Cache może być pusty - AI będzie działać, ale wolniej przy pierwszym użyciu
 
+### Email nie wysyła się
+- Sprawdź RESEND_API_KEY w Edge Functions secrets
+- Sprawdź logi Edge Function w Dashboard
+- Sprawdź email_notifications table - status "pending" czy "sent"
+- Verify Resend API limits (sandbox: 100 emails/day)
+
+### Ikona przedłużenia sesji nie pojawia się
+- Sprawdź konsolę - czy są błędy ładowania sesji
+- Ikona powinna być ZAWSZE widoczna (nawet bez danych)
+- Retry logic ładuje sesję po 2 sekundach
+- W razie błędu używa obecnego czasu jako fallback
+
 ---
 
 ## Kontakt i wsparcie
@@ -287,6 +424,8 @@ W razie problemów:
 2. Sprawdź logi Supabase Dashboard
 3. Sprawdź Network tab (F12) - czy wszystkie requesty 200 OK
 4. Sprawdź RLS policies - czy użytkownik ma odpowiednie uprawnienia
+5. Sprawdź Edge Functions logs
+6. Sprawdź email_notifications table
 
 ---
 
@@ -296,7 +435,9 @@ W razie problemów:
 - React 18.3.1 + TypeScript 5.5.3
 - Vite 5.4.2 (build tool)
 - Tailwind CSS 3.4.1 (styling)
-- Lucide React (ikony)
+- Lucide React 0.344.0 (ikony)
+- React Leaflet 4.2.1 (mapy)
+- Leaflet 1.9.4 (core mapy)
 
 **AI/ML:**
 - @xenova/transformers 2.17.2 (embeddings)
@@ -304,15 +445,25 @@ W razie problemów:
 - Web Speech API (Chrome/Edge)
 
 **Backend:**
-- Supabase (PostgreSQL + Edge Functions)
+- Supabase (PostgreSQL + Edge Functions + Auth)
 - Row Level Security (RLS) na wszystkich tabelach
 - Real-time subscriptions
+- Resend API (email delivery)
 
 **PWA:**
 - Service Worker (offline support)
 - Manifest.json (install prompt)
 - Cache strategies
+- Icons: 192x192, 512x512, apple-touch-icon
+
+**Database:**
+- PostgreSQL 15+
+- 30+ tables
+- 4+ views
+- 10+ stored functions
+- Full RLS coverage
+- Audit trails (price_list_history, order_history)
 
 ---
 
-**Koniec manifestu backupu v1.2**
+**Koniec manifestu backupu v1.4**

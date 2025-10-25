@@ -3,6 +3,21 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { RefreshCw } from 'lucide-react';
 
+/**
+ * SessionTimer - Komponent wyświetlający czas sesji i przycisk przedłużenia
+ *
+ * Funkcjonalność:
+ * - Wyświetla pozostały czas sesji użytkownika
+ * - Przycisk przedłużenia sesji (keep alive)
+ * - Zmiana koloru w zależności od upływu czasu (zielony -> żółty -> pomarańczowy -> czerwony)
+ * - Animacja pulsowania gdy czas się kończy (>75%)
+ * - Automatyczne retry jeśli ładowanie sesji się nie powiedzie
+ * - Zawsze widoczny (nawet gdy dane sesji nie są załadowane)
+ *
+ * Props:
+ * - onKeepAlive: callback wywoływany po przedłużeniu sesji
+ */
+
 interface SessionTimerProps {
   onKeepAlive?: () => void;
 }
@@ -10,9 +25,10 @@ interface SessionTimerProps {
 export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
   const { user } = useAuth();
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
-  const [maxDuration, setMaxDuration] = useState(480); // Default 8 hours in minutes
+  const [maxDuration, setMaxDuration] = useState(480); // Domyślnie 8 godzin w minutach
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Ładowanie danych sesji przy montowaniu komponentu
   useEffect(() => {
     if (!user?.id) return;
 
@@ -20,11 +36,10 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     loadSystemSettings();
   }, [user?.id]);
 
-  // Separate effect for retry logic
+  // Mechanizm retry - jeśli sesja się nie załadowała, próbuj ponownie po 2 sekundach
   useEffect(() => {
     if (sessionStart || !user?.id) return;
 
-    // Retry loading session info after 2 seconds if it fails
     const retryTimer = setTimeout(() => {
       console.log('🔄 Retry loading session info...');
       loadSessionInfo();
@@ -33,7 +48,7 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     return () => clearTimeout(retryTimer);
   }, [sessionStart, user?.id]);
 
-  // Separate interval for updating current time
+  // Oddzielny interwał dla aktualizacji czasu co sekundę
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -42,6 +57,10 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     return () => clearInterval(interval);
   }, []);
 
+  /**
+   * Ładuje informacje o aktualnej sesji użytkownika z bazy danych
+   * Jeśli nie ma aktywnej sesji lub wystąpi błąd, używa bieżącego czasu jako fallback
+   */
   const loadSessionInfo = async () => {
     if (!user?.id) return;
 

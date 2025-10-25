@@ -671,9 +671,69 @@ Główny komponent cennika z następującymi funkcjami:
 
 Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do automatyzacji procesu zamawiania towarów i zarządzania dostawami.
 
-## Najważniejsze Zmiany (Ostatnia Aktualizacja - v1.3)
+## Najważniejsze Zmiany (Ostatnia Aktualizacja - v1.4)
 
-### Nowe funkcje od poprzedniej wersji:
+### Nowe funkcje od poprzedniej wersji (v1.4):
+
+1. **System cenników z priorytetami:**
+   - Cenniki dla sklepów, grup i handlowców z logiką priorytetową
+   - price_list_assignments - przypisania z priorytetami
+   - price_list_items - pozycje w cennikach
+   - price_list_history - audyt zmian w cenach
+   - PriceListAssignments.tsx - zarządzanie przypisaniami
+
+2. **Multiple email addresses dla sklepów:**
+   - wholesale_emails jako array text[]
+   - Możliwość wielu adresów email dla hurtowni
+   - StoreEmailManager.tsx do zarządzania emailami
+
+3. **Preferencje per urządzenie:**
+   - device_preferences - tabela z ustawieniami dla różnych urządzeń
+   - Oddzielne ustawienia dla desktop/mobile/tablet
+   - useDevicePreferences hook do zarządzania
+
+4. **System ogłoszeń:**
+   - system_announcements - komunikaty dla użytkowników
+   - AnnouncementsManager.tsx - zarządzanie ogłoszeniami
+   - UserNotifications.tsx - wyświetlanie powiadomień
+
+5. **Zarządzanie sesjami:**
+   - Konfigurowalne timeouty sesji w SystemSettings
+   - Automatyczne czyszczenie nieaktywnych sesji
+   - SessionTimer z retry logic i always-visible icon
+   - keep_session_alive() - przedłużanie sesji
+   - cleanup_inactive_sessions() - czyszczenie
+
+6. **Email notifications:**
+   - email_notifications - kolejka i logi wysyłki
+   - send-order-email Edge Function (Resend API)
+   - HTML email z tabelą produktów
+   - CSV attachment z pełnym zestawieniem
+   - Kody kreskowe (Code128) i QR
+   - Dane kontaktowe jako klikalne linki (tel:, mailto:)
+
+7. **Profile pictures:**
+   - profile_picture_url w tabeli users
+   - Upload zdjęć profilowych
+   - Wyświetlanie w nagłówku i profilu
+
+8. **Domyślne ilości produktów:**
+   - default_quantity_on_add w products
+   - global default w system_settings
+   - Automatyczne ustawianie przy dodawaniu do zamówienia
+
+9. **FontSize Context:**
+   - Zmiana rozmiaru czcionki w całej aplikacji
+   - 3 rozmiary: small, medium, large
+   - Zapisywanie preferencji w profilu
+
+10. **Naprawiona ikona przedłużenia sesji:**
+    - Zawsze widoczna (mobile i desktop)
+    - Retry logic jeśli ładowanie się nie powiedzie
+    - Fallback na obecny czas w razie błędu
+    - Lepsze komentarze w kodzie
+
+### Nowe funkcje w v1.3:
 
 1. **System grup sklepów:**
    - Możliwość tworzenia grup sklepów (regionalne, tematyczne)
