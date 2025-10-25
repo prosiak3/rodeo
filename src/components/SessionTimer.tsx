@@ -20,6 +20,19 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     loadSystemSettings();
   }, [user?.id]);
 
+  // Separate effect for retry logic
+  useEffect(() => {
+    if (sessionStart || !user?.id) return;
+
+    // Retry loading session info after 2 seconds if it fails
+    const retryTimer = setTimeout(() => {
+      console.log('🔄 Retry loading session info...');
+      loadSessionInfo();
+    }, 2000);
+
+    return () => clearTimeout(retryTimer);
+  }, [sessionStart, user?.id]);
+
   // Separate interval for updating current time
   useEffect(() => {
     const interval = setInterval(() => {
@@ -33,20 +46,31 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     if (!user?.id) return;
 
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_sessions')
         .select('session_start')
         .eq('user_id', user.id)
         .is('session_end', null)
         .order('session_start', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading session info:', error);
+        return;
+      }
 
       if (data) {
         setSessionStart(new Date(data.session_start));
+      } else {
+        // Jeśli nie ma aktywnej sesji, użyj aktualnego czasu jako początku
+        console.log('⚠️ Brak aktywnej sesji, używam bieżącego czasu');
+        setSessionStart(new Date());
       }
     } catch (error) {
       console.error('Error loading session info:', error);
+      // W razie błędu, użyj aktualnego czasu
+      setSessionStart(new Date());
     }
   };
 
@@ -121,21 +145,26 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
     return 'bg-red-600 hover:bg-red-700';
   };
 
-  if (!sessionStart) return null;
+  // Always show the button, even if sessionStart is not loaded yet
+  let elapsedSeconds = 0;
+  let remainingTime = maxDuration * 60; // Default to full duration
+  let percentage = 0;
 
-  // Calculate elapsed time in seconds
-  const elapsedSeconds = Math.floor((currentTime.getTime() - sessionStart.getTime()) / 1000);
+  if (sessionStart) {
+    // Calculate elapsed time in seconds
+    elapsedSeconds = Math.floor((currentTime.getTime() - sessionStart.getTime()) / 1000);
 
-  // Calculate remaining time
-  const maxDurationSeconds = maxDuration * 60;
-  const remainingTime = Math.max(maxDurationSeconds - elapsedSeconds, 0);
+    // Calculate remaining time
+    const maxDurationSeconds = maxDuration * 60;
+    remainingTime = Math.max(maxDurationSeconds - elapsedSeconds, 0);
 
-  // Calculate percentage for color
-  const percentage = (elapsedSeconds / maxDurationSeconds) * 100;
+    // Calculate percentage for color
+    percentage = (elapsedSeconds / maxDurationSeconds) * 100;
+  }
 
   return (
     <>
-      {/* Mobile: okrągła ikona z pulsowaniem */}
+      {/* Mobile: okrągła ikona z pulsowaniem - ZAWSZE widoczna */}
       <button
         onClick={handleKeepAlive}
         className={`md:hidden w-9 h-9 flex items-center justify-center text-white rounded-full font-medium transition ${getButtonColor(percentage)} ${percentage > 75 ? 'animate-pulse' : ''}`}
@@ -144,14 +173,14 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
         <RefreshCw className="w-4 h-4" />
       </button>
 
-      {/* Desktop: przycisk z czasem */}
+      {/* Desktop: przycisk z czasem - ZAWSZE widoczny */}
       <button
         onClick={handleKeepAlive}
         className={`hidden md:flex items-center gap-2 px-3 py-1.5 text-white rounded-lg font-medium transition text-sm ${getButtonColor(percentage)}`}
         title="Kliknij aby przedłużyć sesję"
       >
         <RefreshCw className="w-4 h-4" />
-        <span className="whitespace-nowrap">{formatTime(remainingTime)}</span>
+        <span className="whitespace-nowrap">{sessionStart ? formatTime(remainingTime) : 'Ładowanie...'}</span>
       </button>
     </>
   );
