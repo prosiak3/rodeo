@@ -68,6 +68,8 @@ export interface Product {
   updated_at: string;
   index?: string;
   average_weight?: number;
+  min_quantity: number;
+  default_quantity_on_add?: number;
 }
 
 export interface SpecialPrice {

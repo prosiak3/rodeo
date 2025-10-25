@@ -37,6 +37,7 @@ function AppContent() {
   });
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
   const [previousTab, setPreviousTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
+  const [autoLogoutTimeout, setAutoLogoutTimeout] = useState(15);
 
   const handleTabChange = (newTab: typeof activeTab) => {
     if (newTab !== 'profile') {
@@ -67,9 +68,48 @@ function AppContent() {
     activeTab
   );
 
+  // Load auto-logout timeout from system settings
+  useEffect(() => {
+    if (!user) return;
+
+    const loadAutoLogoutSettings = async () => {
+      try {
+        const { data } = await supabase
+          .from('system_settings')
+          .select('session_timeout_minutes')
+          .single();
+
+        if (data?.session_timeout_minutes) {
+          console.log('🟢 App: Załadowano timeout auto-logout:', data.session_timeout_minutes, 'minut');
+          setAutoLogoutTimeout(data.session_timeout_minutes);
+        }
+      } catch (error) {
+        console.error('Error loading auto-logout settings:', error);
+      }
+    };
+
+    loadAutoLogoutSettings();
+
+    // Subscribe to changes
+    const channel = supabase
+      .channel('system_settings_changes_app')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'system_settings' },
+        (payload) => {
+          console.log('🟢 App: Wykryto zmianę ustawień auto-logout');
+          loadAutoLogoutSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   // Auto-logout with location saving
   useAutoLogout({
-    timeoutMinutes: 15,
+    timeoutMinutes: autoLogoutTimeout,
     enabled: !!(session && user && (user as any).auto_logout_enabled !== false),
     onBeforeLogout: async () => {
       console.log('[Auto-Logout] Saving location before logout...');

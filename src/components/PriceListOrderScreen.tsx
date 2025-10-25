@@ -105,9 +105,6 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
         };
       });
 
-      console.log('🔵 Załadowano produkty, pierwszy produkt:', productsWithPrices[0]);
-      console.log('🔵 default_quantity_on_add pierwszego:', productsWithPrices[0]?.default_quantity_on_add);
-
       setProducts(productsWithPrices);
     } catch (error) {
       console.error('Error loading products:', error);
@@ -149,17 +146,11 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
   }, {} as Record<string, Product[]>);
 
   const selectProduct = (product: Product) => {
-    console.log('🔵 Wybrano produkt:', product.name);
-    console.log('🔵 default_quantity_on_add:', product.default_quantity_on_add);
-    console.log('🔵 min_quantity:', product.min_quantity);
-
     setSelectedProduct(product);
     // Użyj domyślnej ilości produktu, jeśli jest ustawiona, w przeciwnym razie minimum
     const defaultQty = product.default_quantity_on_add && product.default_quantity_on_add > 0
       ? product.default_quantity_on_add
       : product.min_quantity;
-
-    console.log('🔵 Ustawiona ilość:', defaultQty);
     setQuantity(defaultQty.toString());
   };
 

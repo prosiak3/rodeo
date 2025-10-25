@@ -58,12 +58,31 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
         .single();
 
       if (data?.session_max_duration_minutes) {
+        console.log('🟢 SessionTimer: Załadowano max czas sesji:', data.session_max_duration_minutes, 'minut');
         setMaxDuration(data.session_max_duration_minutes);
       }
     } catch (error) {
       console.error('Error loading system settings:', error);
     }
   };
+
+  // Subscribe to system settings changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('system_settings_changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'system_settings' },
+        (payload) => {
+          console.log('🟢 SessionTimer: Wykryto zmianę ustawień systemowych');
+          loadSystemSettings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleKeepAlive = async () => {
     try {
