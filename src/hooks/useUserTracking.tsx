@@ -24,7 +24,7 @@ const FLUSH_INTERVAL = 5000; // 5 seconds
 // Session management
 let currentSession: SessionInfo | null = null;
 let lastActivityTime = Date.now();
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes - matches auto-logout
 let interactionType: 'touch' | 'mouse' | 'mixed' | null = null;
 
 export function useUserTracking(userId: string | null, currentScreen: string) {
@@ -286,6 +286,23 @@ export function useUserTracking(userId: string | null, currentScreen: string) {
     trackOrderAction,
     trackEvent,
   };
+}
+
+// Export function to close current session (e.g., on logout)
+export async function closeCurrentSession() {
+  if (currentSession) {
+    try {
+      await supabase
+        .from('user_sessions')
+        .update({ session_end: new Date().toISOString() })
+        .eq('id', currentSession.sessionId);
+
+      console.log('[Tracking] Session closed:', currentSession.sessionId);
+      currentSession = null;
+    } catch (error) {
+      console.error('[Tracking] Failed to close session:', error);
+    }
+  }
 }
 
 function getDeviceType(): string {

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, User } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { restoreUserLocation, recordSessionGap } from '../hooks/useAutoLogout';
+import { closeCurrentSession } from '../hooks/useUserTracking';
 
 interface AuthContextType {
   session: Session | null;
@@ -78,6 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       console.log('Logout button clicked');
+
+      // Close current tracking session
+      await closeCurrentSession();
 
       if (user?.id) {
         try {

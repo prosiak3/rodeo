@@ -31,7 +31,7 @@ import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SessionCleanupService from './components/SessionCleanupService';
 import { supabase, OrderStatus } from './lib/supabase';
-import { useUserTracking } from './hooks/useUserTracking';
+import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import { Grid3x3, List } from 'lucide-react';
 
@@ -99,6 +99,8 @@ function AppContent() {
           editingOrderId,
         });
       }
+      // Close the session in tracking
+      await closeCurrentSession();
     },
     onLogout: async () => {
       console.log('[Auto-Logout] Executing logout...');
