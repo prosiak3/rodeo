@@ -31,6 +31,7 @@ import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SessionCleanupService from './components/SessionCleanupService';
 import UserNotifications from './components/UserNotifications';
+import SessionTimer from './components/SessionTimer';
 import { supabase, OrderStatus } from './lib/supabase';
 import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
@@ -619,6 +620,9 @@ function AppContent() {
 
       {/* User notifications for system announcements */}
       <UserNotifications />
+
+      {/* Session timer for user */}
+      <SessionTimer />
 
       <Header
         title={header.title}

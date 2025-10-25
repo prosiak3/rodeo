@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, Users, Filter, Mail, Send, Plus, X } from 'lucide-react';
+import { Settings, Save, Users, Filter, Mail, Send, Plus, X, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface SystemSettingsProps {
@@ -11,7 +11,34 @@ interface GlobalSettings {
   default_show_all_filters: boolean;
   default_allow_collaboration: boolean;
   wholesale_emails: string[];
+  session_inactive_warning_minutes: number;
+  session_inactive_disconnect_minutes: number;
+  session_disconnect_kill_minutes: number;
+  session_max_duration_minutes: number;
+  session_settings_enabled: boolean;
 }
+
+const TIME_OPTIONS = [
+  { value: 1, label: '1 minuta' },
+  { value: 5, label: '5 minut' },
+  { value: 15, label: '15 minut' },
+  { value: 30, label: '30 minut' },
+  { value: 60, label: '1 godzina' },
+  { value: 180, label: '3 godziny' },
+  { value: 360, label: '6 godzin' },
+  { value: 480, label: '8 godzin' },
+  { value: 720, label: '12 godzin' },
+];
+
+const MAX_DURATION_OPTIONS = [
+  { value: 20, label: '20 minut' },
+  { value: 60, label: '1 godzina' },
+  { value: 180, label: '3 godziny' },
+  { value: 360, label: '6 godzin' },
+  { value: 480, label: '8 godzin' },
+  { value: 720, label: '12 godzin' },
+  { value: 1440, label: '24 godziny' },
+];
 
 export default function SystemSettings({ userId }: SystemSettingsProps) {
   const [settings, setSettings] = useState<GlobalSettings>({
@@ -19,6 +46,11 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     default_show_all_filters: false,
     default_allow_collaboration: true,
     wholesale_emails: [],
+    session_inactive_warning_minutes: 5,
+    session_inactive_disconnect_minutes: 15,
+    session_disconnect_kill_minutes: 30,
+    session_max_duration_minutes: 480,
+    session_settings_enabled: true,
   });
   const [newEmail, setNewEmail] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
@@ -47,6 +79,11 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           default_show_all_filters: data.default_show_all_filters || false,
           default_allow_collaboration: data.default_allow_collaboration ?? true,
           wholesale_emails: data.wholesale_emails || [],
+          session_inactive_warning_minutes: data.session_inactive_warning_minutes || 5,
+          session_inactive_disconnect_minutes: data.session_inactive_disconnect_minutes || 15,
+          session_disconnect_kill_minutes: data.session_disconnect_kill_minutes || 30,
+          session_max_duration_minutes: data.session_max_duration_minutes || 480,
+          session_settings_enabled: data.session_settings_enabled ?? true,
         });
       }
     } catch (error) {
@@ -387,6 +424,103 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
                 <div className="text-sm text-gray-600">Tylko twórca może edytować swoje szkice (zwiększa prywatność)</div>
               </button>
             </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Zarządzanie sesjami</h3>
+            </div>
+
+            <div className="mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.session_settings_enabled}
+                  onChange={(e) => setSettings({ ...settings, session_settings_enabled: e.target.checked })}
+                  className="w-4 h-4 text-amber-600"
+                />
+                <span className="text-sm font-medium text-gray-700">Włącz automatyczne zarządzanie sesjami</span>
+              </label>
+            </div>
+
+            {settings.session_settings_enabled && (
+              <div className="space-y-4 mt-4 pl-6 border-l-2 border-amber-200">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ostrzeżenie o nieaktywności
+                  </label>
+                  <select
+                    value={settings.session_inactive_warning_minutes}
+                    onChange={(e) => setSettings({ ...settings, session_inactive_warning_minutes: Number(e.target.value) })}
+                    className="w-full p-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                  >
+                    {TIME_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Czas nieaktywności przed pokazaniem ostrzeżenia</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rozłączenie po nieaktywności
+                  </label>
+                  <select
+                    value={settings.session_inactive_disconnect_minutes}
+                    onChange={(e) => setSettings({ ...settings, session_inactive_disconnect_minutes: Number(e.target.value) })}
+                    className="w-full p-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                  >
+                    {TIME_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Czas nieaktywności przed rozłączeniem sesji</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ostateczne zakończenie rozłączonej sesji
+                  </label>
+                  <select
+                    value={settings.session_disconnect_kill_minutes}
+                    onChange={(e) => setSettings({ ...settings, session_disconnect_kill_minutes: Number(e.target.value) })}
+                    className="w-full p-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                  >
+                    {TIME_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Czas po rozłączeniu przed ostatecznym zabiciem sesji</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Maksymalny czas sesji (nawet jeśli aktywna)
+                  </label>
+                  <select
+                    value={settings.session_max_duration_minutes}
+                    onChange={(e) => setSettings({ ...settings, session_max_duration_minutes: Number(e.target.value) })}
+                    className="w-full p-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                  >
+                    {MAX_DURATION_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Maksymalny czas trwania sesji, nawet jeśli użytkownik jest aktywny</p>
+                </div>
+
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800">
+                    <strong>Schemat działania:</strong><br/>
+                    1. Po {settings.session_inactive_warning_minutes} min nieaktywności → Ostrzeżenie<br/>
+                    2. Po {settings.session_inactive_disconnect_minutes} min nieaktywności → Rozłączenie<br/>
+                    3. Po {settings.session_disconnect_kill_minutes} min od rozłączenia → Usunięcie sesji<br/>
+                    4. Po {settings.session_max_duration_minutes} min od startu → Wymuszenie końca sesji
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
