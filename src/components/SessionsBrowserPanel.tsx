@@ -73,7 +73,7 @@ export default function SessionsBrowserPanel() {
         .from('user_sessions')
         .select(`
           *,
-          users!inner (
+          users!user_sessions_user_id_fkey (
             full_name,
             role,
             store_id
