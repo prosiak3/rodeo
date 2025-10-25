@@ -83,6 +83,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   };
 
   const handleSaveContactInfo = async () => {
+    setSaving(true);
     try {
       const { error } = await supabase
         .from('users')
@@ -93,8 +94,12 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
         .eq('id', user.id);
 
       if (error) throw error;
+      showAlert('Dane kontaktowe zapisane!', 'success');
     } catch (error) {
       console.error('Error updating contact info:', error);
+      showAlert('Błąd podczas zapisywania danych', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -570,7 +575,6 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  onBlur={handleSaveContactInfo}
                   placeholder="np. +48 123 456 789"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
@@ -581,11 +585,18 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  onBlur={handleSaveContactInfo}
                   placeholder="np. kontakt@example.com"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 />
               </div>
+              <button
+                onClick={handleSaveContactInfo}
+                disabled={saving}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? 'Zapisywanie...' : 'Zapisz dane kontaktowe'}
+              </button>
             </div>
 
             <div className="border-t border-gray-200 my-4"></div>
