@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, Mail } from 'lucide-react';
+import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, Mail, Bell } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresAndGroupsManager from './StoresAndGroupsManager';
@@ -11,6 +11,7 @@ import BannersManager from './BannersManager';
 import PromotionsAndPrices from './PromotionsAndPrices';
 import SalespersonAssignments from './SalespersonAssignments';
 import EmailLogsPanel from './EmailLogsPanel';
+import AnnouncementsManager from './AnnouncementsManager';
 import { supabase } from '../lib/supabase';
 
 interface AdminPanelProps {
@@ -20,7 +21,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'email_logs' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'announcements' | 'email_logs' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -153,6 +154,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Logi emaili
           </button>
           <button
+            onClick={() => setActiveTab('announcements')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'announcements'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Bell className="w-5 h-5" />
+            Ogłoszenia
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'settings'
@@ -191,6 +203,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
 
         {activeTab === 'email_logs' && <EmailLogsPanel />}
 
+        {activeTab === 'announcements' && <AnnouncementsManager />}
         {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>
     </div>

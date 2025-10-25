@@ -30,6 +30,7 @@ import DriverScreen from './components/DriverScreen';
 import BottomNav from './components/BottomNav';
 import Header from './components/Header';
 import SessionCleanupService from './components/SessionCleanupService';
+import UserNotifications from './components/UserNotifications';
 import { supabase, OrderStatus } from './lib/supabase';
 import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
@@ -615,6 +616,9 @@ function AppContent() {
     <div className="fixed inset-0 flex flex-col bg-gray-50">
       {/* Background service: automatically closes inactive sessions every 5 minutes */}
       <SessionCleanupService />
+
+      {/* User notifications for system announcements */}
+      <UserNotifications />
 
       <Header
         title={header.title}
