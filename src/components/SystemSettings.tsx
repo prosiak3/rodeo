@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, Users, Filter, Mail, Send, Plus, X, Clock } from 'lucide-react';
+import { Settings, Save, Users, Filter, Mail, Send, Plus, X, Clock, Mic, Volume2, TrendingUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface SystemSettingsProps {
@@ -18,6 +18,9 @@ interface GlobalSettings {
   session_settings_enabled: boolean;
   default_quantity_on_add: number;
   voice_order_inactivity_timeout: number;
+  show_voice_transcript_realtime: boolean;
+  voice_minimum_confidence_threshold: number;
+  voice_ignore_low_confidence: boolean;
 }
 
 const TIME_OPTIONS = [
@@ -61,6 +64,9 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     session_settings_enabled: true,
     default_quantity_on_add: 5,
     voice_order_inactivity_timeout: 30,
+    show_voice_transcript_realtime: true,
+    voice_minimum_confidence_threshold: 70,
+    voice_ignore_low_confidence: false,
   });
   const [newEmail, setNewEmail] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
@@ -96,6 +102,9 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           session_settings_enabled: data.session_settings_enabled ?? true,
           default_quantity_on_add: data.default_quantity_on_add || 5,
           voice_order_inactivity_timeout: data.voice_order_inactivity_timeout || 30,
+          show_voice_transcript_realtime: data.show_voice_transcript_realtime ?? true,
+          voice_minimum_confidence_threshold: data.voice_minimum_confidence_threshold || 70,
+          voice_ignore_low_confidence: data.voice_ignore_low_confidence || false,
         });
       }
     } catch (error) {
@@ -480,6 +489,124 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
               <p className="text-xs text-blue-800">
                 <strong>Info:</strong> Jeśli użytkownik nie powie nic przez wybrany czas podczas składania zamówienia głosowego,
                 nagrywanie automatycznie się zatrzyma. Dłuższy czas może być wygodny dla wolniejszych użytkowników.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Mic className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Zaawansowane ustawienia rozpoznawania głosu</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              Kontrola nad tym jak system przetwarza i wyświetla rozpoznawanie mowy.
+            </p>
+
+            <div className="space-y-4">
+              <div className="border-2 border-gray-200 rounded-lg p-4 bg-white">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.show_voice_transcript_realtime}
+                    onChange={(e) => setSettings({ ...settings, show_voice_transcript_realtime: e.target.checked })}
+                    className="mt-1 w-4 h-4 text-amber-600"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Volume2 className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm font-semibold text-gray-800">Pokazuj transkrypcję na żywo</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Wyświetlaj użytkownikom tekst rozpoznany w czasie rzeczywistym podczas składania zamówienia głosowego.
+                      Wyłączenie upraszcza interfejs i zmniejsza rozproszenie.
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <div className="border-2 border-gray-200 rounded-lg p-4 bg-white">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.voice_ignore_low_confidence}
+                    onChange={(e) => setSettings({ ...settings, voice_ignore_low_confidence: e.target.checked })}
+                    className="mt-1 w-4 h-4 text-amber-600"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm font-semibold text-gray-800">Ignoruj niską pewność rozpoznania</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Całkowicie zignoruj rozpoznania poniżej progu pewności (nie pokazuj nawet jako sugestii).
+                      Pomaga wyeliminować przypadkowy hałas z otoczenia.
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <div className="border-2 border-gray-200 rounded-lg p-4 bg-white">
+                <div className="mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold text-gray-800">
+                      Minimalny próg pewności AI
+                    </label>
+                    <span className="text-lg font-bold text-amber-600">
+                      {settings.voice_minimum_confidence_threshold}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Produkty z pewnością poniżej tego progu będą wymagały potwierdzenia lub zostaną zignorowane.
+                  </p>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={settings.voice_minimum_confidence_threshold}
+                    onChange={(e) => setSettings({ ...settings, voice_minimum_confidence_threshold: Number(e.target.value) })}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0% (akceptuj wszystko)</span>
+                    <span>50% (balans)</span>
+                    <span>100% (tylko pewne)</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${
+                          settings.voice_minimum_confidence_threshold < 50 ? 'bg-red-500' :
+                          settings.voice_minimum_confidence_threshold < 70 ? 'bg-yellow-500' :
+                          settings.voice_minimum_confidence_threshold < 85 ? 'bg-green-500' :
+                          'bg-blue-500'
+                        }`}
+                        style={{ width: `${settings.voice_minimum_confidence_threshold}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-700">
+                    <strong>Rekomendacja:</strong>
+                    {settings.voice_minimum_confidence_threshold < 50 && ' Bardzo niski próg - system zaakceptuje prawie wszystkie rozpoznania, w tym hałas z otoczenia.'}
+                    {settings.voice_minimum_confidence_threshold >= 50 && settings.voice_minimum_confidence_threshold < 70 && ' Niski próg - system będzie częściej prosić o potwierdzenie.'}
+                    {settings.voice_minimum_confidence_threshold >= 70 && settings.voice_minimum_confidence_threshold < 85 && ' Optymalny próg - dobry balans między wygodą a dokładnością.'}
+                    {settings.voice_minimum_confidence_threshold >= 85 && ' Wysoki próg - system zaakceptuje tylko bardzo pewne rozpoznania. Dobre gdy system jest już dobrze wytrenowany.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                <strong>Jak to działa:</strong><br/>
+                1. Użytkownik dyktuje produkty<br/>
+                2. System rozpoznaje mowę i dopasowuje produkty z % pewności<br/>
+                3. Jeśli pewność {'≥'} {settings.voice_minimum_confidence_threshold}% → automatyczna akceptacja<br/>
+                4. Jeśli pewność {'<'} {settings.voice_minimum_confidence_threshold}% → {settings.voice_ignore_low_confidence ? 'ignoruj' : 'pokaż jako sugestię'}<br/>
+                5. Transkrypcja na żywo: {settings.show_voice_transcript_realtime ? 'widoczna' : 'ukryta'}
               </p>
             </div>
           </div>

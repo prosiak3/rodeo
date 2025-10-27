@@ -105,25 +105,45 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   const [inlineSearchQuery, setInlineSearchQuery] = useState('');
   const [showDeleteIcons, setShowDeleteIcons] = useState(false);
   const [voiceTimeoutSeconds, setVoiceTimeoutSeconds] = useState(30);
+  const [showTranscriptRealtime, setShowTranscriptRealtime] = useState(true);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(70);
+  const [ignoreLowConfidence, setIgnoreLowConfidence] = useState(false);
 
-  const loadVoiceTimeout = async () => {
+  const loadVoiceSettings = async () => {
     try {
       const { data, error } = await supabase
         .from('system_settings')
-        .select('voice_order_inactivity_timeout')
+        .select('voice_order_inactivity_timeout, show_voice_transcript_realtime, voice_minimum_confidence_threshold, voice_ignore_low_confidence')
         .maybeSingle();
 
       if (error) {
-        console.error('[VoiceTimeout] Error loading timeout:', error);
+        console.error('[VoiceSettings] Error loading settings:', error);
         return;
       }
 
-      if (data?.voice_order_inactivity_timeout) {
-        setVoiceTimeoutSeconds(data.voice_order_inactivity_timeout);
-        console.log('[VoiceTimeout] Loaded timeout:', data.voice_order_inactivity_timeout, 'seconds');
+      if (data) {
+        if (data.voice_order_inactivity_timeout) {
+          setVoiceTimeoutSeconds(data.voice_order_inactivity_timeout);
+          console.log('[VoiceSettings] Loaded timeout:', data.voice_order_inactivity_timeout, 'seconds');
+        }
+
+        if (data.show_voice_transcript_realtime !== null && data.show_voice_transcript_realtime !== undefined) {
+          setShowTranscriptRealtime(data.show_voice_transcript_realtime);
+          console.log('[VoiceSettings] Show transcript realtime:', data.show_voice_transcript_realtime);
+        }
+
+        if (data.voice_minimum_confidence_threshold) {
+          setConfidenceThreshold(data.voice_minimum_confidence_threshold);
+          console.log('[VoiceSettings] Confidence threshold:', data.voice_minimum_confidence_threshold, '%');
+        }
+
+        if (data.voice_ignore_low_confidence !== null && data.voice_ignore_low_confidence !== undefined) {
+          setIgnoreLowConfidence(data.voice_ignore_low_confidence);
+          console.log('[VoiceSettings] Ignore low confidence:', data.voice_ignore_low_confidence);
+        }
       }
     } catch (err) {
-      console.error('[VoiceTimeout] Failed to load timeout:', err);
+      console.error('[VoiceSettings] Failed to load settings:', err);
     }
   };
 
@@ -157,7 +177,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy. Użyj Chrome lub Edge.');
     }
-    loadVoiceTimeout();
+    loadVoiceSettings();
     loadUserPreferences();
     loadProducts();
 
@@ -601,7 +621,45 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               phraseMapped = true;
             }
 
-            // Wysokie dopasowanie (>= 90%) - automatyczna akceptacja
+            // Sprawdź próg pewności przed akceptacją
+            // Jeśli confidence < threshold, traktuj jako niską pewność
+            if (topMatch.confidence < confidenceThreshold) {
+              console.log(`[ConfidenceFilter] Match confidence ${topMatch.confidence}% < threshold ${confidenceThreshold}%`);
+
+              // Jeśli włączone ignorowanie niskiej pewności, pomiń całkowicie
+              if (ignoreLowConfidence) {
+                console.log(`[ConfidenceFilter] Ignoring low confidence match for: "${normalizedName}"`);
+                setNotification(`⚠️ Pominięto niewyraźne rozpoznanie: "${productName}" (pewność: ${topMatch.confidence}%)`);
+                setTimeout(() => setNotification(''), 3000);
+                continue;
+              }
+
+              // Jeśli nie ignorujemy, pokaż jako sugestię wymagającą potwierdzenia
+              console.log(`[ConfidenceFilter] Showing as suggestion (low confidence): "${topMatch.product_name}"`);
+              const matchProducts = smartMatches.map(m => ({
+                id: m.product_id,
+                name: m.product_name,
+                index: m.product_index,
+                unit: (m as any).product_unit || 'kg',
+                store_id: storeId
+              }));
+
+              items.push({
+                productName,
+                quantity,
+                unit,
+                matched: false,
+                suggestions: matchProducts,
+                confidence: topMatch.confidence,
+                aiMatched: false,
+                phraseMapped,
+                originalPhrase: phraseMapped ? originalPhrase : undefined,
+                mappedPhrase: phraseMapped ? normalizedName : undefined,
+              });
+              continue;
+            }
+
+            // Wysokie dopasowanie (>= threshold i >= 90% lub jedyny wynik) - automatyczna akceptacja
             if (smartMatches.length === 1 || topMatch.confidence >= 90) {
               console.log(`[SmartMatch] Auto-matching with ${topMatch.confidence}% confidence (${topMatch.match_method})`);
 
@@ -1591,7 +1649,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
             )}
           </div>
 
-          {transcript && (
+          {showTranscriptRealtime && transcript && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm font-medium text-blue-800 mb-2">Transkrypcja na żywo:</p>
               <p className="text-gray-700">{transcript}</p>
