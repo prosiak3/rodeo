@@ -130,17 +130,35 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
         .select('id')
         .single();
 
+      const updateData = {
+        default_order_mode: settings.default_order_mode,
+        default_show_all_filters: settings.default_show_all_filters,
+        default_allow_collaboration: settings.default_allow_collaboration,
+        wholesale_emails: settings.wholesale_emails,
+        session_inactive_warning_minutes: settings.session_inactive_warning_minutes,
+        session_inactive_disconnect_minutes: settings.session_inactive_disconnect_minutes,
+        session_disconnect_kill_minutes: settings.session_disconnect_kill_minutes,
+        session_max_duration_minutes: settings.session_max_duration_minutes,
+        session_settings_enabled: settings.session_settings_enabled,
+        default_quantity_on_add: settings.default_quantity_on_add,
+        voice_order_inactivity_timeout: settings.voice_order_inactivity_timeout,
+        show_voice_transcript_realtime: settings.show_voice_transcript_realtime,
+        voice_minimum_confidence_threshold: settings.voice_minimum_confidence_threshold,
+        voice_ignore_low_confidence: settings.voice_ignore_low_confidence,
+        updated_at: new Date().toISOString(),
+      };
+
       if (existing) {
         const { error } = await supabase
           .from('system_settings')
-          .update(settings)
+          .update(updateData)
           .eq('id', existing.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('system_settings')
-          .insert([settings]);
+          .insert([updateData]);
 
         if (error) throw error;
       }
