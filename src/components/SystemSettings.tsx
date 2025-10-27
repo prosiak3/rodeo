@@ -17,6 +17,7 @@ interface GlobalSettings {
   session_max_duration_minutes: number;
   session_settings_enabled: boolean;
   default_quantity_on_add: number;
+  voice_order_inactivity_timeout: number;
 }
 
 const TIME_OPTIONS = [
@@ -41,6 +42,12 @@ const MAX_DURATION_OPTIONS = [
   { value: 1440, label: '24 godziny' },
 ];
 
+const VOICE_TIMEOUT_OPTIONS = [
+  { value: 30, label: '30 sekund' },
+  { value: 60, label: '1 minuta' },
+  { value: 300, label: '5 minut' },
+];
+
 export default function SystemSettings({ userId }: SystemSettingsProps) {
   const [settings, setSettings] = useState<GlobalSettings>({
     default_order_mode: 'quantity',
@@ -53,6 +60,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     session_max_duration_minutes: 480,
     session_settings_enabled: true,
     default_quantity_on_add: 5,
+    voice_order_inactivity_timeout: 30,
   });
   const [newEmail, setNewEmail] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
@@ -87,6 +95,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           session_max_duration_minutes: data.session_max_duration_minutes || 480,
           session_settings_enabled: data.session_settings_enabled ?? true,
           default_quantity_on_add: data.default_quantity_on_add || 5,
+          voice_order_inactivity_timeout: data.voice_order_inactivity_timeout || 30,
         });
       }
     } catch (error) {
@@ -447,6 +456,31 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
                 <div className="font-semibold text-gray-800">❌ Wyłączone</div>
                 <div className="text-sm text-gray-600">Tylko twórca może edytować swoje szkice (zwiększa prywatność)</div>
               </button>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Settings className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Zamówienia głosowe</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Czas bezczynności przed automatycznym zatrzymaniem nagrywania:
+            </p>
+            <select
+              value={settings.voice_order_inactivity_timeout}
+              onChange={(e) => setSettings({ ...settings, voice_order_inactivity_timeout: parseInt(e.target.value) })}
+              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+            >
+              {VOICE_TIMEOUT_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                <strong>Info:</strong> Jeśli użytkownik nie powie nic przez wybrany czas podczas składania zamówienia głosowego,
+                nagrywanie automatycznie się zatrzyma. Dłuższy czas może być wygodny dla wolniejszych użytkowników.
+              </p>
             </div>
           </div>
 

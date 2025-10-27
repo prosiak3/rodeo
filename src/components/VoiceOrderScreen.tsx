@@ -104,6 +104,28 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
   const [searchingItemIndex, setSearchingItemIndex] = useState<number | null>(null);
   const [inlineSearchQuery, setInlineSearchQuery] = useState('');
   const [showDeleteIcons, setShowDeleteIcons] = useState(false);
+  const [voiceTimeoutSeconds, setVoiceTimeoutSeconds] = useState(30);
+
+  const loadVoiceTimeout = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('voice_order_inactivity_timeout')
+        .maybeSingle();
+
+      if (error) {
+        console.error('[VoiceTimeout] Error loading timeout:', error);
+        return;
+      }
+
+      if (data?.voice_order_inactivity_timeout) {
+        setVoiceTimeoutSeconds(data.voice_order_inactivity_timeout);
+        console.log('[VoiceTimeout] Loaded timeout:', data.voice_order_inactivity_timeout, 'seconds');
+      }
+    } catch (err) {
+      console.error('[VoiceTimeout] Failed to load timeout:', err);
+    }
+  };
 
   const loadUserPreferences = async () => {
     try {
@@ -135,6 +157,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Twoja przeglądarka nie obsługuje rozpoznawania mowy. Użyj Chrome lub Edge.');
     }
+    loadVoiceTimeout();
     loadUserPreferences();
     loadProducts();
 
@@ -354,9 +377,10 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         clearTimeout(inactivityTimer);
       }
 
+      const timeoutMs = voiceTimeoutSeconds * 1000;
       const newTimer = setTimeout(() => {
         stopListening();
-      }, 30000);
+      }, timeoutMs);
       setInactivityTimer(newTimer);
 
       let interimTranscript = '';
@@ -1561,7 +1585,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                   Przykład: "5 kg schab" lub "3 kg kiełbasa"
                 </p>
                 <p className="mt-1 text-xs text-gray-400 text-center">
-                  Automatyczne zatrzymanie po 30 sekundach bezczynności
+                  Automatyczne zatrzymanie po {voiceTimeoutSeconds} {voiceTimeoutSeconds === 60 ? 'minucie' : voiceTimeoutSeconds >= 60 ? 'minutach' : 'sekundach'} bezczynności
                 </p>
               </>
             )}
