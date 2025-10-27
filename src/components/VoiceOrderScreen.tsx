@@ -31,6 +31,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import HelpTooltip from './HelpTooltip';
 
 /**
  * Produkt z bazy danych
@@ -1514,6 +1515,13 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         )}
 
         <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg">Zamówienie głosowe</h3>
+            <HelpTooltip
+              tooltipId="voice-order-mic-button"
+              position="bottom"
+            />
+          </div>
           <div className="flex flex-col items-center">
             <div className="relative">
               {isListening && (

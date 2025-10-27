@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, Mail, Bell } from 'lucide-react';
+import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, Mail, Bell, HelpCircle } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresAndGroupsManager from './StoresAndGroupsManager';
@@ -12,6 +12,7 @@ import PromotionsAndPrices from './PromotionsAndPrices';
 import SalespersonAssignments from './SalespersonAssignments';
 import EmailLogsPanel from './EmailLogsPanel';
 import AnnouncementsManager from './AnnouncementsManager';
+import HelpTooltipsManager from './HelpTooltipsManager';
 import { supabase } from '../lib/supabase';
 
 interface AdminPanelProps {
@@ -21,7 +22,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'announcements' | 'email_logs' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'announcements' | 'email_logs' | 'help_tooltips' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -165,6 +166,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Ogłoszenia
           </button>
           <button
+            onClick={() => setActiveTab('help_tooltips')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'help_tooltips'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <HelpCircle className="w-5 h-5" />
+            Podpowiedzi
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'settings'
@@ -204,6 +216,7 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'email_logs' && <EmailLogsPanel />}
 
         {activeTab === 'announcements' && <AnnouncementsManager />}
+        {activeTab === 'help_tooltips' && <HelpTooltipsManager />}
         {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>
     </div>

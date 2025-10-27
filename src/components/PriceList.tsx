@@ -3,6 +3,7 @@ import { Search, Tag, LayoutGrid, AlignJustify, ArrowUpAZ, ArrowDownZA, ArrowUp,
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDeviceType } from '../hooks/useDeviceType';
+import HelpTooltip from './HelpTooltip';
 
 interface Product {
   id: string;
@@ -664,7 +665,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
           )}
 
           {showPriceLayoutToggle && (
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
               <button
                 onClick={() => setPriceLayout('horizontal')}
                 className="p-1.5 rounded transition bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -681,6 +682,11 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
+              <HelpTooltip
+                tooltipId="price-layout-toggle"
+                position="bottom"
+                iconSize={16}
+              />
             </div>
           )}
         </div>

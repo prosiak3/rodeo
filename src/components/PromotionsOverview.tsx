@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Percent, Calendar, Package, TrendingDown, Trash2, AlertCircle, CheckCircle, Plus, Copy, CheckSquare, Square, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import HelpTooltip from './HelpTooltip';
 
 interface PromotionStats {
   total_promotions: number;
@@ -449,6 +450,10 @@ export default function PromotionsOverview() {
         <div className="flex items-center gap-3">
           <Percent className="w-8 h-8 text-amber-600" />
           <h2 className="text-2xl font-bold text-gray-800">Przegląd Promocji</h2>
+          <HelpTooltip
+            tooltipId="promo-10-plus-1"
+            position="bottom"
+          />
         </div>
         <div className="flex gap-2">
           <button

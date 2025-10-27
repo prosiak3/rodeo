@@ -49,6 +49,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [phone, setPhone] = useState<string>(user.phone || '');
   const [contactEmail, setContactEmail] = useState<string>(user.contact_email || '');
+  const [showHelpTooltips, setShowHelpTooltips] = useState<boolean>((user as any).show_help_tooltips ?? true);
 
   const saveDevicePreference = async (field: string, value: any) => {
     try {
@@ -357,6 +358,29 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
       showAlert('Ustawienia zapisane!', 'success');
     } catch (error) {
       console.error('Error updating auto-logout settings:', error);
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleShowHelpTooltipsToggle = async () => {
+    setSaving(true);
+    try {
+      const newValue = !showHelpTooltips;
+      const { error } = await supabase
+        .from('users')
+        .update({ show_help_tooltips: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setShowHelpTooltips(newValue);
+      showAlert(`Podpowiedzi zostały ${newValue ? 'włączone' : 'wyłączone'}!`, 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error('Error updating help tooltips settings:', error);
       showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
@@ -823,6 +847,42 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <p className="text-sm text-blue-800">
               ℹ️ Zamówienia głosowe w trakcie tworzenia będą automatycznie zapisane jako szkic przed wylogowaniem
             </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Settings className="w-5 h-5 text-amber-600" />
+            <h3 className="font-semibold text-lg">Pomoc i podpowiedzi</h3>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Eye className={`w-5 h-5 ${showHelpTooltips ? 'text-green-600' : 'text-gray-400'}`} />
+                <div>
+                  <div className="font-medium">Wyświetlaj podpowiedzi</div>
+                  <div className="text-sm text-gray-600">Pokaż ikony pomocy przy skomplikowanych funkcjach</div>
+                </div>
+              </div>
+              <button
+                onClick={handleShowHelpTooltipsToggle}
+                disabled={saving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  showHelpTooltips ? 'bg-green-600' : 'bg-gray-300'
+                } disabled:opacity-50`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    showHelpTooltips ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                ℹ️ Podpowiedzi pomagają zrozumieć funkcje aplikacji. Możesz je włączyć lub wyłączyć w dowolnym momencie.
+              </p>
+            </div>
           </div>
         </div>
 
