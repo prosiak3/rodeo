@@ -373,30 +373,36 @@ function AppContent() {
     return <LoginScreen onLogin={signIn} onCreateTestUsers={createTestUsers} />;
   }
 
-  if (editingOrderId) {
+  if (editingOrderId && activeTab !== 'prices') {
     return (
-      <EditDraftOrderScreen
-        orderId={editingOrderId}
-        userId={user.id}
-        onSave={() => {
-          setEditingOrderId(null);
-          setSelectedOrderId(editingOrderId);
-          setOrderRefreshKey(prev => prev + 1);
-        }}
-        onCancel={() => {
-          setEditingOrderId(null);
-          setSelectedOrderId(editingOrderId);
-        }}
-      />
+      <div className="flex flex-col min-h-screen">
+        <EditDraftOrderScreen
+          orderId={editingOrderId}
+          userId={user.id}
+          onSave={() => {
+            setEditingOrderId(null);
+            setSelectedOrderId(editingOrderId);
+            setOrderRefreshKey(prev => prev + 1);
+          }}
+          onCancel={() => {
+            setEditingOrderId(null);
+            setSelectedOrderId(editingOrderId);
+          }}
+        />
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+          handleTabChange(tab);
+        }} userRole={user.role} />
+      </div>
     );
   }
 
-  if (selectedOrderId) {
+  if (selectedOrderId && activeTab !== 'prices') {
     return (
-      <OrderDetails
-        key={`order-${selectedOrderId}-${orderRefreshKey}`}
-        orderId={selectedOrderId}
-        userRole={user.role}
+      <div className="flex flex-col min-h-screen">
+        <OrderDetails
+          key={`order-${selectedOrderId}-${orderRefreshKey}`}
+          orderId={selectedOrderId}
+          userRole={user.role}
         userId={user.id}
         onBack={() => setSelectedOrderId(null)}
         onEdit={() => {
@@ -422,6 +428,10 @@ function AppContent() {
           setActiveTab('prices');
         }}
       />
+      <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+        handleTabChange(tab);
+      }} userRole={user.role} />
+      </div>
     );
   }
 
@@ -815,7 +825,7 @@ function AppContent() {
               </>
             )}
 
-            {orderMode === 'voice' && (
+            {orderMode === 'voice' && activeTab === 'new-order' && (
               <VoiceOrderScreen
                 storeId={user.store_id}
                 userId={user.id}
@@ -823,6 +833,7 @@ function AppContent() {
                   setOrderMode(null);
                   setEditingOrderId(orderId);
                 }}
+                onShowPrices={() => setActiveTab('prices')}
               />
             )}
 

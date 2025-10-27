@@ -29,7 +29,7 @@
  * - metadata zawiera: metoda, przyczyna błędu, dostępność AI, czas przetwarzania
  */
 import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles, Search } from 'lucide-react';
+import { Mic, MicOff, Plus, Minus, Check, Edit2, Send, X, ShoppingCart, Trash2, Sparkles, Search, DollarSign } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import HelpTooltip from './HelpTooltip';
 
@@ -80,9 +80,10 @@ interface VoiceOrderScreenProps {
   storeId: string;
   userId: string;
   onDraftCreated: (orderId: string) => void;
+  onShowPrices?: () => void;
 }
 
-export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: VoiceOrderScreenProps) {
+export default function VoiceOrderScreen({ storeId, userId, onDraftCreated, onShowPrices }: VoiceOrderScreenProps) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -1599,10 +1600,22 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-lg">Zamówienie głosowe</h3>
-            <HelpTooltip
-              tooltipId="voice-order-mic-button"
-              position="bottom"
-            />
+            <div className="flex items-center gap-2">
+              {onShowPrices && (
+                <button
+                  onClick={onShowPrices}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition shadow-md"
+                  title="Przejdź do cennika"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span className="text-sm font-medium">Cennik</span>
+                </button>
+              )}
+              <HelpTooltip
+                tooltipId="voice-order-mic-button"
+                position="bottom"
+              />
+            </div>
           </div>
           <div className="flex flex-col items-center">
             <div className="relative">
