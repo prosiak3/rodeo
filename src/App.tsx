@@ -373,11 +373,13 @@ function AppContent() {
     return <LoginScreen onLogin={signIn} onCreateTestUsers={createTestUsers} />;
   }
 
-  if (editingOrderId && activeTab !== 'prices') {
+  // Pokaż ekran edycji tylko gdy nie przełączyliśmy się świadomie na inną zakładkę
+  // Jeśli editingOrderId jest ustawione i jesteśmy na orders/home lub activeTab nie został jeszcze zmieniony
+  if (editingOrderId && (activeTab === 'orders' || activeTab === 'home' || !activeTab)) {
     return (
       <div className="flex flex-col min-h-screen">
         <EditDraftOrderScreen
-          orderId={editingOrderId}
+          orderId={editingOrderId!}
           userId={user.id}
           onSave={() => {
             setEditingOrderId(null);
@@ -389,19 +391,27 @@ function AppContent() {
             setSelectedOrderId(editingOrderId);
           }}
         />
-        <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+        <BottomNav activeTab="orders" onTabChange={(tab) => {
+          if (tab === 'orders') {
+            // Już jesteśmy w edycji - nic nie rób
+            return;
+          }
+          // Wyczyść editingOrderId jeśli użytkownik przechodzi do innej zakładki (oprócz prices)
+          if (tab !== 'prices') {
+            setEditingOrderId(null);
+          }
           handleTabChange(tab);
         }} userRole={user.role} />
       </div>
     );
   }
 
-  if (selectedOrderId && activeTab !== 'prices') {
+  if (selectedOrderId && (activeTab === 'orders' || activeTab === 'home' || !activeTab)) {
     return (
       <div className="flex flex-col min-h-screen">
         <OrderDetails
           key={`order-${selectedOrderId}-${orderRefreshKey}`}
-          orderId={selectedOrderId}
+          orderId={selectedOrderId!}
           userRole={user.role}
         userId={user.id}
         onBack={() => setSelectedOrderId(null)}
@@ -428,7 +438,15 @@ function AppContent() {
           setActiveTab('prices');
         }}
       />
-      <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+      <BottomNav activeTab="orders" onTabChange={(tab) => {
+        if (tab === 'orders') {
+          // Już jesteśmy w szczegółach - nic nie rób
+          return;
+        }
+        // Wyczyść selectedOrderId jeśli użytkownik przechodzi do innej zakładki (oprócz prices)
+        if (tab !== 'prices') {
+          setSelectedOrderId(null);
+        }
         handleTabChange(tab);
       }} userRole={user.role} />
       </div>
