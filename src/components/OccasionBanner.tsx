@@ -82,10 +82,10 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
   return (
     <div
       onClick={onClick}
-      className={`rounded-lg shadow-xl p-8 relative cursor-pointer hover:shadow-2xl transition border-2 border-orange-400 ${animationClass}`}
+      className={`rounded-lg shadow-xl p-8 relative cursor-pointer hover:shadow-2xl transition border-4 border-rose-400 ${animationClass}`}
       style={{
         ...gradientStyle,
-        background: 'linear-gradient(135deg, #ff6b35 0%, #ff8c42 50%, #ffa500 100%)',
+        background: 'linear-gradient(135deg, #dc2626 0%, #e11d48 50%, #be123c 100%)',
       }}
     >
       {renderDecorations()}
@@ -95,7 +95,7 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
           e.stopPropagation();
           onDismiss();
         }}
-        className="absolute top-3 right-3 hover:opacity-80 transition z-10 bg-white/20 rounded-full p-1"
+        className="absolute top-3 right-3 hover:opacity-80 transition z-10 bg-white/30 rounded-full p-1"
         style={{ color: '#ffffff' }}
       >
         <X className="w-6 h-6" />
@@ -113,14 +113,14 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
           <h3 className="font-bold text-2xl mb-2">{banner.title}</h3>
 
           {bestPromo && bestPromo.type === 'percentage' && (
-            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-xl font-bold text-orange-600 shadow-md">
+            <div className="inline-flex items-center gap-2 bg-yellow-300 rounded-full px-4 py-1.5 text-xl font-bold text-red-800 shadow-md">
               <span>🔥</span>
               <span>-{bestPromo.value}%</span>
             </div>
           )}
 
           {bestPromo && bestPromo.type === 'buy_x_get_y' && (
-            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-xl font-bold text-orange-600 shadow-md">
+            <div className="inline-flex items-center gap-2 bg-yellow-300 rounded-full px-4 py-1.5 text-xl font-bold text-red-800 shadow-md">
               <span>🎁</span>
               <span>10+1 GRATIS</span>
             </div>
