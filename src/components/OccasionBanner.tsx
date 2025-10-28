@@ -110,17 +110,17 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
         </div>
 
         <div className="flex-1" style={{ color: '#ffffff' }}>
-          <h3 className="font-bold text-xl mb-2">{banner.title}</h3>
+          <h3 className="font-bold text-2xl mb-2">{banner.title}</h3>
 
           {bestPromo && bestPromo.type === 'percentage' && (
-            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-lg font-bold text-orange-600 shadow-md">
+            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-xl font-bold text-orange-600 shadow-md">
               <span>🔥</span>
               <span>-{bestPromo.value}%</span>
             </div>
           )}
 
           {bestPromo && bestPromo.type === 'buy_x_get_y' && (
-            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-lg font-bold text-orange-600 shadow-md">
+            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-xl font-bold text-orange-600 shadow-md">
               <span>🎁</span>
               <span>10+1 GRATIS</span>
             </div>
