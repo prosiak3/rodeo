@@ -16,6 +16,8 @@ import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import { Grid3x3, List } from 'lucide-react';
+import OrdersList from './components/OrdersList';
+import OrderDetails from './components/OrderDetails';
 
 // Lazy load heavy components for better performance
 const StylesDemo = lazy(() => import('./components/StylesDemo'));
@@ -25,8 +27,6 @@ const CopyOrderScreen = lazy(() => import('./components/CopyOrderScreen'));
 const PriceListOrderScreen = lazy(() => import('./components/PriceListOrderScreen'));
 const PriceListOrderListMode = lazy(() => import('./components/PriceListOrderListMode'));
 const AutoOrderScreen = lazy(() => import('./components/AutoOrderScreen'));
-const OrdersList = lazy(() => import('./components/OrdersList'));
-const OrderDetails = lazy(() => import('./components/OrderDetails'));
 const EditDraftOrderScreen = lazy(() => import('./components/EditDraftOrderScreen'));
 const ProfileScreen = lazy(() => import('./components/ProfileScreen'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
