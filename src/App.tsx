@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, startTransition } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { FontSizeProvider } from './contexts/FontSizeContext';
@@ -478,7 +478,7 @@ function AppContent() {
               <h1 className="text-2xl font-bold text-gray-900">System Analityczny RODEO</h1>
               <div className="flex gap-2 bg-gray-100 rounded-lg p-1">
                 <button
-                  onClick={() => setAnalystView('behavior')}
+                  onClick={() => startTransition(() => setAnalystView('behavior'))}
                   className={`px-4 py-2 rounded-lg font-medium transition ${
                     analystView === 'behavior'
                       ? 'bg-white text-blue-600 shadow-sm'
@@ -488,7 +488,7 @@ function AppContent() {
                   Analiza Użytkowników
                 </button>
                 <button
-                  onClick={() => setAnalystView('sales')}
+                  onClick={() => startTransition(() => setAnalystView('sales'))}
                   className={`px-4 py-2 rounded-lg font-medium transition ${
                     analystView === 'sales'
                       ? 'bg-white text-blue-600 shadow-sm'
@@ -501,7 +501,9 @@ function AppContent() {
             </div>
           </div>
         </div>
-        {analystView === 'behavior' ? <AnalyticsPanel /> : <SalesAnalyticsPanel />}
+        <Suspense fallback={<div className="p-6"><SkeletonList items={5} /></div>}>
+          {analystView === 'behavior' ? <AnalyticsPanel /> : <SalesAnalyticsPanel />}
+        </Suspense>
       </div>
     );
   }
