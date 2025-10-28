@@ -82,7 +82,7 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
   return (
     <div
       onClick={onClick}
-      className={`rounded-lg shadow-xl p-6 relative cursor-pointer hover:shadow-2xl transition border-2 border-orange-400 ${animationClass}`}
+      className={`rounded-lg shadow-xl p-8 relative cursor-pointer hover:shadow-2xl transition border-2 border-orange-400 ${animationClass}`}
       style={{
         ...gradientStyle,
         background: 'linear-gradient(135deg, #ff6b35 0%, #ff8c42 50%, #ffa500 100%)',
