@@ -6,18 +6,19 @@ import ErrorBoundary from './components/ErrorBoundary.tsx';
 import './index.css';
 
 // Rejestracja Service Worker dla PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('[SW] Service Worker registered successfully:', registration.scope);
-      })
-      .catch((error) => {
-        console.error('[SW] Service Worker registration failed:', error);
-      });
-  });
-}
+// Wyłączone w środowisku StackBlitz - Service Workers nie są wspierane w WebContainer
+// if ('serviceWorker' in navigator) {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker
+//       .register('/sw.js')
+//       .then((registration) => {
+//         console.log('[SW] Service Worker registered successfully:', registration.scope);
+//       })
+//       .catch((error) => {
+//         console.error('[SW] Service Worker registration failed:', error);
+//       });
+//   });
+// }
 
 // Inicjalizuj Web Vitals monitoring
 // Wyłączone ze względu na problemy z WebContainer/StackBlitz
