@@ -419,11 +419,10 @@ export default function OrdersList({ storeId, userRole, onSelectOrder, showLimit
         </div>
         <button
           onClick={() => setSortAscending(!sortAscending)}
-          className="px-4 py-3 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition flex items-center gap-2 whitespace-nowrap"
+          className="w-12 h-12 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition flex items-center justify-center"
           title={sortAscending ? "Od najstarszych" : "Od najnowszych"}
         >
           <ArrowUpDown className="w-5 h-5" />
-          <span className="hidden sm:inline">{sortAscending ? "Najstarsze" : "Najnowsze"}</span>
         </button>
       </div>
 
