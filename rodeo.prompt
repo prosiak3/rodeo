@@ -1,812 +1,581 @@
 # RODEO - System Zarządzania Zamówieniami Mięsno-Wędliniarskimi
 
+**Wersja:** 1.6.1
+**Data aktualizacji:** 28.10.2024
+**Status:** Production Ready ✅
+
 ## Opis Aplikacji
 
-RODEO to nowoczesna aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Umożliwia ekspedientom sklepów składanie zamówień różnymi metodami, handlowcom i pracownikom hurtowni ich przetwarzanie, kierowcom realizację dostaw, a administratorom kompleksowe zarządzanie systemem.
+RODEO to zaawansowana aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Oferuje wielokanałowe składanie zamówień (głos, cennik, manual, auto-AI), zarządzanie 400+ produktami, analitykę sprzedaży, prognozowanie popytu AI i kompletny system zarządzania hurtownią.
 
-## Funkcjonalności
+## Główne Funkcjonalności v1.6.1
 
-### Dla Ekspedientów (store_manager)
+### 🛒 Systemy Składania Zamówień
+1. **Zamówienie głosowe** - rozpoznawanie mowy z ML, automatyczne parsowanie
+2. **Z cennika** - szybkie dodawanie produktów, swipe-to-add do notatnika
+3. **Manualne** - pełna kontrola nad pozycjami
+4. **Auto-zamówienie AI** - sugestie bazujące na historii (7, 14, 30, 60, 90 dni)
+5. **Kopiowanie** - wykorzystanie wcześniejszych zamówień
+6. **Notatnik** - przesunięcie produktu w prawo w cenniku
 
-1. **Dwa tryby zamawiania:**
-   - **Tryb ilościowy (quantity)** - standardowe wprowadzanie ilości produktów i natychmiastowe wysyłanie
-   - **Tryb listowy (list)** - szybkie zaznaczanie produktów bez podawania ilości, budowanie listy, zapisywanie jako szkic
+### 📊 Analityka i AI
+- **Panel analityczny** - zachowania użytkowników, sesje, top eventy
+- **Analiza sprzedaży** - statystyki zamówień, produktów, sklepów
+- **Metryki AI** - dokładność rozpoznawania głosu, learning corrections
+- **Prognozowanie popytu** - AI przewiduje przyszły popyt produktów
+- **Trendy sezonowe** - analiza wzorców zakupowych
+- **Web Vitals** - monitoring wydajności (LCP, FID, CLS, TTFB)
+- **Path clustering** - grupowanie wzorców nawigacji
+- **Embeddings** - wektorowa reprezentacja produktów (ML)
 
-2. **Pięć sposobów składania zamówień:**
-   - **Głosowo** - dyktowanie zamówienia przez mikrofon, automatyczne rozpoznawanie produktów i ilości, weryfikacja i zatwierdzenie na ekranie
-   - **Z cennika** - wybieranie produktów bezpośrednio z aktywnego cennika z możliwością dodawania przez swipe
-   - **Wprowadzanie ręczne** - wybieranie produktów z pełnej listy
-   - **Kopiowanie zamówienia** - wykorzystanie wcześniejszych zamówień jako szablonu
-   - **Notatnik (swipe)** - szybkie dodawanie produktów do notatnika poprzez przesunięcie palcem w prawo w cenniku
+### 📈 Roadmap i Changelog
+- **Roadmap** - interaktywna wizualizacja etapów rozwoju
+- **Changelog** - automatyczne logowanie wszystkich zmian
+- **Odnośniki do kodu** - precyzyjne śledzenie modyfikacji
+- **Kategorie zmian** - feature, improvement, bugfix, breaking, security
+- **Auto-logging** - wpisy dodawane przy logowaniu admina
 
-3. **Zarządzanie zamówieniami:**
-   - Przeglądanie historii zamówień z filtrowaniem
-   - Szkice zamówień (draft) - można edytować i usuwać
-   - Notatnik (notatnik) - lista produktów bez ilości, dodawane przez swipe w cenniku
-   - Wysłane zamówienia (sent) - widoczne w historii
-   - Szczegóły zamówienia z datami utworzenia i modyfikacji
-   - Możliwość usunięcia szkicu i notatnika
-   - Status zamówienia śledzony przez cały proces
-   - Współdzielenie edycji szkiców z kolegami z tego samego sklepu (opcjonalne)
-   - Historia modyfikacji z informacją kto i kiedy zmienił zamówienie
+### 💰 Zarządzanie Cenami
+- **Cenniki** - różne dla grup sklepów, z priorytetami
+- **Promocje** - rabaty 15%, 50%
+- **Akcje 10+1** - kup 10, dostaniesz 11
+- **Ceny specjalne** - indywidualne dla sklepów
+- **Historia zmian** - audyt wszystkich modyfikacji cen
 
-4. **Cennik:**
-   - Przeglądanie aktualnych cen produktów
-   - Wyszukiwanie produktów po nazwie i indeksie
-   - **Swipe-to-add** - przesunięcie produktu palcem w prawo dodaje go do notatnika
-   - Produkt znika z widoku po dodaniu do notatnika
-   - Sortowanie (nazwa A-Z, Z-A, cena rosnąco/malejąco)
-   - Dwa układy wyświetlania cen (poziomy/pionowy)
-   - Wyświetlanie trzech rodzajów cen:
-     - Cena bazowa (base_price) - oznaczona jako "N:"
-     - Twoja cena (your_price) - indywidualna cena negocjowana dla sklepu, widoczna dla ekspedienta jako "T:" (kolor niebieski)
-     - Cena promocyjna (promo_price) - oznaczona jako "S:" (kolor czerwony, pulsująca)
-   - Produkty z limitami ilościowymi (min_quantity, quantity_step)
-   - Produkty pogrupowane według kategorii wyświetlania
+### 🗺️ Sklepy i Grupy
+- **124 sklepy** w północno-wschodniej Polsce
+- **Grupy sklepów** - regionalne i kategorialne
+- **Mapa GPS** - wizualizacja z React Leaflet
+- **E-maile hurtowe** - wiele adresów per sklep
 
-5. **Profil:**
-   - Informacje o użytkowniku i sklepie
-   - Zmiana trybu zamawiania (ilościowy/listowy)
-   - Przełączanie widoku filtrów zamówień (uproszczone/wszystkie)
-   - Włączanie/wyłączanie współdzielenia edycji szkiców
-   - Wylogowanie
+### 🔔 Powiadomienia
+- **Real-time** - aktualizacje na żywo (Supabase Realtime)
+- **Ogłoszenia** - komunikaty systemowe dla wszystkich
+- **Banery okazjonalne** - promocje, święta, wydarzenia
+- **E-mail** - automatyczne wysyłanie zamówień (CSV + HTML)
 
-### Dla Handlowców (salesperson)
-
-1. **Zarządzanie zamówieniami przypisanych sklepów:**
-   - Przeglądanie zamówień ze wszystkich obsługiwanych sklepów
-   - Potwierdzanie/odrzucanie zamówień
-   - Modyfikacja ilości w pozycjach zamówienia
-   - Dodawanie uwag
-   - Tworzenie zamówień dla sklepów które obsługują
-   - Widok wszystkich zamówień bez ograniczeń filtrów
-
-2. **Filtrowanie:**
-   - Po statusie zamówienia
-   - Po sklepie
-
-### Dla Pracowników Hurtowni (operator)
-
-1. **Zarządzanie zamówieniami:**
-   - Przeglądanie wszystkich zamówień w systemie
-   - Zmiana statusu zamówień na "w realizacji" (in_progress)
-   - Potwierdzanie/odrzucanie zamówień
-   - Modyfikacja pozycji zamówienia
-
-2. **Dostęp do danych:**
-   - Widok wszystkich sklepów
-   - Historia zamówień
-   - Szczegóły zamówień
-
-### Dla Administratorów (admin)
-
-1. **Panel administracyjny z zakładkami:**
-   - **Zamówienia** - zarządzanie wszystkimi zamówieniami
-   - **Sklepy** - dodawanie i edycja sklepów
-   - **Produkty** - pełne zarządzanie katalogiem produktów
-   - **Cenniki** - zarządzanie cennikami i cenami specjalnymi
-   - **Tagi** - zarządzanie tagami produktów
-   - **Użytkownicy** - tworzenie i zarządzanie użytkownikami systemu
-   - **Ustawienia** - konfiguracja parametrów systemowych
-
-2. **Zarządzanie użytkownikami:**
-   - Tworzenie nowych kont użytkowników
-   - Przypisywanie ról: Administrator, Ekspedient, Handlowiec, Hurtownia, Kierowca
-   - Przypisywanie użytkowników do sklepów
-   - Aktywacja/dezaktywacja kont
-   - Usuwanie użytkowników
-   - Widok wszystkich użytkowników z filtrowaniem
-
-3. **Ustawienia systemowe:**
-   - Domyślny tryb zamawiania dla nowych użytkowników
-   - Domyślny widok filtrów zamówień
-   - Domyślne ustawienia współdzielenia edycji
-   - Możliwość zastosowania ustawień do wszystkich użytkowników jednocześnie
-
-4. **Zarządzanie cenami:**
-   - Cena bazowa produktu
-   - Ceny specjalne dla konkretnych sklepów (your_price)
-   - Ceny promocyjne (promo_price)
-   - Okresy ważności cen
-
-5. **Zarządzanie produktami:**
-   - Dodawanie nowych produktów
-   - Edycja istniejących produktów
-   - Ustawianie indeksów produktów
-   - Zarządzanie kategoriami i tagami
-   - Archiwizacja produktów
-   - Min. ilość i krok ilości
-
-6. **Zarządzanie tagami:**
-   - Tworzenie nowych tagów
-   - Edycja nazw tagów
-   - Usuwanie tagów
-   - Wyświetlanie liczby produktów z danym tagiem
-
-### Dla Kierowców (driver)
-
-1. **Panel kierowcy:**
-   - Lista załadowanych dostaw
-   - Szczegóły zamówień do dostawy
-   - Informacje o sklepie i trasie
-   - Możliwość oznaczenia dostawy jako "w drodze" i "dostarczona"
-   - Dodawanie notatek do dostaw
+### 🎨 Personalizacja UI
+- **10+ motywów** kolorystycznych
+- **Dark mode** - pełne wsparcie trybu ciemnego
+- **Rozmiar czcionki** - 5 poziomów
+- **Preferencje per urządzenie** - desktop/mobile/tablet
+- **Układy** - lista/kafelki dla różnych widoków
 
 ## Technologie
 
 ### Frontend
-- **React 18** z TypeScript
-- **Vite** jako bundler
-- **Tailwind CSS** do stylowania
-- **Lucide React** dla ikon
+- React 18 + TypeScript
+- Vite (szybki build)
+- Tailwind CSS (utility-first)
+- Lucide React (ikony)
+- React Leaflet (mapy)
+- Web Vitals (performance monitoring)
 
-### Backend & Baza Danych
-- **Supabase** jako backend-as-a-service
-  - PostgreSQL jako baza danych
-  - Supabase Auth do autentykacji (email/password)
-  - Row Level Security (RLS) do zabezpieczeń
-  - Realtime subscriptions (opcjonalnie)
+### Backend & Database
+- Supabase (BaaS)
+- PostgreSQL (140+ migracji)
+- Edge Functions (send-order-email, auto-order-suggestion)
+- Real-time subscriptions
+- Row Level Security (RLS) - restrykcyjne polityki
 
-### PWA
-- Manifest.json dla instalacji jako aplikacja
-- Service Worker (opcjonalnie)
-- Responsywny design z mobile-first approach
-- Dolna nawigacja optymalizowana pod urządzenia mobilne
-- Obsługa gestów swipe dla dodawania produktów
+### AI/ML
+- @xenova/transformers - embeddings w przeglądarce
+- Web Speech API - rozpoznawanie mowy
+- Path clustering - grupowanie wzorców
+- Demand forecasting - predykcja popytu
 
 ## Struktura Bazy Danych
 
-### Tabele
+### Główne Tabele (22 głównych + system)
 
-1. **stores** - Sklepy
-   - id, name, code, address, phone, active
-   - created_at, updated_at
-   - Przechowuje informacje o sklepach
-
-2. **users** - Użytkownicy
-   - id (referencja do auth.users), email, full_name, role, store_id, active
-   - order_mode (quantity/list) - tryb zamawiania
-   - show_all_order_filters (boolean) - widok filtrów zamówień
-   - allow_collaborative_editing (boolean) - współdzielenie edycji szkiców
-   - created_at, updated_at
-   - Role: admin, store_manager, salesperson, operator, driver
-
-3. **products** - Produkty
-   - id, name, code (kod produktu), original_category, display_category
-   - unit, base_price, image_url, description, index (numer indeksowy)
-   - price_list_id - przypisanie do cennika
-   - min_quantity, quantity_step - limity zamawiania
-   - tags[] - tablica tagów do grupowania
-   - active, created_at, updated_at
-   - Katalog produktów mięsno-wędliniarskich (147 produktów)
-   - **UWAGA:** Kody kreskowe zostały zastąpione indeksami produktów
-
-4. **price_lists** - Cenniki
-   - id, name, description, is_active
-   - valid_from, valid_to
-   - created_at, updated_at
-   - Zarządzanie cennikami produktów
-
-5. **special_prices** - Ceny Specjalne
-   - id, store_id, product_id
-   - your_price - indywidualna cena dla sklepu
-   - promo_price - cena promocyjna/specjalna
-   - valid_from, valid_to
-   - created_at
-
-6. **orders** - Zamówienia
-   - id, order_number, store_id, created_by
-   - status: draft, notatnik, sent, in_progress, pending_confirmation, confirmed, partially_confirmed, rejected
-   - requires_confirmation, total_amount
-   - voice_transcript, notes
-   - sent_at, in_progress_at, confirmed_at, delivery_date
-   - created_at, updated_at
-   - **Nowy status:** notatnik - lista produktów bez ilości, dodawane przez swipe
-
-7. **order_items** - Pozycje Zamówienia
-   - id, order_id, product_id
-   - quantity, unit, unit_price, total_price
-   - confirmed_quantity, status
-   - created_at
-   - **Dla zamówień notatnik:** quantity może być 0
-
-8. **order_history** - Historia Zamówień
-   - id, order_id, action, performed_by, details (jsonb)
-   - created_at
-   - Audit log wszystkich akcji na zamówieniach
-
-9. **order_modifications** - Modyfikacje Zamówień
-   - id, order_id, modified_by
-   - changes (jsonb) - szczegóły zmian
-   - created_at
-   - Śledzenie kto i kiedy modyfikował szkic zamówienia
-
-10. **salesperson_stores** - Przypisania Handlowców
-    - salesperson_id, store_id
-    - created_at
-    - Określa które sklepy obsługuje dany handlowiec
-
-11. **deliveries** - Dostawy
-    - id, order_id, driver_id
-    - status: loaded, in_transit, delivered
-    - loaded_at, delivered_at, notes
-    - created_at, updated_at
-    - System zarządzania dostawami dla kierowców
-
-12. **system_settings** - Ustawienia Systemowe
-    - id, default_order_mode, default_show_all_filters, default_allow_collaboration
-    - created_at, updated_at
-    - Globalne ustawienia systemu zarządzane przez administratora
-
-13. **tags** - Tagi
-    - id, name
-    - created_at, updated_at
-    - System tagów do grupowania produktów
+1. **users** - użytkownicy (admin, salesperson, warehouse, driver, analyst)
+2. **stores** - sklepy z GPS, email hurtowy (array)
+3. **store_groups** - grupy sklepów
+4. **store_group_assignments** - przypisania do grup
+5. **products** - 400+ produktów (kategorie, tagi, indeksy)
+6. **orders** - zamówienia (9 statusów + draft/notatnik/koszyk)
+7. **order_items** - pozycje zamówień
+8. **order_history** - audit log akcji
+9. **order_modifications** - śledzenie edycji
+10. **price_lists** - cenniki
+11. **price_list_items** - produkty w cennikach
+12. **price_list_assignments** - przypisania z priorytetami
+13. **price_list_history** - audyt zmian cen
+14. **special_prices** - ceny indywidualne
+15. **promotional_prices** - promocje czasowe
+16. **tags** - tagi produktów
+17. **deliveries** - dostawy (kierowcy)
+18. **salesperson_stores** - przypisania handlowców
+19. **system_settings** - konfiguracja globalna
+20. **user_sessions** - sesje (auto-cleanup co 5 min)
+21. **user_analytics_events** - eventy (batch processing)
+22. **ai_model_performance** - metryki ML
+23. **voice_recognition_corrections** - learning z błędów
+24. **email_notifications** - kolejka mailowa
+25. **occasion_banners** - banery okazjonalne
+26. **system_announcements** - ogłoszenia
+27. **device_preferences** - ustawienia per urządzenie
+28. **web_vitals** - metryki wydajności
+29. **demand_forecasts** - prognozy AI
+30. **seasonal_trends** - trendy sezonowe
+31. **changelog_entries** - wpisy changelogu
+32. **roadmap_stages** - etapy roadmapy
+33. **roadmap_features** - funkcje w roadmapie
 
 ### Zabezpieczenia (RLS)
+- Ekspedienci: tylko własny sklep
+- Handlowcy: przypisane sklepy
+- Warehouse: wszystkie zamówienia
+- Driver: tylko własne dostawy
+- Analyst: read-only wszystko
+- Admin: pełny dostęp
 
-Każda tabela ma włączone Row Level Security z politykami:
-- Ekspedienci widzą tylko dane swojego sklepu
-- Ekspedienci mogą usuwać tylko swoje szkice i notatniki (status: draft, notatnik)
-- Ekspedienci mogą edytować szkice współpracowników z tego samego sklepu (jeśli allow_collaborative_editing = true)
-- Handlowcy widzą dane sklepów, które obsługują
-- Pracownicy hurtowni i admini mają pełny dostęp do wszystkich danych
-- Kierowcy widzą tylko swoje dostawy
-- Wszystkie polityki sprawdzają auth.uid() i role użytkownika
-- Polityki UPDATE umożliwiają zmianę statusu zamówień
-- Administrator może zarządzać ustawieniami systemowymi
+## Role Użytkowników
 
-## Komponenty Aplikacji
+### Admin
+- Pełny dostęp CRUD
+- Zarządzanie użytkownikami, produktami, cenami
+- Analityka, roadmap, changelog
+- Ustawienia systemowe
 
-### Główne Komponenty
+### Warehouse (Hurtownia)
+- Zarządzanie zamówieniami
+- Zmiana statusów
+- Dostęp do cenników i produktów
 
-1. **App.tsx** - Główny komponent z routingiem i logiką nawigacji
-2. **AuthContext.tsx** - Kontekst autentykacji z zarządzaniem sesją
-3. **BottomNav.tsx** - Dolna nawigacja (Home, Nowe, Zamówienia, Cennik, Profil)
+### Analyst
+- Read-only access
+- Pełna analityka i raporty
+- Metryki AI i Web Vitals
+- Brak modyfikacji danych
 
-### Ekrany
+### Salesperson (Handlowiec)
+- Składanie zamówień dla przypisanych sklepów
+- Zarządzanie własnymi zamówieniami
+- Dostęp do cenników
 
-1. **LoginScreen.tsx** - Ekran logowania z autentykacją Supabase
-2. **HomeScreen.tsx** - Ekran powitalny z szybkimi akcjami
-3. **VoiceOrderScreen.tsx** - Składanie zamówienia głosowo z rozpoznawaniem mowy
-4. **PriceListOrderScreen.tsx** - Składanie zamówienia z cennika (główny tryb)
-5. **PriceListOrderListMode.tsx** - Tryb listowy zamawiania
-6. **ManualOrderScreen.tsx** - Ręczne wprowadzanie zamówienia
-7. **CopyOrderScreen.tsx** - Kopiowanie wcześniejszego zamówienia
-8. **EditDraftOrderScreen.tsx** - Edycja szkicu zamówienia z historią modyfikacji
-9. **OrdersList.tsx** - Lista zamówień z filtrowaniem i możliwością usuwania szkiców i notatników
-10. **OrderDetails.tsx** - Szczegóły zamówienia z komunikatem sukcesu po wysłaniu
-11. **PriceList.tsx** - Cennik produktów z wyszukiwaniem i swipe-to-add
-12. **ProfileScreen.tsx** - Profil użytkownika z ustawieniami
-13. **AdminPanel.tsx** - Panel administracyjny z zakładkami
-14. **ProductManager.tsx** - Zarządzanie produktami
-15. **StoresManager.tsx** - Zarządzanie sklepami
-16. **PriceListManager.tsx** - Zarządzanie cennikami
-17. **TagsManager.tsx** - Zarządzanie tagami
-18. **UsersManager.tsx** - Zarządzanie użytkownikami systemu
-19. **SystemSettings.tsx** - Ustawienia systemowe
-20. **DriverScreen.tsx** - Panel kierowcy z dostawami
-21. **ProductCard.tsx** - Karta produktu
+### Driver (Kierowca)
+- Widok dostaw
+- Zmiana statusu (w drodze, dostarczone)
+- Dodawanie notatek
+
+## Komponenty Kluczowe
+
+### Główne Ekrany
+- **App.tsx** - routing, nawigacja, auto-logout, tracking
+- **AuthContext.tsx** - autentykacja, sesje, zapisywanie lokalizacji
+- **ThemeContext.tsx** - zarządzanie motywami
+- **FontSizeContext.tsx** - rozmiar czcionki
+
+### Ekrany Zamówień
+- **VoiceOrderScreen.tsx** - rozpoznawanie mowy + ML
+- **PriceListOrderScreen.tsx** - zamawianie z cennika (główny)
+- **ManualOrderScreen.tsx** - ręczne dodawanie
+- **AutoOrderScreen.tsx** - AI sugestie z historii
+- **CopyOrderScreen.tsx** - duplikacja zamówień
+- **EditDraftOrderScreen.tsx** - edycja szkiców
+- **OrdersList.tsx** - lista z filtrowaniem (9 statusów)
+- **OrderDetails.tsx** - szczegóły + historia
+
+### Panele Administracyjne
+- **AdminPanel.tsx** - główny panel z 8 zakładkami
+- **ProductManager.tsx** - CRUD produktów
+- **StoresManager.tsx** - zarządzanie sklepami
+- **StoreGroupsManager.tsx** - grupy sklepów
+- **PriceListManager.tsx** - cenniki + przypisania
+- **SpecialPricesManager.tsx** - ceny indywidualne
+- **UsersManager.tsx** - zarządzanie użytkownikami
+- **SystemSettings.tsx** - konfiguracja globalna
+- **TagsManager.tsx** - tagi produktów
+- **RoadmapManager.tsx** - roadmap + changelog
+- **AnnouncementsManager.tsx** - ogłoszenia
+- **BannersManager.tsx** - banery okazjonalne
+
+### Analityka (Analyst/Admin)
+- **AnalyticsPanel.tsx** - KPI, top eventy, sesje
+- **SalesAnalyticsPanel.tsx** - statystyki sprzedaży
+- **SessionsBrowserPanel.tsx** - przeglądarka sesji
+- **AIMetricsPanel.tsx** - metryki ML/rozpoznawania
+- **TopProductsPanel.tsx** - top produkty
+- **LoginRankingsPanel.tsx** - ranking aktywności
+- **PushAnalyticsPanel.tsx** - analityka powiadomień
+- **DemandForecastPanel.tsx** - prognozy AI
+- **StoreAnalyticsPanel.tsx** - analiza sklepów
+
+### Pozostałe
+- **PriceList.tsx** - cennik z swipe-to-add
+- **ProfileScreen.tsx** - profil + preferencje
+- **DriverScreen.tsx** - panel kierowcy
+- **StoresMap.tsx** - mapa sklepów (Leaflet)
+- **ChangelogPanel.tsx** - historia zmian
+- **ErrorBoundary.tsx** - obsługa błędów
+- **SessionCleanupService.tsx** - auto-cleanup sesji
+- **UserNotifications.tsx** - powiadomienia
+- **RealtimeOrderNotifications.tsx** - real-time updates
+- **OccasionBanner.tsx** - banery
+
+## Custom Hooks
+
+- **useUserTracking.tsx** - śledzenie użytkowników (batch)
+- **useAutoLogout.tsx** - auto-wylogowanie + save location
+- **useDevicePreferences.tsx** - preferencje per urządzenie
+- **useDeviceType.tsx** - wykrywanie typu urządzenia
+- **useKeyboardShortcuts.tsx** - skróty klawiszowe
+- **useOfflineSync.tsx** - synchronizacja offline
+- **useConfirm.tsx** - dialogi potwierdzenia
+- **useModal.tsx** - zarządzanie modalami
+- **useActiveBanners.tsx** - aktywne banery
+
+## Biblioteki Pomocnicze (src/lib/)
+
+- **supabase.ts** - klient Supabase, typy
+- **changelogHelper.ts** - auto-logging zmian
+- **embeddingsManager.ts** - ML embeddings produktów
+- **demandForecasting.ts** - prognozowanie AI
+- **pathClustering.ts** - clustering wzorców
+- **priceCalculations.ts** - obliczenia cen
+- **sessionCleanup.ts** - zarządzanie sesjami
+- **offlineStorage.ts** - IndexedDB storage
+- **webVitals.ts** - monitoring wydajności
+- **alerts.ts** - system alertów
+- **accessibility.ts** - a11y helpers
 
 ## Przepływ Pracy
 
-### Składanie Zamówienia (Ekspedient)
+### Składanie Zamówienia
 
-1. Logowanie do aplikacji
-2. Kliknięcie "Nowe zamówienie" na ekranie głównym lub w dolnej nawigacji
-3. Wybór metody składania zamówienia:
-   - **Głosowo**:
-     1. Kliknięcie przycisku mikrofonu
-     2. Dyktowanie zamówienia (np. "Schab 10 kilogramów, kiełbasa 5 kilogramów")
-     3. Automatyczne rozpoznawanie produktów i ilości przez system
-     4. Wyświetlenie transkrypcji i rozpoznanych produktów na ekranie
-     5. Możliwość edycji, dodania/usunięcia pozycji
-     6. Kliknięcie "Zapisz jako szkic"
-     7. Automatyczne przejście do edycji szkicu
-     8. Możliwość dalszej edycji przed wysłaniem
-   - **Z cennika**: Przeglądanie cennika, dodawanie produktów, wysłanie
-   - **Ręczne**: Wyszukanie produktów, dodanie do koszyka, określenie ilości, wysłanie
-   - **Kopiowanie**: Wybór wcześniejszego zamówienia, modyfikacja, wysłanie
-   - **Notatnik (swipe)**:
-     1. Przeglądanie cennika
-     2. Przesunięcie produktu palcem w prawo
-     3. Produkt znika i dodaje się do notatnika
-     4. Automatyczne tworzenie zamówienia ze statusem "notatnik"
-     5. Możliwość uzupełnienia ilości później
-4. Zamówienie zapisywane jako szkic (draft) można edytować
-5. Po kliknięciu "Zamów w hurtowni" pojawia się komunikat sukcesu i filtr automatycznie przełącza się na "Wysłane"
-6. Status zmienia się na "sent"
-7. Można sprawdzić status w zakładce "Zamówienia"
-8. Szkice i notatniki można edytować, kopiować i usuwać
+#### 1. Głosowe
+1. Kliknij mikrofon
+2. Dyktuj (np. "Schab 10 kg, kiełbasa 5")
+3. System rozpoznaje produkty + ilości
+4. Weryfikacja na ekranie
+5. Zapisz jako szkic
+6. Edytuj i wyślij
 
-### Notatnik - Nowa Funkcjonalność
+#### 2. Z Cennika
+1. Przeglądaj produkty
+2. Dodaj do koszyka lub:
+3. **Swipe w prawo → notatnik**
+4. Produkt znika (opacity animation)
+5. Uzupełnij ilości później
 
-1. **Dodawanie produktów przez swipe:**
-   - Otwórz cennik
-   - Przesuń dowolny produkt palcem w prawo
-   - Produkt znika z ekranu (animacja opacity)
-   - Automatycznie dodaje się do notatnika
+#### 3. Auto-zamówienie AI
+1. Wybierz sklep
+2. Wybierz okres analizy (7-90 dni)
+3. AI generuje sugestie
+4. Edytuj i dostosuj
+5. Wyślij
 
-2. **Automatyczne tworzenie zamówienia:**
-   - Przy pierwszym dodaniu tworzy się zamówienie ze statusem "notatnik"
-   - Numer zamówienia: NOT-[timestamp]
-   - Kolejne produkty dodawane są do tego samego zamówienia
-   - Produkty mają quantity = 0 (do uzupełnienia później)
+### Statusy Zamówień
 
-3. **Uzupełnianie ilości:**
-   - Otwórz listę zamówień
-   - Znajdź zamówienie z filtrem "Notatnik" (kolor turkusowy)
-   - Edytuj zamówienie i uzupełnij ilości
-   - Wyślij do hurtowni
+1. **draft** - szkic (bursztynowy)
+2. **notatnik** - lista bez ilości (turkusowy)
+3. **sent** - wysłane (niebieski)
+4. **in_progress** - w realizacji (fioletowy)
+5. **pending_confirmation** - oczekuje (żółty)
+6. **confirmed** - potwierdzone (zielony)
+7. **partially_confirmed** - częściowo (pomarańczowy)
+8. **rejected** - odrzucone (czerwony)
+9. **archived** - archiwum (szary)
 
-### Przetwarzanie Zamówienia (Hurtownia/Admin)
+### Notatnik - Swipe-to-Add
 
-1. Logowanie do panelu administracyjnego
-2. Przeglądanie nowych zamówień (status: sent)
-3. Kliknięcie "Rozpocznij realizację"
-4. Status zmienia się na "in_progress"
-5. Przygotowanie zamówienia
-6. Przypisanie kierowcy i załadunek
+1. Otwórz cennik
+2. Przesuń produkt palcem w prawo
+3. Produkt znika (animacja)
+4. Auto-tworzenie zamówienia "notatnik"
+5. quantity = 0 (uzupełnij później)
+6. Edytuj → dodaj ilości → wyślij
 
-### Dostawa Zamówienia (Kierowca)
+## System Cen
 
-1. Logowanie do aplikacji
-2. Panel kierowcy wyświetla załadowane dostawy
-3. Kliknięcie na dostawę -> szczegóły
-4. Rozpoczęcie dostawy - status "w drodze" (in_transit)
-5. Po dostarczeniu - oznaczenie jako "dostarczona" (delivered)
-6. Możliwość dodania notatek
+### Trzy typy cen:
+1. **Base Price (N:)** - cena bazowa (czarna)
+2. **Your Price (T:)** - indywidualna dla sklepu (niebieska)
+3. **Promo Price (S:)** - promocyjna (czerwona, pulsująca)
 
-### Zarządzanie Systemem (Administrator)
+### Logika priorytetów:
+1. Cena ze specjalnego cennika dla sklepu
+2. Cena z cennika dla grupy sklepu
+3. Cena z cennika handlowca
+4. Cena z cennika bazowego
+5. base_price produktu (fallback)
 
-1. Logowanie jako administrator
-2. Dostęp do "Panel administracyjny" na ekranie głównym
-3. Zakładki dostępne w panelu:
-   - Zamówienia - wszystkie zamówienia w systemie
-   - Sklepy - dodawanie/edycja sklepów
-   - Produkty - zarządzanie katalogiem
-   - Cenniki - zarządzanie cenami
-   - Tagi - zarządzanie tagami produktów
-   - Użytkownicy - tworzenie i zarządzanie kontami
-   - Ustawienia - konfiguracja systemu
+## Promocje
+
+### Rabat -15%
+- Kurczak: 9.99 → 8.49 / kg
+- Boczek świeży: 28.90 → 24.57 / kg
+
+### Akcja 10+1
+- Kup 10 kg, dostaniesz 11 kg
+- Karkówka extra Rytel: 18.49/kg
+- Polędwiczki wp vac: 23.90/kg
+- Koszt: 10 × cena + 0.01
+
+## Analityka - Automatyczne Logowanie
+
+### User Tracking (useUserTracking)
+- Batch processing (co 5s lub 20 zdarzeń)
+- Timeout sesji: 30 min
+- Typ interakcji: touch/mouse/mixed
+- Device info: browser, OS, rozdzielczość
+
+### Session Cleanup (automatyczny)
+- Co 5 minut zamyka nieaktywne sesje
+- Funkcja: `close_inactive_sessions()`
+- Brak ręcznych przycisków
+- Sesje zamykane przy wylogowaniu
+
+### Web Vitals
+- LCP - Largest Contentful Paint
+- FID - First Input Delay
+- CLS - Cumulative Layout Shift
+- TTFB - Time to First Byte
+
+## Changelog - Auto-logging
+
+### Jak działa:
+1. Admin loguje się do aplikacji
+2. `App.tsx` wywołuje `logRecentChanges()`
+3. System sprawdza wpisy w `changelogHelper.ts`
+4. Dodaje nowe wpisy do bazy (unika duplikatów)
+5. Logi w konsoli: "✅ Added X new changelog entries"
+
+### Dodawanie nowego wpisu:
+1. Edytuj `src/lib/changelogHelper.ts`
+2. Dodaj wpis na początku tablicy `entries`
+3. Wypełnij: version, title, description, category, file_references
+4. System automatycznie doda przy następnym logowaniu admina
+
+### Struktura wpisu:
+```typescript
+{
+  version: '1.6.1',
+  title: 'Krótki tytuł zmiany',
+  description: 'Szczegółowy opis wprowadzonej funkcjonalności...',
+  category: 'feature', // feature|improvement|bugfix|breaking|security
+  file_references: [
+    'src/components/Component.tsx:123',
+    'src/lib/helper.ts:45-67'
+  ]
+}
+```
+
+## Edge Functions (Supabase)
+
+### 1. send-order-email
+- Wysyłanie zamówień mailem (Resend API)
+- HTML email z tabelą produktów
+- CSV attachment
+- Kody kreskowe (Code128) i QR
+- Dane kontaktowe jako linki (tel:, mailto:)
+
+### 2. auto-order-suggestion
+- Generowanie sugestii AI na podstawie historii
+- Analiza 7/14/30/60/90 dni wstecz
+- Statystyki per produkt
+- Format JSON
+
+### 3. auto-order-refresh-scheduler (opcjonalny)
+- Scheduler dla odświeżania sugestii
+- Wywołanie co X godzin
+- Batch processing dla wielu sklepów
+
+## Skróty Klawiszowe
+
+- `Ctrl/Cmd + N` - Nowe zamówienie
+- `Ctrl/Cmd + H` - Home
+- `Ctrl/Cmd + O` - Lista zamówień
+- `Ctrl/Cmd + C` - Cennik
+- `Ctrl/Cmd + P` - Profil
+- `Ctrl/Cmd + A` - Admin panel
+- `Ctrl/Cmd + V` - Zamówienie głosowe
+- `ESC` - Anuluj/Zamknij
 
 ## Dane Testowe
 
 ### Użytkownicy:
-- **Administrator**: admin@rodeo.pl / test123
+- **Admin**: admin@rodeo.pl / test123
 - **Ekspedient**: kierownik@sklep.pl / test123
 - **Handlowiec**: handlowiec@hurtownia.pl / test123
-- **Hurtownia**: operator@hurtownia.pl / test123
+- **Warehouse**: operator@hurtownia.pl / test123
 - **Kierowca**: kierowca@rodeo.pl / test123
+- **Analyst**: analyst@rodeo.pl / test123
 
-### Sklepy:
-- 18 realnych sklepów mięsnych w różnych miastach Polski
-
-### Produkty:
-147 produktów w kategoriach wyświetlania:
-- Mięso (schab, karkówka, żeberka, łopatka, itp.)
-- Wędliny (szynka, kiełbasa, parówki, salami, boczki, itp.)
-- Drób (kurczak, indyk, kaczka)
-- System tagów do precyzyjnego grupowania
-- Każdy produkt ma indeks (zamiast kodu kreskowego)
+### Dane:
+- **Sklepy**: 124 z GPS w woj. mazurskim, podlaskim, warmińsko-mazurskim
+- **Produkty**: 400+ (mięso, wędliny, drób, ryby)
+- **Kategorie**: 15+ kategorii wyświetlania
+- **Tagi**: elastyczne tagowanie
 
 ## Zmienne Środowiskowe
 
 ```env
-VITE_SUPABASE_URL=https://[your-project].supabase.co
-VITE_SUPABASE_ANON_KEY=[your-anon-key]
+VITE_SUPABASE_URL=https://[project].supabase.co
+VITE_SUPABASE_ANON_KEY=[anon-key]
 ```
 
-## Instalacja i Uruchomienie
+## Instalacja
 
 ```bash
-# Instalacja zależności
 npm install
-
-# Uruchomienie w trybie deweloperskim
-npm run dev
-
-# Build do produkcji
-npm run build
-
-# Podgląd buildu
-npm run preview
-
-# Sprawdzanie typów
-npm run typecheck
+npm run dev          # Development
+npm run build        # Production build
+npm run preview      # Preview build
+npm run typecheck    # TypeScript check
 ```
-
-## Kluczowe Funkcjonalności
-
-### Zamawianie Głosowe
-- **Rozpoznawanie mowy** - wykorzystanie Web Speech API do dyktowania zamówień
-- **Automatyczne parsowanie** - inteligentne rozpoznawanie nazw produktów i ilości z transkrypcji
-- **Weryfikacja na ekranie** - wyświetlenie transkrypcji i rozpoznanych produktów przed zapisaniem
-- **Zapisywanie jako szkic** - po dyktowaniu zamówienie zapisywane jako draft, nie wysyłane od razu
-- **Przejście do edycji** - automatyczne przekierowanie do ekranu edycji szkicu
-- **Edycja przed wysłaniem** - możliwość poprawy, dodania lub usunięcia pozycji w trybie edycji
-- **Szybkość składania zamówień** - znacznie szybsze niż ręczne wprowadzanie
-- **Przykładowe komendy głosowe**:
-  - "Schab 10 kilogramów"
-  - "Kiełbasa krakowska 5 kilo"
-  - "Parówki 20 opakowań"
-  - "Karkówka bez kości 15 kg"
-
-### Swipe-to-Add w Cenniku
-- **Gest przesunięcia** - przesuń produkt palcem w prawo aby dodać do notatnika
-- **Animacja znikania** - produkt płynnie znika po dodaniu
-- **Automatyczne tworzenie zamówienia** - pierwsze przesunięcie tworzy zamówienie "notatnik"
-- **Agregacja produktów** - kolejne produkty dodawane do tego samego zamówienia
-- **Bez konieczności podawania ilości** - ilości można uzupełnić później
-- **Szybkie budowanie listy zakupów** - idealne do tworzenia list produktów
-
-### System Cen
-- **Cena bazowa (base_price)** - podstawowa cena produktu (oznaczenie "N:")
-- **Twoja cena (your_price)** - indywidualna cena negocjowana dla sklepu (oznaczenie "T:", kolor niebieski)
-- **Cena promocyjna (promo_price)** - najniższa cena specjalna/promocyjna (oznaczenie "S:", kolor czerwony, pulsująca)
-- Automatyczne wyświetlanie najkorzystniejszej ceny
-- Śledzenie okresów ważności cen
-- Dwa układy wyświetlania (poziomy i pionowy)
-
-### Limity Zamawiania
-- **min_quantity** - minimalna ilość do zamówienia
-- **quantity_step** - krok zwiększania ilości (np. karton 10 szt.)
-- Walidacja ilości po stronie interfejsu
-
-### Tryby Zamawiania
-- **Tryb ilościowy (quantity)** - podawanie dokładnych ilości i natychmiastowe wysyłanie
-- **Tryb listowy (list)** - szybkie zaznaczanie produktów, budowanie listy, zapisywanie jako szkic
-
-### Współdzielenie Edycji
-- Ekspedienci z tego samego sklepu mogą edytować szkice nawzajem (opcjonalne)
-- Historia modyfikacji pokazuje kto i kiedy zmienił zamówienie
-- Można wyłączyć w ustawieniach profilu
-
-### Statusy Zamówień
-1. **draft** - szkic, można edytować i usunąć (ikona: ołówek, kolor: bursztynowy)
-2. **notatnik** - lista produktów bez ilości, dodane przez swipe (ikona: notatnik, kolor: turkusowy)
-3. **sent** - wysłane do hurtowni (ikona: samolot, kolor: niebieski)
-4. **in_progress** - w realizacji przez hurtownię (ikona: play, kolor: fioletowy)
-5. **pending_confirmation** - oczekuje na potwierdzenie (ikona: wykrzyknik, kolor: żółty)
-6. **confirmed** - potwierdzone (ikona: check, kolor: zielony)
-7. **partially_confirmed** - częściowo potwierdzone (ikona: wykrzyknik, kolor: pomarańczowy)
-8. **rejected** - odrzucone (ikona: X, kolor: czerwony)
-9. **archived** - archiwum (ikona: paczka, kolor: szary)
-
-### Statusy Dostaw
-1. **loaded** - załadowana, czeka na wyjazd
-2. **in_transit** - w drodze do klienta
-3. **delivered** - dostarczona
-
-### Komunikaty Sukcesu
-- Po wysłaniu zamówienia pojawia się elegancki modal z animacją
-- Zielona ikona checkmark z efektem scale-in
-- Automatyczne przekierowanie do ekranu głównego po 2 sekundach
-
-## Propozycje Motywów Kolorystycznych
-
-### 1. Motyw Bursztynowy (Aktualny - domyślny)
-- Główny: Bursztynowy (#F59E0B) do Pomarańczowy (#EA580C)
-- Akcent: Pomarańczowy ciemny
-- Tło: Szare odcienie
-- Użycie: Energetyczny, ciepły, branża spożywcza
-
-### 2. Motyw Czerwony Mięsny
-- Główny: Czerwony (#DC2626) do Bordowy (#991B1B)
-- Akcent: Ciemny czerwony
-- Tło: Jasny różowy i szary
-- Użycie: Bezpośrednie odniesienie do mięsa, odważny
-
-### 3. Motyw Zielony Świeżość
-- Główny: Zielony (#10B981) do Ciemny zielony (#059669)
-- Akcent: Jasny zielony
-- Tło: Miętowe i szare
-- Użycie: Świeżość, ekologia, naturalne produkty
-
-### 4. Motyw Niebieski Profesjonalny
-- Główny: Niebieski (#3B82F6) do Granatowy (#1E40AF)
-- Akcent: Jasny niebieski
-- Tło: Błękitne i szare
-- Użycie: Profesjonalny, zaufanie, korporacyjny
-
-### 5. Motyw Fioletowy Premium
-- Główny: Fioletowy (#8B5CF6) do Ciemny fiolet (#6D28D9)
-- Akcent: Lawendowy
-- Tło: Jasny fioletowy i szary
-- Użycie: Premium, luksusowy, ekskluzywny
-
-## Implementacja Motywów
-
-Motywy można zaimplementować poprzez:
-1. Zmienne CSS w index.css z wyborem motywu
-2. Tailwind CSS z custom colors w tailwind.config.js
-3. Context API do przełączania motywów w czasie rzeczywistym
-4. Zapisywanie preferencji motywu w profilu użytkownika
-
-## Przyszłe Funkcjonalności
-
-1. **Przełączanie motywów** - wybór kolorystyki w ustawieniach
-2. **Powiadomienia push** - o nowych zamówieniach i zmianach statusu
-3. **Eksport do PDF/Excel** - generowanie raportów zamówień
-4. **Statystyki** - wykresy sprzedaży, najpopularniejsze produkty
-5. **Zaawansowane planowanie tras** - optymalizacja dostaw
-6. **Chat** - komunikacja między ekspedientami a handlowcami
-7. **Historia cen** - śledzenie zmian cen produktów w czasie
-8. **Ulubione zestawy** - zapisywanie często zamawianych kombinacji
-9. **Ulepszenia zamawiania głosowego** - lepsza precyzja rozpoznawania i więcej języków
-10. **Więcej gestów swipe** - przesunięcie w lewo dla innych akcji
-11. **Etykiety QR** - generowanie kodów QR dla produktów
 
 ## Deployment
 
-Aplikacja jest gotowa do deploymentu na platformach:
+### Platformy:
 - Vercel
 - Netlify
-- Railway
-- Render
-- Bolt.new
+- Railway (railway.json)
+- Render (render.yaml)
 - Własny serwer (nginx)
 
-Wymagania:
+### Wymagania:
 - Node.js 18+
-- Konto Supabase z utworzonymi tabelami
-- Zmienne środowiskowe ustawione w platformie hostingowej
+- Konto Supabase
+- Zmienne środowiskowe
 
-## Wsparcie
+## Migracje (140+ plików)
 
-Aplikacja wspiera:
-- Przeglądarki: Chrome, Edge, Safari, Firefox (najnowsze wersje)
-- Urządzenia: Desktop, Tablet, Mobile
-- Systemy: Windows, macOS, Linux, iOS, Android
-- Orientacja: Portrait i Landscape (responsywny design)
-- Gesty dotykowe: swipe, tap, długie przytrzymanie
+Lokalizacja: `supabase/migrations/`
+
+### Główne kategorie:
+- **Schema** - tworzenie tabel + RLS
+- **Data** - przykładowe dane (produkty, sklepy)
+- **Features** - nowe funkcje (AI, analytics, roadmap)
+- **Fixes** - poprawki RLS, indeksy, optymalizacje
+- **Permissions** - uprawnienia, polityki bezpieczeństwa
+
+### Ostatnie migracje (v1.6):
+- `20251028204451` - System roadmap
+- `20251028215000` - Preferencja show_notebook_toast
+- `20251028220000` - System changelog
 
 ## Bezpieczeństwo
 
-- Wszystkie zapytania chronione przez Supabase RLS
-- Hasła hashowane przez Supabase Auth (bcrypt)
-- HTTPS wymagane w produkcji
-- Tokeny JWT do autoryzacji
-- Walidacja danych po stronie backendu
-- Ochrona przed SQL injection (Supabase parametrized queries)
-- Rate limiting (Supabase built-in)
-- Row Level Security sprawdza auth.uid() dla każdego zapytania
-- Administrator ma specjalne uprawnienia do zarządzania systemem
+- **RLS** na wszystkich tabelach
+- **JWT** tokeny (Supabase Auth)
+- **bcrypt** hasła
+- **HTTPS** wymagane
+- **Rate limiting** (Supabase built-in)
+- **SQL injection** - parametrized queries
+- **XSS** - React auto-escape
+- **Security definer** functions dla złożonych zapytań
 
-## Migracje Bazy Danych
+## Performance
 
-Wszystkie migracje znajdują się w katalogu `/supabase/migrations/`:
-- Tworzenie tabel z RLS
-- Dodawanie przykładowych danych
-- Aktualizacje schematów
-- Poprawki polityk RLS
-- System tagów i kategorii
-- System dostaw
-- System modyfikacji zamówień
-- Ustawienia systemowe
-- Dodanie statusu "notatnik" dla zamówień
-- Polityki usuwania zamówień draft i notatnik
+### Optymalizacje:
+- Lazy loading komponentów (React.lazy)
+- Code splitting (Vite)
+- Indeksy bazy danych (foreign keys, często używane kolumny)
+- Batch processing (analytics events)
+- Debouncing (wyszukiwanie)
+- Memoization (React.memo, useMemo)
+- Web Vitals monitoring
 
-## System Analityki i Automatycznego Zarządzania Sesjami
+### Caching:
+- Supabase cache (60s dla produktów)
+- IndexedDB (offline storage)
+- Service Worker (PWA)
 
-### Komponenty Analityki
+## Monitoring
 
-1. **useUserTracking** (src/hooks/useUserTracking.tsx)
-   - Automatyczne śledzenie nawigacji i akcji użytkowników
-   - Batch processing zdarzeń (co 5s lub 20 zdarzeń)
-   - Zarządzanie sesjami z timeoutem 30 minut
-   - Wykrywanie typu interakcji (touch/mouse/mixed)
-   - Zbieranie informacji o urządzeniu i przeglądarce
+### Logi włączane/wyłączane w SystemSettings:
+- `enable_voice_recognition_logging` - rozpoznawanie głosu
+- `enable_user_tracking` - śledzenie użytkowników
+- `enable_ai_metrics_logging` - metryki AI
+- `enable_learning_corrections` - korekty ML
 
-2. **SessionCleanupService** (src/components/SessionCleanupService.tsx)
-   - **AUTOMATYCZNE** zamykanie nieaktywnych sesji co 5 minut
-   - Działa w tle bez interakcji użytkownika
-   - Uruchamia `close_inactive_sessions()` z bazy danych
-   - Żadnych ręcznych przycisków - całkowicie automatyczny proces
+### Web Vitals:
+- Automatyczne zbieranie metryk
+- Tabela: web_vitals
+- Dostępne w AnalyticsPanel
 
-3. **Funkcje Bazodanowe**
-   - `close_inactive_sessions()` - zamyka sesje bez aktywności przez 30+ minut
-   - `close_user_sessions(user_id)` - zamyka wszystkie sesje użytkownika przy wylogowaniu
-   - Funkcje wywoływane automatycznie przez system
+## Dokumentacja
 
-### Panele Analityczne (dla analyst/admin)
+### Pliki:
+- `README.md` - główna dokumentacja
+- `CHANGELOG_GUIDE.md` - przewodnik dodawania zmian
+- `ANALYTICS_SYSTEM.md` - system analityki
+- `EMAIL_SETUP.md` - konfiguracja emaili
+- `DEPLOYMENT.md` - deployment guide
+- `JAK_ZMIENIC_MOTYW.md` - zmiana motywu
 
-1. **AnalyticsPanel** - Dashboard KPI, top wydarzenia, sesje
-2. **SessionsBrowserPanel** - Przegląd sesji z filtrowaniem
-3. **TopProductsPanel** - Najpopularniejsze produkty
-4. **AIMetricsPanel** - Metryki AI (rozpoznawanie głosu)
-5. **LoginRankingsPanel** - Ranking aktywności użytkowników
-6. **PushAnalyticsPanel** - Analityka powiadomień push
+### Backupy:
+- `backup-system-20251028.tar.gz` - pełny backup
+- Automatyczne tworzenie przy większych zmianach
 
-### Zabezpieczenia Analityki (RLS)
+## Najważniejsze Zmiany v1.6.1
 
-- **user_events** - użytkownicy wstawiają własne, analyst/admin czytają wszystkie
-- **user_sessions** - użytkownicy zarządzają własnymi, analyst/admin widzą wszystkie
-- **user_paths** - tylko analyst/admin mają dostęp
-- **path_clusters** - tylko analyst/admin mają dostęp
+### Nowe w tej wersji:
+1. **Automatyczne logowanie zmian** - changelogHelper.ts
+2. **System Changelog** - ChangelogPanel.tsx
+3. **Integracja z Roadmap** - zakładki Roadmap + Changelog
+4. **Komentarze w kodzie** - JSDoc dla kluczowych funkcji
+5. **Zaktualizowana dokumentacja** - README.md, rodeo.prompt
+6. **Backup systemu** - pełny tar.gz
 
-### WAŻNE: Sesje są zarządzane AUTOMATYCZNIE!
-- Brak ręcznych przycisków do zamykania sesji
-- System sam zamyka nieaktywne sesje co 5 minut
-- Sesje zamykane przy wylogowaniu użytkownika
-- Statystyki pokazują tylko rzeczywiste aktywne sesje (< 30 min)
+### V1.6.0:
+- System Roadmap (etapy, funkcje, priorytety)
+- Panel RoadmapManager z postępem
+- Pełna wizualizacja rozwoju projektu
 
-## Szczegóły Techniczne - Cennik
+### V1.5.1:
+- Preferencja show_notebook_toast (użytkownik + global)
+- Animacja toast message (fade-in-out)
+- Ustawienia w ProfileScreen + SystemSettings
 
-### PriceList.tsx
-Główny komponent cennika z następującymi funkcjami:
+### V1.5.0:
+- Zmiana "Szkic" → "Koszyk" (wszystkie komponenty)
+- Lepsze UX dla ekspedientów
+- Spójne nazewnictwo w całej aplikacji
 
-1. **Stan komponentu:**
-   - products - lista produktów z cenami
-   - search - wyszukiwanie po nazwie i indeksie
-   - sortBy - sortowanie (name-asc, name-desc, price-asc, price-desc)
-   - priceLayout - układ wyświetlania (horizontal, vertical)
-   - swipedProduct - aktualnie przeciągany produkt
-   - touchStart/touchCurrent - koordynaty gestu swipe
-   - notebookItems - lista produktów dodawanych do notatnika
-   - storeId/userId - identyfikatory do tworzenia zamówień
+## Przyszłe Funkcjonalności (Roadmap)
 
-2. **Funkcje swipe:**
-   - handleTouchStart() - początek gestu
-   - handleTouchMove() - śledzenie ruchu palca
-   - handleTouchEnd() - zakończenie gestu, sprawdzenie dystansu
-   - addToNotebook() - dodanie produktu do zamówienia notatnik
-   - getSwipeTransform() - obliczanie przesunięcia dla animacji
+### Planowane (v1.7+):
+- [ ] Automatyczne parsowanie git commitów do changelogu
+- [ ] Integracja z GitHub releases
+- [ ] Eksport changelogu do Markdown
+- [ ] Klikalne odnośniki do kodu (VS Code)
+- [ ] RSS feed dla zmian
+- [ ] Więcej okresów analizy AI (180, 365 dni)
+- [ ] Export raportów do PDF/Excel
+- [ ] Chat handlowiec ↔ ekspedient
+- [ ] Push notifications (FCM)
+- [ ] Ulubione zestawy produktów
+- [ ] QR codes dla produktów
 
-3. **Logika dodawania do notatnika:**
-   - Sprawdzenie czy istnieje zamówienie notatnik dla użytkownika
-   - Jeśli nie - utworzenie nowego z numerem NOT-[timestamp]
-   - Dodanie produktu z quantity=0
-   - Animacja znikania produktu (opacity)
-   - Automatyczne usunięcie z listy notebookItems po 500ms
+## Wsparcie
 
-4. **Wyświetlanie:**
-   - Grupowanie produktów według kategorii
-   - Sortowanie według wybranego kryterium
-   - Bez filtrów kategorii i tagów (usunięte)
-   - Bez kodów kreskowych (usunięte)
-   - Tylko nazwa produktu i ceny
+### Przeglądarki:
+- Chrome, Edge, Safari, Firefox (najnowsze)
+
+### Urządzenia:
+- Desktop, Tablet, Mobile
+- iOS, Android
+- Portrait + Landscape
+
+### Gesty:
+- Swipe (dodawanie do notatnika)
+- Tap, Long press
+- Multi-touch
 
 ## Licencja
 
-Aplikacja stworzona dla branży mięsno-wędliniarskiej jako system B2B do automatyzacji procesu zamawiania towarów i zarządzania dostawami.
+Proprietary - Wszystkie prawa zastrzeżone
 
-## Najważniejsze Zmiany (Ostatnia Aktualizacja - v1.4)
+---
 
-### Nowe funkcje od poprzedniej wersji (v1.4):
+**Kontakt:**
+- Email: support@rodeo.pl
+- GitHub Issues: [repo]/issues
+- Dokumentacja: `/docs`
 
-1. **System cenników z priorytetami:**
-   - Cenniki dla sklepów, grup i handlowców z logiką priorytetową
-   - price_list_assignments - przypisania z priorytetami
-   - price_list_items - pozycje w cennikach
-   - price_list_history - audyt zmian w cenach
-   - PriceListAssignments.tsx - zarządzanie przypisaniami
-
-2. **Multiple email addresses dla sklepów:**
-   - wholesale_emails jako array text[]
-   - Możliwość wielu adresów email dla hurtowni
-   - StoreEmailManager.tsx do zarządzania emailami
-
-3. **Preferencje per urządzenie:**
-   - device_preferences - tabela z ustawieniami dla różnych urządzeń
-   - Oddzielne ustawienia dla desktop/mobile/tablet
-   - useDevicePreferences hook do zarządzania
-
-4. **System ogłoszeń:**
-   - system_announcements - komunikaty dla użytkowników
-   - AnnouncementsManager.tsx - zarządzanie ogłoszeniami
-   - UserNotifications.tsx - wyświetlanie powiadomień
-
-5. **Zarządzanie sesjami:**
-   - Konfigurowalne timeouty sesji w SystemSettings
-   - Automatyczne czyszczenie nieaktywnych sesji
-   - SessionTimer z retry logic i always-visible icon
-   - keep_session_alive() - przedłużanie sesji
-   - cleanup_inactive_sessions() - czyszczenie
-
-6. **Email notifications:**
-   - email_notifications - kolejka i logi wysyłki
-   - send-order-email Edge Function (Resend API)
-   - HTML email z tabelą produktów
-   - CSV attachment z pełnym zestawieniem
-   - Kody kreskowe (Code128) i QR
-   - Dane kontaktowe jako klikalne linki (tel:, mailto:)
-
-7. **Profile pictures:**
-   - profile_picture_url w tabeli users
-   - Upload zdjęć profilowych
-   - Wyświetlanie w nagłówku i profilu
-
-8. **Domyślne ilości produktów:**
-   - default_quantity_on_add w products
-   - global default w system_settings
-   - Automatyczne ustawianie przy dodawaniu do zamówienia
-
-9. **FontSize Context:**
-   - Zmiana rozmiaru czcionki w całej aplikacji
-   - 3 rozmiary: small, medium, large
-   - Zapisywanie preferencji w profilu
-
-10. **Naprawiona ikona przedłużenia sesji:**
-    - Zawsze widoczna (mobile i desktop)
-    - Retry logic jeśli ładowanie się nie powiedzie
-    - Fallback na obecny czas w razie błędu
-    - Lepsze komentarze w kodzie
-
-11. **Error Boundary:**
-    - Zabezpieczenie przed crashem całej aplikacji
-    - Przyjazny ekran błędu zamiast białej strony
-    - Logowanie błędów do konsoli (gotowe na Sentry)
-    - Przycisk odświeżenia i reset
-
-12. **Loading Skeletons:**
-    - Skeleton.tsx - uniwersalny komponent placeholder
-    - SkeletonCard, SkeletonList, SkeletonTable
-    - Animacja shimmer podczas ładowania
-    - Lepsza percepcja wydajności
-
-13. **Keyboard Shortcuts:**
-    - Ctrl/Cmd + N - Nowe zamówienie
-    - Ctrl/Cmd + H - Home
-    - Ctrl/Cmd + O - Lista zamówień
-    - Ctrl/Cmd + C - Cennik
-    - Ctrl/Cmd + P - Profil
-    - Ctrl/Cmd + A - Admin panel (tylko admin/analyst)
-    - Nie działa gdy focus jest na input/textarea
-
-14. **Real-time Order Notifications:**
-    - Supabase Realtime dla zmian statusów zamówień
-    - Toast notifications w prawym górnym rogu
-    - Dźwięk powiadomienia dla każdego typu
-    - Różne kolory i ikony (success, error, warning, info)
-    - Auto-znikanie po 5 sekundach
-    - Animacja slide-in-right
-
-### Nowe funkcje w v1.3:
-
-1. **System grup sklepów:**
-   - Możliwość tworzenia grup sklepów (regionalne, tematyczne)
-   - Przypisywanie sklepów do wielu grup jednocześnie
-   - Zarządzanie przez StoreGroupsManager.tsx
-   - Tabele: store_groups, store_group_assignments
-
-2. **Mapa sklepów:**
-   - 124 realne sklepy w Polsce północno-wschodniej z koordynatami GPS
-   - Wizualizacja na mapie Leaflet (StoresMap.tsx)
-   - Możliwość filtrowania według grup
-   - Marker clustering dla lepszej czytelności
-
-3. **System banerów okolicznościowych:**
-   - Tabela occasion_banners z harmonogramem wyświetlania
-   - BannersManager.tsx do zarządzania banerami
-   - OccasionBanner.tsx do wyświetlania banerów w aplikacji
-   - Obsługa różnych okazji (święta, promocje, wydarzenia)
-
-4. **Rozbudowane preferencje użytkownika:**
-   - font_size - rozmiar czcionki (small, medium, large)
-   - ui_theme - motyw interfejsu (7 motywów do wyboru)
-   - show_sort_buttons - widoczność przycisków sortowania
-   - order_details_status_expanded - domyślny stan rozwinięcia statusów
-   - notebook_button_labels - widoczność etykiet przycisków w notatniku
-   - show_delete_icons - widoczność ikon usuwania
-   - price_list_layout - układ cennika
-
-5. **Uprawnienia zarządzania produktami:**
-   - Szczegółowe polityki RLS dla tabeli products
-   - Admin może wszystko (CRUD)
-   - User może tylko czytać produkty
-   - Security definer functions dla złożonych zapytań
-
-6. **Poprawki bezpieczeństwa RLS:**
-   - Użycie SECURITY DEFINER dla funkcji get_user_role()
-   - Zapobieganie nieskończonej rekursji w politykach
-   - Poprawne sprawdzanie uprawnień użytkowników
-
-### Poprzednie zmiany (v1.2):
-
-1. **Usunięto kody kreskowe** - pozostawiono indeksy produktów
-2. **Mechanizm Swipe-to-Add** - dodawanie produktów przez gest
-3. **Status "notatnik"** - lista produktów bez ilości
-4. **Uproszczenie cennika** - usunięto filtry kategorii i tagów
-5. **Zmieniony przepływ głosowy** - zapisywanie jako szkic, nie wysyłanie
-6. **Auto-filtrowanie** - po wysłaniu przełączanie na "Wysłane"
+**Zespół:** RODEO Development Team
+**Branża:** Mięsno-wędliniarska B2B
+**Typ:** SaaS / PWA
