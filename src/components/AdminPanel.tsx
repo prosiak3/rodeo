@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, Mail, Bell, TrendingUp, Map } from 'lucide-react';
+import { Package, ShoppingBag, DollarSign, Settings, UserCog, Brain, Tag, Percent, UserCheck, Mail, Bell, TrendingUp, Map, Monitor } from 'lucide-react';
 import OrdersList from './OrdersList';
 import PriceListManager from './PriceListManager';
 import StoresAndGroupsManager from './StoresAndGroupsManager';
@@ -14,6 +14,7 @@ import EmailLogsPanel from './EmailLogsPanel';
 import AnnouncementsManager from './AnnouncementsManager';
 import DemandForecastPanel from './DemandForecastPanel';
 import RoadmapManager from './RoadmapManager';
+import SessionsBrowserPanel from './SessionsBrowserPanel';
 import { supabase } from '../lib/supabase';
 
 interface AdminPanelProps {
@@ -23,7 +24,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'announcements' | 'email_logs' | 'demand_forecast' | 'roadmap' | 'settings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'stores' | 'products' | 'pricelists' | 'promotions' | 'users' | 'salesperson_assignments' | 'ai' | 'banners' | 'announcements' | 'email_logs' | 'demand_forecast' | 'roadmap' | 'sessions' | 'settings'>('orders');
   const [storeId, setStoreId] = useState<string>('');
 
   useEffect(() => {
@@ -189,6 +190,17 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
             Roadmapa
           </button>
           <button
+            onClick={() => setActiveTab('sessions')}
+            className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
+              activeTab === 'sessions'
+                ? 'text-amber-600 border-b-2 border-amber-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Monitor className="w-5 h-5" />
+            Sesje
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-6 py-4 font-medium transition ${
               activeTab === 'settings'
@@ -232,6 +244,8 @@ export default function AdminPanel({ userId, userRole, onSelectOrder }: AdminPan
         {activeTab === 'demand_forecast' && <DemandForecastPanel />}
 
         {activeTab === 'roadmap' && <RoadmapManager isAdmin={userRole === 'admin'} />}
+
+        {activeTab === 'sessions' && <SessionsBrowserPanel />}
 
         {activeTab === 'settings' && <SystemSettings userId={userId} />}
       </div>
