@@ -488,7 +488,12 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
               {orderItems.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-800 truncate">{item.products?.name}</div>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span className="font-medium text-gray-800">{item.products?.name}</span>
+                      {item.unit && (
+                        <span className="text-sm text-gray-500">({item.unit})</span>
+                      )}
+                    </div>
                     {sourceType !== 'voice' && (
                       <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)}{item.unit && item.unit !== 'kg' ? ` / 1${item.unit}` : ''}</div>
                     )}
