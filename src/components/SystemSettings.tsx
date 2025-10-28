@@ -21,6 +21,7 @@ interface GlobalSettings {
   show_voice_transcript_realtime: boolean;
   voice_minimum_confidence_threshold: number;
   voice_ignore_low_confidence: boolean;
+  after_order_sent_behavior: 'go_to_sent' | 'stay_in_details' | 'go_to_drafts';
 }
 
 const TIME_OPTIONS = [
@@ -67,6 +68,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     show_voice_transcript_realtime: true,
     voice_minimum_confidence_threshold: 70,
     voice_ignore_low_confidence: false,
+    after_order_sent_behavior: 'go_to_sent',
   });
   const [newEmail, setNewEmail] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
@@ -105,6 +107,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           show_voice_transcript_realtime: data.show_voice_transcript_realtime ?? true,
           voice_minimum_confidence_threshold: data.voice_minimum_confidence_threshold || 70,
           voice_ignore_low_confidence: data.voice_ignore_low_confidence || false,
+          after_order_sent_behavior: data.after_order_sent_behavior || 'go_to_sent',
         });
       }
     } catch (error) {
@@ -145,6 +148,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
         show_voice_transcript_realtime: settings.show_voice_transcript_realtime,
         voice_minimum_confidence_threshold: settings.voice_minimum_confidence_threshold,
         voice_ignore_low_confidence: settings.voice_ignore_low_confidence,
+        after_order_sent_behavior: settings.after_order_sent_behavior,
         updated_at: new Date().toISOString(),
       };
 
@@ -724,6 +728,91 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Send className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Zachowanie po wysłaniu zamówienia</h3>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                Wybierz, co ma się dziać po wysłaniu zamówienia przez użytkownika:
+              </p>
+
+              <div className="space-y-2">
+                <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-white transition-colors" style={{
+                  borderColor: settings.after_order_sent_behavior === 'go_to_sent' ? '#d97706' : '#d1d5db',
+                  backgroundColor: settings.after_order_sent_behavior === 'go_to_sent' ? '#fffbeb' : 'transparent'
+                }}>
+                  <input
+                    type="radio"
+                    name="after_order_sent_behavior"
+                    value="go_to_sent"
+                    checked={settings.after_order_sent_behavior === 'go_to_sent'}
+                    onChange={(e) => setSettings({ ...settings, after_order_sent_behavior: e.target.value as any })}
+                    className="mt-1 w-4 h-4 text-amber-600"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">Przejdź do zakładki "Wysłane"</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Użytkownik zostanie przekierowany do listy wysłanych zamówień, gdzie może od razu sprawdzić wysłane zamówienie.
+                    </div>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-white transition-colors" style={{
+                  borderColor: settings.after_order_sent_behavior === 'stay_in_details' ? '#d97706' : '#d1d5db',
+                  backgroundColor: settings.after_order_sent_behavior === 'stay_in_details' ? '#fffbeb' : 'transparent'
+                }}>
+                  <input
+                    type="radio"
+                    name="after_order_sent_behavior"
+                    value="stay_in_details"
+                    checked={settings.after_order_sent_behavior === 'stay_in_details'}
+                    onChange={(e) => setSettings({ ...settings, after_order_sent_behavior: e.target.value as any })}
+                    className="mt-1 w-4 h-4 text-amber-600"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">Zostań w szczegółach zamówienia</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Użytkownik pozostanie na ekranie szczegółów wysłanego zamówienia.
+                    </div>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-white transition-colors" style={{
+                  borderColor: settings.after_order_sent_behavior === 'go_to_drafts' ? '#d97706' : '#d1d5db',
+                  backgroundColor: settings.after_order_sent_behavior === 'go_to_drafts' ? '#fffbeb' : 'transparent'
+                }}>
+                  <input
+                    type="radio"
+                    name="after_order_sent_behavior"
+                    value="go_to_drafts"
+                    checked={settings.after_order_sent_behavior === 'go_to_drafts'}
+                    onChange={(e) => setSettings({ ...settings, after_order_sent_behavior: e.target.value as any })}
+                    className="mt-1 w-4 h-4 text-amber-600"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">Wróć do szkiców</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Użytkownik zostanie przekierowany do listy szkiców, aby mógł kontynuować pracę nad kolejnymi zamówieniami.
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg mt-3">
+                <p className="text-xs text-blue-800">
+                  <strong>Wybrana opcja:</strong> {
+                    settings.after_order_sent_behavior === 'go_to_sent' ? 'Po wysłaniu → lista wysłanych zamówień' :
+                    settings.after_order_sent_behavior === 'stay_in_details' ? 'Po wysłaniu → pozostań w szczegółach' :
+                    'Po wysłaniu → lista szkiców'
+                  }
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

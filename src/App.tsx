@@ -421,10 +421,14 @@ function AppContent() {
           setOrderRefreshKey(prev => prev + 1);
         }}
         onOrderSent={() => {
-          setSelectedOrderId(null);
+          // Najpierw ustawiamy filtr i klucz odświeżania, potem przełączamy zakładkę
           setOrdersListFilter('sent');
-          setActiveTab('orders');
           setOrderRefreshKey(prev => prev + 1);
+          setSelectedOrderId(null);
+          // Małe opóźnienie dla pewności że stan się zastosował przed przełączeniem zakładki
+          setTimeout(() => {
+            setActiveTab('orders');
+          }, 50);
         }}
         onUseAsTemplate={(orderId) => {
           setTemplateOrderId(orderId);
@@ -860,10 +864,13 @@ function AppContent() {
                 storeId={user.store_id}
                 userId={user.id}
                 onOrderSent={() => {
+                  // ManualOrderScreen wysyła zamówienie od razu jako 'sent'
                   setOrderMode(null);
+                  setOrdersListFilter('sent');
                   setOrderRefreshKey(prev => prev + 1);
-                  setOrdersListFilter('draft');
-                  setActiveTab('orders');
+                  setTimeout(() => {
+                    setActiveTab('orders');
+                  }, 50);
                 }}
                 onCancel={() => setOrderMode(null)}
               />
@@ -875,10 +882,13 @@ function AppContent() {
                   storeId={user.store_id}
                   userId={user.id}
                   onOrderSaved={() => {
+                    // PriceListOrderListMode zapisuje jako szkic
                     setOrderMode(null);
-                    setOrderRefreshKey(prev => prev + 1);
                     setOrdersListFilter('draft');
-                    setActiveTab('orders');
+                    setOrderRefreshKey(prev => prev + 1);
+                    setTimeout(() => {
+                      setActiveTab('orders');
+                    }, 50);
                   }}
                   onCancel={() => {
                     setOrderMode(null);
@@ -890,10 +900,13 @@ function AppContent() {
                   storeId={user.store_id}
                   userId={user.id}
                   onOrderSent={() => {
+                    // PriceListOrderScreen zapisuje jako szkic
                     setOrderMode(null);
-                    setOrderRefreshKey(prev => prev + 1);
                     setOrdersListFilter('draft');
-                    setActiveTab('orders');
+                    setOrderRefreshKey(prev => prev + 1);
+                    setTimeout(() => {
+                      setActiveTab('orders');
+                    }, 50);
                   }}
                   onCancel={() => {
                     setOrderMode(null);
@@ -908,11 +921,14 @@ function AppContent() {
                 storeId={user.store_id}
                 userId={user.id}
                 onOrderSent={() => {
+                  // CopyOrderScreen zapisuje jako szkic
                   setOrderMode(null);
                   setTemplateOrderId(null);
-                  setOrderRefreshKey(prev => prev + 1);
                   setOrdersListFilter('draft');
-                  setActiveTab('orders');
+                  setOrderRefreshKey(prev => prev + 1);
+                  setTimeout(() => {
+                    setActiveTab('orders');
+                  }, 50);
                 }}
                 onCancel={() => {
                   setOrderMode(null);
@@ -927,10 +943,13 @@ function AppContent() {
                 storeId={user.store_id}
                 userId={user.id}
                 onOrderSent={() => {
+                  // AutoOrderScreen może zapisać jako szkic lub wysłać
                   setOrderMode(null);
-                  setOrderRefreshKey(prev => prev + 1);
                   setOrdersListFilter('draft');
-                  setActiveTab('orders');
+                  setOrderRefreshKey(prev => prev + 1);
+                  setTimeout(() => {
+                    setActiveTab('orders');
+                  }, 50);
                 }}
                 onCancel={() => setOrderMode(null)}
               />
@@ -941,7 +960,7 @@ function AppContent() {
         {activeTab === 'orders' && (
           <div className="p-6">
             <OrdersList
-              key={`orders-list-${orderRefreshKey}`}
+              key={`orders-list-${ordersListFilter}-${orderRefreshKey}`}
               storeId={user.store_id}
               userRole={user.role}
               onSelectOrder={setSelectedOrderId}
