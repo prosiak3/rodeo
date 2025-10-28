@@ -821,7 +821,12 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                          '○'}
                       </span>
                     )}
-                    <span className="font-semibold text-gray-900 truncate text-base">{item.products?.name || 'Produkt'}</span>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="font-semibold text-gray-900 truncate text-base">{item.products?.name || 'Produkt'}</span>
+                      {item.unit && (
+                        <span className="text-xs text-gray-500 flex-shrink-0">({item.unit})</span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-600 flex-shrink-0">
                     {canEditItems ? (
