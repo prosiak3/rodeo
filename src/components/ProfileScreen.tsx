@@ -882,7 +882,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
           </div>
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              ℹ️ Zamówienia głosowe w trakcie tworzenia będą automatycznie zapisane jako szkic przed wylogowaniem
+              ℹ️ Zamówienia głosowe w trakcie tworzenia będą automatycznie zapisane do koszyka przed wylogowaniem
             </p>
           </div>
         </div>
@@ -1246,7 +1246,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 <Mic className="w-5 h-5 text-amber-600" />
                 <div>
                   <div className="font-semibold text-gray-800">Dodawanie głosem w edycji</div>
-                  <div className="text-sm text-gray-600">Wyświetlaj sekcję &quot;Dodaj głosem&quot; w edycji szkicu zamówienia</div>
+                  <div className="text-sm text-gray-600">Wyświetlaj sekcję &quot;Dodaj głosem&quot; w edycji koszyka zamówienia</div>
                 </div>
               </div>
               <button
@@ -1307,7 +1307,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
               <h3 className="font-semibold text-lg">Współdzielenie edycji</h3>
             </div>
             <div className="space-y-3">
-              <p className="text-sm text-gray-600 mb-3">Czy inni użytkownicy z Twojego sklepu mogą edytować Twoje szkice zamówień?</p>
+              <p className="text-sm text-gray-600 mb-3">Czy inni użytkownicy z Twojego sklepu mogą edytować Twój koszyk zamówień?</p>
               <button
                 onClick={handleCollaborationToggle}
                 disabled={saving}
@@ -1318,7 +1318,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 }`}
               >
                 <div className="font-semibold text-gray-800 mb-1">✅ Tak, pozwól innym edytować</div>
-                <div className="text-sm text-gray-600">Inni kierownicy i handlowcy z Twojego sklepu mogą edytować Twoje szkice</div>
+                <div className="text-sm text-gray-600">Inni kierownicy i handlowcy z Twojego sklepu mogą edytować Twój koszyk</div>
               </button>
               <button
                 onClick={handleCollaborationToggle}
@@ -1330,7 +1330,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 }`}
               >
                 <div className="font-semibold text-gray-800 mb-1">❌ Nie, tylko ja mogę edytować</div>
-                <div className="text-sm text-gray-600">Tylko Ty możesz edytować swoje szkice zamówień</div>
+                <div className="text-sm text-gray-600">Tylko Ty możesz edytować swój koszyk zamówień</div>
               </button>
             </div>
           </div>
@@ -1405,7 +1405,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 }`}
               >
                 <div className="font-semibold text-gray-800 mb-1">Uproszczony widok</div>
-                <div className="text-sm text-gray-600">Pokazuj tylko filtry: Szkice i Wysłane</div>
+                <div className="text-sm text-gray-600">Pokazuj tylko filtry: Koszyk i Wysłane</div>
               </button>
               <button
                 onClick={handleShowAllFiltersToggle}

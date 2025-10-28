@@ -238,11 +238,11 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
         details: { items_count: orderItems.length, source: 'price_list_list_mode' },
       });
 
-      alert('Zamówienie zapisane jako szkic!');
+      alert('Zamówienie zapisane do koszyka!');
       onOrderSaved();
     } catch (error) {
       console.error('Error saving draft:', error);
-      alert('Błąd podczas zapisywania szkicu');
+      alert('Błąd podczas zapisywania do koszyka');
     } finally {
       setSaving(false);
     }

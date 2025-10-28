@@ -550,8 +550,8 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
   const convertToDraft = async () => {
     if (!order || order.status !== 'notatnik') return;
     const confirmed = await confirm({
-      title: 'Przekształcić w szkic?',
-      message: 'Zamówienie zostanie przekształcone w szkic i będzie można je edytować. Zostaniesz przeniesiony do edycji.',
+      title: 'Przekształcić do koszyka?',
+      message: 'Zamówienie zostanie przekształcone do koszyka i będzie można je edytować. Zostaniesz przeniesiony do edycji.',
       confirmText: 'Przekształć',
       cancelText: 'Anuluj',
       variant: 'warning'
@@ -1207,7 +1207,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
 
                 {history.filter(h => h.action === 'modified_draft').length > 0 && (
                   <div className="mt-3 pt-2 border-t border-gray-200">
-                    <h5 className="font-semibold text-xs text-gray-700 mb-2">Modyfikacje szkicu:</h5>
+                    <h5 className="font-semibold text-xs text-gray-700 mb-2">Modyfikacje koszyka:</h5>
                     <div className="space-y-2">
                       {history.filter(h => h.action === 'modified_draft').map((mod, index) => (
                         <div key={index} className="flex items-start gap-2 text-xs">

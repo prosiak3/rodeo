@@ -1154,7 +1154,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       if (notFoundCount > 0) {
         message += `\n• ${notFoundCount} nie znaleziono w cenniku`;
       }
-      message += `\n\nZapisać szkic z ${matchedCount} dopasowanymi produktami?`;
+      message += `\n\nDodać do koszyka ${matchedCount} dopasowanych produktów?`;
 
       if (!confirm(message)) {
         return;
@@ -1229,7 +1229,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
       });
 
       setTimeout(() => {
-        alert(`Szkic utworzony! Dopasowano ${matchedItems.length} z ${orderItems.length} produktów.`);
+        alert(`Dodano do koszyka! Dopasowano ${matchedItems.length} z ${orderItems.length} produktów.`);
       }, 100);
       onDraftCreated(order.id);
     } catch (error) {
@@ -1477,7 +1477,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
               className="flex-1 py-5 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check className="w-5 h-5" />
-              {sending ? 'Zapisuję...' : 'Zapisz jako szkic'}
+              {sending ? 'Zapisuję...' : 'Dodaj do koszyka'}
             </button>
           </div>
         </div>
@@ -1637,7 +1637,7 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated }: Vo
                 className="w-full py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition flex items-center justify-center gap-2 shadow-lg active:scale-95"
               >
                 <Check className="w-5 h-5" />
-                Zapisz jako szkic
+                Dodaj do koszyka
               </button>
             </div>
           </>

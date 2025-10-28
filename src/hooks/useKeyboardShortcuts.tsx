@@ -93,7 +93,7 @@ export default function useKeyboardShortcuts(
  * Dostępne skróty w aplikacji RODEO:
  *
  * Ctrl/Cmd + N - Nowe zamówienie
- * Ctrl/Cmd + S - Zapisz szkic
+ * Ctrl/Cmd + S - Zapisz do koszyka
  * Ctrl/Cmd + H - Home
  * Ctrl/Cmd + O - Lista zamówień
  * Ctrl/Cmd + P - Profil

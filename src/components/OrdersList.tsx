@@ -13,7 +13,7 @@ interface OrdersListProps {
 }
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; icon: any; bgColor: string; hoverColor: string }> = {
-  draft: { label: 'Szkic', color: 'text-amber-700', icon: Edit3, bgColor: 'bg-amber-100', hoverColor: 'hover:text-amber-700 hover:bg-amber-200' },
+  draft: { label: 'Koszyk', color: 'text-amber-700', icon: Edit3, bgColor: 'bg-amber-100', hoverColor: 'hover:text-amber-700 hover:bg-amber-200' },
   notatnik: { label: 'Notatnik', color: 'text-teal-700', icon: FileText, bgColor: 'bg-teal-100', hoverColor: 'hover:text-teal-700 hover:bg-teal-200' },
   sent: { label: 'Wysłane', color: 'text-blue-700', icon: Send, bgColor: 'bg-blue-100', hoverColor: 'hover:text-blue-700 hover:bg-blue-200' },
   in_progress: { label: 'W realizacji', color: 'text-violet-700', icon: PlayCircle, bgColor: 'bg-violet-100', hoverColor: 'hover:text-violet-700 hover:bg-violet-200' },

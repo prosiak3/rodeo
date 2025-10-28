@@ -360,7 +360,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
                 }`}
               >
                 <div className="font-semibold text-gray-800">Z cennika lista</div>
-                <div className="text-sm text-gray-600">Budujesz listę produktów, potem podajesz ilości i zapisujesz jako szkic</div>
+                <div className="text-sm text-gray-600">Budujesz listę produktów, potem podajesz ilości i zapisujesz do koszyka</div>
               </button>
             </div>
           </div>
@@ -402,7 +402,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
                 }`}
               >
                 <div className="font-semibold text-gray-800">Uproszczony widok</div>
-                <div className="text-sm text-gray-600">Pokazuj tylko filtry: Szkice i Wysłane</div>
+                <div className="text-sm text-gray-600">Pokazuj tylko filtry: Koszyk i Wysłane</div>
               </button>
               <button
                 onClick={() => setSettings({ ...settings, default_show_all_filters: true })}
@@ -421,7 +421,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <Users className="w-5 h-5 text-amber-600" />
-              <h3 className="font-semibold text-lg">Współdzielenie edycji szkiców</h3>
+              <h3 className="font-semibold text-lg">Współdzielenie edycji koszyka</h3>
             </div>
             <p className="text-sm text-gray-600 mb-3">Domyślne ustawienie współpracy przy edycji zamówień:</p>
             <div className="space-y-2">
@@ -434,7 +434,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
                 }`}
               >
                 <div className="font-semibold text-gray-800">✅ Włączone</div>
-                <div className="text-sm text-gray-600">Użytkownicy mogą domyślnie edytować szkice kolegów z tego samego sklepu</div>
+                <div className="text-sm text-gray-600">Użytkownicy mogą domyślnie edytować koszyk kolegów z tego samego sklepu</div>
               </button>
               <button
                 onClick={() => setSettings({ ...settings, default_allow_collaboration: false })}
@@ -445,7 +445,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
                 }`}
               >
                 <div className="font-semibold text-gray-800">❌ Wyłączone</div>
-                <div className="text-sm text-gray-600">Tylko twórca może edytować swoje szkice (zwiększa prywatność)</div>
+                <div className="text-sm text-gray-600">Tylko twórca może edytować swój koszyk (zwiększa prywatność)</div>
               </button>
             </div>
           </div>

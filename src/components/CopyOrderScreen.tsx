@@ -188,7 +188,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
       onOrderSent();
     } catch (error) {
       console.error('Error creating draft order:', error);
-      alert('Błąd podczas tworzenia szkicu zamówienia');
+      alert('Błąd podczas dodawania do koszyka');
     } finally {
       setSending(false);
     }
@@ -261,7 +261,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
-        <h2 className="text-xl font-bold">Skopiuj do szkicu</h2>
+        <h2 className="text-xl font-bold">Skopiuj do koszyka</h2>
         <p className="text-amber-100 text-sm mt-1">
           Kopiowanie z: {selectedOrder.order_number}
         </p>
@@ -362,7 +362,7 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
                 ) : (
                   <>
                     <FileText className="w-5 h-5" />
-                    Zapisz jako szkic
+                    Dodaj do koszyka
                   </>
                 )}
               </button>

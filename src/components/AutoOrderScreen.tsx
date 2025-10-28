@@ -267,7 +267,7 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
         .update({ total_amount: totalAmount })
         .eq('id', order.id);
 
-      showSuccess(asDraft ? 'Zapisano jako szkic' : 'Zamówienie wysłane!');
+      showSuccess(asDraft ? 'Zapisano do koszyka' : 'Zamówienie wysłane!');
       onOrderSent();
     } catch (error) {
       console.error('Error sending order:', error);
@@ -508,7 +508,7 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
             className="flex-1 px-4 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-semibold hover:from-amber-600 hover:to-orange-700 transition shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Save className="w-5 h-5" />
-            Zapisz szkic
+            Dodaj do koszyka
           </button>
         </div>
       </div>

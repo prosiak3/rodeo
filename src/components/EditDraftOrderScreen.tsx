@@ -452,7 +452,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
             <span className="font-medium">Powrót</span>
           </button>
           <div className="flex-1">
-            <h2 className="text-xl font-bold">Edycja szkicu</h2>
+            <h2 className="text-xl font-bold">Edycja koszyka</h2>
             <p className="text-amber-100 text-sm">{orderNumber}</p>
           </div>
         </div>
