@@ -180,6 +180,28 @@ export default function ManualOrderScreen({ storeId, userId, onOrderSent, onCanc
 
       if (itemsError) throw itemsError;
 
+      // Dodaj wpis do historii o utworzeniu zamówienia
+      await supabase.from('order_history').insert({
+        order_id: order.id,
+        action: 'order_created',
+        performed_by: userId,
+        details: {
+          source_type: 'manual',
+          source_label: 'Ręcznie',
+          items_count: orderItems.length
+        }
+      });
+
+      // Dodaj wpis o wysłaniu
+      await supabase.from('order_history').insert({
+        order_id: order.id,
+        action: 'sent',
+        performed_by: userId,
+        details: {
+          notes: notes || null
+        }
+      });
+
       onOrderSent();
     } catch (error) {
       console.error('Error sending order:', error);

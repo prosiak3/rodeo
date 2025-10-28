@@ -270,11 +270,12 @@ export default function PriceListOrderScreen({ storeId, userId, onOrderSent, onC
 
       await supabase.from('order_history').insert({
         order_id: order.id,
-        action: 'created',
+        action: 'order_created',
         performed_by: userId,
         details: {
+          source_type: 'price_list',
+          source_label: 'Z cennika (tryb ilościowy)',
           items_count: orderItems.length,
-          source: 'price_list_quantity_mode',
         },
       });
 

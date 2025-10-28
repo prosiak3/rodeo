@@ -1301,11 +1301,14 @@ export default function VoiceOrderScreen({ storeId, userId, onDraftCreated, onSh
 
       if (itemsError) throw itemsError;
 
+      // Dodaj wpis o utworzeniu zamówienia
       await supabase.from('order_history').insert({
         order_id: order.id,
-        action: 'draft_created',
+        action: 'order_created',
         performed_by: userId,
         details: {
+          source_type: 'voice',
+          source_label: 'Głosowo',
           items_count: matchedItems.length,
           matched: matchedItems.length,
           total: orderItems.length

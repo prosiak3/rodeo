@@ -267,6 +267,31 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
         .update({ total_amount: totalAmount })
         .eq('id', order.id);
 
+      // Dodaj wpis o utworzeniu zamówienia
+      await supabase.from('order_history').insert({
+        order_id: order.id,
+        action: 'order_created',
+        performed_by: userId,
+        details: {
+          source_type: 'auto',
+          source_label: 'Auto-zamówienie',
+          items_count: itemsToInsert.length,
+          analysis_period: suggestion?.analysis_period || 'unknown'
+        }
+      });
+
+      // Jeśli zamówienie zostało od razu wysłane, dodaj też wpis o wysłaniu
+      if (!asDraft) {
+        await supabase.from('order_history').insert({
+          order_id: order.id,
+          action: 'sent',
+          performed_by: userId,
+          details: {
+            notes: notes || 'Wygenerowane automatycznie'
+          }
+        });
+      }
+
       showSuccess(asDraft ? 'Zapisano jako szkic' : 'Zamówienie wysłane!');
       onOrderSent();
     } catch (error) {

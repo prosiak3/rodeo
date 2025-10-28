@@ -1245,26 +1245,56 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
             </button>
             {historyExpanded && (
               <div className="px-3 pb-3 space-y-2 border-t border-gray-100">
-                {history.map((entry) => (
+                {history.map((entry) => {
+                  const details = entry.details as any;
+                  const getActionLabel = (action: string) => {
+                    switch(action) {
+                      case 'order_created': return 'Utworzono zamówienie';
+                      case 'converted_to_draft': return 'Przekształcono notatnik na szkic';
+                      case 'sent': return 'Wysłano do hurtowni';
+                      case 'confirmed': return 'Potwierdzono całkowicie';
+                      case 'partially_confirmed': return 'Potwierdzono częściowo';
+                      case 'rejected': return 'Odrzucono';
+                      case 'modified_draft': return 'Zmodyfikowano szkic';
+                      case 'item_added': return 'Dodano produkt';
+                      case 'item_removed': return 'Usunięto produkt';
+                      case 'quantity_updated': return 'Zaktualizowano ilość';
+                      default: return action;
+                    }
+                  };
+
+                  return (
                   <div key={entry.id} className="p-2 bg-gray-50 rounded text-xs">
                     <div className="flex items-start gap-2">
                       <Package className="w-3 h-3 text-gray-500 flex-shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col gap-1 mb-1">
-                          <span className="font-medium text-gray-800">{entry.action}</span>
+                          <span className="font-medium text-gray-800">{getActionLabel(entry.action)}</span>
                           {entry.details && typeof entry.details === 'object' && (
                             <div className="text-gray-600">
-                              {(entry.details as any).product_name && (
-                                <div>Produkt: {(entry.details as any).product_name}</div>
-                              )}
-                              {(entry.details as any).old_quantity !== undefined && (
-                                <div>
-                                  {(entry.details as any).old_quantity} {(entry.details as any).unit} → {(entry.details as any).new_quantity} {(entry.details as any).unit}
+                              {details.source_label && (
+                                <div className="text-blue-600 font-medium">
+                                  📝 {details.source_label}
+                                  {details.items_count && ` (${details.items_count} produktów)`}
                                 </div>
                               )}
-                              {(entry.details as any).quantity !== undefined && (entry.details as any).old_quantity === undefined && (
+                              {details.copied_from && (
+                                <div>Skopiowano z: {details.copied_from}</div>
+                              )}
+                              {details.from_status && (
+                                <div>Ze statusu: {details.from_status}</div>
+                              )}
+                              {details.product_name && (
+                                <div>Produkt: {details.product_name}</div>
+                              )}
+                              {details.old_quantity !== undefined && (
                                 <div>
-                                  Ilość: {(entry.details as any).quantity} {(entry.details as any).unit}
+                                  {details.old_quantity} {details.unit} → {details.new_quantity} {details.unit}
+                                </div>
+                              )}
+                              {details.quantity !== undefined && details.old_quantity === undefined && (
+                                <div>
+                                  Ilość: {details.quantity} {details.unit}
                                 </div>
                               )}
                             </div>
@@ -1277,10 +1307,14 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
                             <span className="text-gray-400">({entry.users.role === 'store_manager' ? 'Ekspedient' : entry.users.role === 'salesperson' ? 'Handlowiec' : entry.users.role === 'operator' ? 'Operator' : entry.users.role})</span>
                           </div>
                         )}
+                        {!entry.users && (
+                          <div className="text-gray-400 text-xs">Brak informacji o użytkowniku</div>
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
+                );
+                })}
               </div>
             )}
           </div>

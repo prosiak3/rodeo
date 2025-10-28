@@ -185,6 +185,19 @@ export default function CopyOrderScreen({ storeId, userId, onOrderSent, onCancel
 
       if (itemsError) throw itemsError;
 
+      // Dodaj wpis do historii o utworzeniu zamówienia
+      await supabase.from('order_history').insert({
+        order_id: order.id,
+        action: 'order_created',
+        performed_by: userId,
+        details: {
+          source_type: 'copy',
+          source_label: 'Kopiowanie',
+          items_count: orderItems.length,
+          copied_from: selectedOrder.order_number
+        }
+      });
+
       onOrderSent();
     } catch (error) {
       console.error('Error creating draft order:', error);

@@ -233,9 +233,13 @@ export default function PriceListOrderListMode({ storeId, userId, onOrderSaved, 
 
       await supabase.from('order_history').insert({
         order_id: order.id,
-        action: 'created',
+        action: 'order_created',
         performed_by: userId,
-        details: { items_count: orderItems.length, source: 'price_list_list_mode' },
+        details: {
+          source_type: 'price_list',
+          source_label: 'Z cennika (tryb listowy)',
+          items_count: orderItems.length
+        },
       });
 
       alert('Zamówienie zapisane jako szkic!');
