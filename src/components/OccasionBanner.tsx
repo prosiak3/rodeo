@@ -82,8 +82,11 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
   return (
     <div
       onClick={onClick}
-      className={`rounded-lg shadow-md p-3 relative cursor-pointer hover:shadow-lg transition ${animationClass}`}
-      style={gradientStyle}
+      className={`rounded-lg shadow-xl p-6 relative cursor-pointer hover:shadow-2xl transition border-2 border-orange-400 ${animationClass}`}
+      style={{
+        ...gradientStyle,
+        background: 'linear-gradient(135deg, #ff6b35 0%, #ff8c42 50%, #ffa500 100%)',
+      }}
     >
       {renderDecorations()}
 
@@ -92,32 +95,32 @@ export default function OccasionBanner({ banner, onDismiss, onClick }: OccasionB
           e.stopPropagation();
           onDismiss();
         }}
-        className="absolute top-2 right-2 hover:opacity-80 transition z-10"
-        style={{ color: banner.styling.textColor }}
+        className="absolute top-3 right-3 hover:opacity-80 transition z-10 bg-white/20 rounded-full p-1"
+        style={{ color: '#ffffff' }}
       >
-        <X className="w-5 h-5" />
+        <X className="w-6 h-6" />
       </button>
 
-      <div className="flex items-center gap-3 relative z-10 pr-8">
+      <div className="flex items-center gap-4 relative z-10 pr-10">
         <div className="flex-shrink-0">
           <Icon
-            className="w-7 h-7"
-            style={{ color: banner.styling.textColor }}
+            className="w-10 h-10"
+            style={{ color: '#ffffff' }}
           />
         </div>
 
-        <div className="flex-1" style={{ color: banner.styling.textColor }}>
-          <h3 className="font-bold text-base mb-1">{banner.title}</h3>
+        <div className="flex-1" style={{ color: '#ffffff' }}>
+          <h3 className="font-bold text-xl mb-2">{banner.title}</h3>
 
           {bestPromo && bestPromo.type === 'percentage' && (
-            <div className="inline-flex items-center gap-1 bg-white/30 backdrop-blur-sm rounded px-2 py-0.5 text-sm font-bold">
+            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-lg font-bold text-orange-600 shadow-md">
               <span>🔥</span>
               <span>-{bestPromo.value}%</span>
             </div>
           )}
 
           {bestPromo && bestPromo.type === 'buy_x_get_y' && (
-            <div className="inline-flex items-center gap-1 bg-white/30 backdrop-blur-sm rounded px-2 py-0.5 text-sm font-bold">
+            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 text-lg font-bold text-orange-600 shadow-md">
               <span>🎁</span>
               <span>10+1 GRATIS</span>
             </div>
