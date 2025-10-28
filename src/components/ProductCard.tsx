@@ -78,8 +78,9 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
                 </span>
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="font-semibold text-gray-800 text-sm">{product.name}</h4>
+                  <span className="text-xs text-gray-500">({product.unit})</span>
                   {is10Plus1 && (
                     <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold">10+1 GRATIS</span>
                   )}
