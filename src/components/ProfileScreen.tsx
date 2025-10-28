@@ -275,7 +275,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
       if (error) throw error;
       setAutoOrderAnalysisDays(days);
-      showAlert('Ustawienia zapisane!', 'success');
+
+      if (user.store_id) {
+        await supabase
+          .from('auto_order_suggestions')
+          .delete()
+          .eq('store_id', user.store_id);
+      }
+
+      showAlert('Ustawienia zapisane! Cache automatycznych zamówień został wyczyszczony.', 'success');
     } catch (error) {
       console.error('Error updating auto order analysis period:', error);
       showAlert('Błąd podczas zapisywania ustawień', 'error');
@@ -693,6 +701,12 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
           <p className="text-sm text-gray-600 mb-4">
             Wybierz okres analizy historii zamówień dla generowania automatycznych propozycji:
           </p>
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              💡 Po zmianie okresu analizy, cache automatycznych zamówień zostanie wyczyszczony.
+              Następne otwarcie "Auto Zamówienia" wygeneruje świeżą propozycję z nowym okresem.
+            </p>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => handleAutoOrderAnalysisDaysChange(90)}

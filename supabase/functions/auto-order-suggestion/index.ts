@@ -110,7 +110,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Handle GET request - return cached suggestion
+    // Handle GET request - return cached suggestion if valid and matches user preferences
     if (req.method === 'GET') {
       const { data: cachedSuggestion, error: cacheError } = await supabase
         .from('auto_order_suggestions')
@@ -124,17 +124,24 @@ Deno.serve(async (req: Request) => {
       }
 
       if (cachedSuggestion) {
-        return new Response(
-          JSON.stringify({
-            ...cachedSuggestion.suggestion_data,
-            cached: true,
-            cache_generated_at: cachedSuggestion.generated_at,
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        const cachedAnalysisDays = cachedSuggestion.suggestion_data?.metadata?.analysis_period_days;
+        const userPreferredDays = userData.auto_order_analysis_days || 180;
+
+        if (cachedAnalysisDays === userPreferredDays) {
+          return new Response(
+            JSON.stringify({
+              ...cachedSuggestion.suggestion_data,
+              cached: true,
+              cache_generated_at: cachedSuggestion.generated_at,
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log(`Cache invalidated: user prefers ${userPreferredDays} days but cache has ${cachedAnalysisDays} days`);
       }
 
-      // No cache - generate on demand
+      // No cache or preferences changed - generate on demand
       // Fall through to generation logic
     }
 

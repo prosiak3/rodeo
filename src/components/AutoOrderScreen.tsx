@@ -366,25 +366,35 @@ export default function AutoOrderScreen({ storeId, userId, onOrderSent, onCancel
             <span className="text-sm">Generuj ponownie</span>
           </button>
         </div>
-        <div className="text-sm opacity-90">
-          {suggestion?.cached ? (
-            <p>Propozycja z {new Date(suggestion.cache_generated_at!).toLocaleString('pl-PL')}</p>
-          ) : (
-            <p>Świeżo wygenerowana propozycja</p>
-          )}
+        <div className="text-sm opacity-90 space-y-1">
+          <div className="flex items-center gap-2">
+            {suggestion?.cached ? (
+              <>
+                <span className="px-2 py-0.5 bg-white/20 rounded text-xs font-medium">CACHE</span>
+                <span>z {new Date(suggestion.cache_generated_at!).toLocaleString('pl-PL')}</span>
+              </>
+            ) : (
+              <>
+                <span className="px-2 py-0.5 bg-green-400/30 rounded text-xs font-medium">ŚWIEŻE</span>
+                <span>Świeżo wygenerowana propozycja</span>
+              </>
+            )}
+          </div>
+          <p className="font-medium">
+            📊 Okres analizy: {
+              suggestion?.metadata.analysis_period_days === 90 ? '90 dni (3 miesiące)' :
+              suggestion?.metadata.analysis_period_days === 180 ? '180 dni (6 miesięcy)' :
+              suggestion?.metadata.analysis_period_days === 270 ? '270 dni (9 miesięcy)' :
+              suggestion?.metadata.analysis_period_days === 365 ? '365 dni (1 rok)' :
+              `${suggestion?.metadata.analysis_period_days || 180} dni`
+            }
+          </p>
           <p>
             Przeanalizowano {suggestion?.metadata.based_on_orders_count || 0} {
               ((suggestion?.metadata.based_on_orders_count || 0) === 1) ? 'zamówienie' :
               ((suggestion?.metadata.based_on_orders_count || 0) >= 2 && (suggestion?.metadata.based_on_orders_count || 0) <= 4) ? 'zamówienia' :
               'zamówień'
             }
-            {suggestion?.metadata.analysis_period_days && ` (okres: ${
-              suggestion.metadata.analysis_period_days === 90 ? 'ostatnie 3 miesiące' :
-              suggestion.metadata.analysis_period_days === 180 ? 'ostatnie 6 miesięcy' :
-              suggestion.metadata.analysis_period_days === 270 ? 'ostatnie 9 miesięcy' :
-              suggestion.metadata.analysis_period_days === 365 ? 'ostatni rok' :
-              `ostatnie ${suggestion.metadata.analysis_period_days} dni`
-            })`}
           </p>
         </div>
       </div>
