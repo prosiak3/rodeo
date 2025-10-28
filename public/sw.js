@@ -2,6 +2,11 @@
 const CACHE_NAME = 'rodeo-v1';
 const SUPABASE_URL = 'https://your-project.supabase.co'; // Will be replaced dynamically
 
+// Check if we're in development mode
+const isDevelopment = self.location.hostname === 'localhost' ||
+                      self.location.hostname === '127.0.0.1' ||
+                      self.location.hostname.includes('webcontainer');
+
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing...');
   self.skipWaiting();
@@ -18,6 +23,16 @@ self.addEventListener('activate', (event) => {
       );
     }).then(() => self.clients.claim())
   );
+});
+
+// Don't intercept fetch requests in development
+self.addEventListener('fetch', (event) => {
+  // In development, let all requests pass through
+  if (isDevelopment) {
+    return;
+  }
+
+  // In production, you can add caching strategies here if needed
 });
 
 // Track push notification delivery
