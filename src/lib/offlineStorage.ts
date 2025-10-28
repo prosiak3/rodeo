@@ -253,7 +253,7 @@ export async function getUnsyncedCount(): Promise<number> {
     const transaction = db!.transaction([STORE_DRAFT_ORDERS], 'readonly');
     const store = transaction.objectStore(STORE_DRAFT_ORDERS);
     const index = store.index('synced');
-    const request = index.count(false);
+    const request = index.count(IDBKeyRange.only(false));
 
     request.onsuccess = () => {
       resolve(request.result);
