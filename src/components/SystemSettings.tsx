@@ -10,6 +10,7 @@ interface GlobalSettings {
   default_order_mode: 'quantity' | 'list';
   default_show_all_filters: boolean;
   default_allow_collaboration: boolean;
+  default_show_notebook_toast: boolean;
   wholesale_emails: string[];
   session_inactive_warning_minutes: number;
   session_inactive_disconnect_minutes: number;
@@ -46,6 +47,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
     default_order_mode: 'quantity',
     default_show_all_filters: false,
     default_allow_collaboration: true,
+    default_show_notebook_toast: true,
     wholesale_emails: [],
     session_inactive_warning_minutes: 5,
     session_inactive_disconnect_minutes: 15,
@@ -80,6 +82,7 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           default_order_mode: data.default_order_mode || 'quantity',
           default_show_all_filters: data.default_show_all_filters || false,
           default_allow_collaboration: data.default_allow_collaboration ?? true,
+          default_show_notebook_toast: data.default_show_notebook_toast ?? true,
           wholesale_emails: data.wholesale_emails || [],
           session_inactive_warning_minutes: data.session_inactive_warning_minutes || 5,
           session_inactive_disconnect_minutes: data.session_inactive_disconnect_minutes || 15,
@@ -446,6 +449,38 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
               >
                 <div className="font-semibold text-gray-800">❌ Wyłączone</div>
                 <div className="text-sm text-gray-600">Tylko twórca może edytować swój koszyk (zwiększa prywatność)</div>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Mail className="w-5 h-5 text-amber-600" />
+              <h3 className="font-semibold text-lg">Komunikaty w cenniku</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">Wyświetlanie komunikatu po dodaniu produktu do notatnika:</p>
+            <div className="space-y-2">
+              <button
+                onClick={() => setSettings({ ...settings, default_show_notebook_toast: true })}
+                className={`w-full p-3 rounded-lg border-2 transition text-left ${
+                  settings.default_show_notebook_toast
+                    ? 'border-amber-500 bg-amber-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-semibold text-gray-800">✅ Włączone</div>
+                <div className="text-sm text-gray-600">Wyświetlaj komunikat &quot;Dodano do notatnika&quot; (domyślnie dla nowych użytkowników)</div>
+              </button>
+              <button
+                onClick={() => setSettings({ ...settings, default_show_notebook_toast: false })}
+                className={`w-full p-3 rounded-lg border-2 transition text-left ${
+                  !settings.default_show_notebook_toast
+                    ? 'border-amber-500 bg-amber-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-semibold text-gray-800">❌ Wyłączone</div>
+                <div className="text-sm text-gray-600">Nie pokazuj komunikatów (tylko dźwięk potwierdzenia)</div>
               </button>
             </div>
           </div>

@@ -64,6 +64,9 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
   const [showSortButtons, setShowSortButtons] = useState<boolean>(false);
   const [showGroupButtons, setShowGroupButtons] = useState<boolean>(false);
   const [currentSessionNotebookId, setCurrentSessionNotebookId] = useState<string | null>(notebookOrderId || null);
+  const [showNotebookToast, setShowNotebookToast] = useState<boolean>(true);
+  const [toastMessage, setToastMessage] = useState<string>('');
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -142,7 +145,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
       const { data: userData } = await supabase
         .from('users')
-        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle, show_sort_buttons, show_group_buttons')
+        .select('store_id, show_product_description, show_product_index, notebook_mode, show_sort_icons, show_price_layout_toggle, show_sort_buttons, show_group_buttons, show_notebook_toast')
         .eq('id', authData.user.id)
         .single();
 
@@ -156,6 +159,7 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       setShowPriceLayoutToggle((userData as any)?.show_price_layout_toggle ?? true);
       setShowSortButtons((userData as any)?.show_sort_buttons ?? false);
       setShowGroupButtons((userData as any)?.show_group_buttons ?? false);
+      setShowNotebookToast((userData as any)?.show_notebook_toast ?? true);
 
       const { data, error } = await supabase
         .from('products')
@@ -536,6 +540,13 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
       // Play success sound
       playAddSound();
 
+      // Show toast message if enabled
+      if (showNotebookToast) {
+        setToastMessage('Dodano do notatnika');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+      }
+
       console.log('✅ Successfully added to order, reloading notebook items');
       await loadNotebookItems(orderId);
     } catch (error) {
@@ -586,6 +597,16 @@ export default function PriceList({ notebookOrderId, onBackToOrder }: PriceListP
 
   return (
     <div className="space-y-3" style={{ touchAction: 'pan-y' }}>
+      {showToast && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in-out">
+          <div className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span className="font-medium">{toastMessage}</span>
+          </div>
+        </div>
+      )}
       {notebookOrderId && onBackToOrder && (
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-lg p-3 sticky top-0 z-30 mb-3" style={{ touchAction: 'auto' }}>
           <button

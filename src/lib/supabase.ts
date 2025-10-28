@@ -54,6 +54,7 @@ export interface User {
   font_size_preference?: FontSize;
   phone?: string;
   contact_email?: string;
+  show_notebook_toast?: boolean;
 }
 
 export interface Product {
