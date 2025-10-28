@@ -18,6 +18,7 @@ import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
 import { Grid3x3, List } from 'lucide-react';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
+import EditDraftOrderScreen from './components/EditDraftOrderScreen';
 
 // Lazy load heavy components for better performance
 const StylesDemo = lazy(() => import('./components/StylesDemo'));
@@ -27,7 +28,6 @@ const CopyOrderScreen = lazy(() => import('./components/CopyOrderScreen'));
 const PriceListOrderScreen = lazy(() => import('./components/PriceListOrderScreen'));
 const PriceListOrderListMode = lazy(() => import('./components/PriceListOrderListMode'));
 const AutoOrderScreen = lazy(() => import('./components/AutoOrderScreen'));
-const EditDraftOrderScreen = lazy(() => import('./components/EditDraftOrderScreen'));
 const ProfileScreen = lazy(() => import('./components/ProfileScreen'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const AnalyticsPanel = lazy(() => import('./components/AnalyticsPanel'));
