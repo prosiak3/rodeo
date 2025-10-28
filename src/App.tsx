@@ -111,7 +111,8 @@ function AppContent() {
         const { data } = await supabase
           .from('system_settings')
           .select('session_timeout_minutes')
-          .single();
+          .limit(1)
+          .maybeSingle();
 
         if (data?.session_timeout_minutes) {
           console.log('🟢 App: Załadowano timeout auto-logout:', data.session_timeout_minutes, 'minut');

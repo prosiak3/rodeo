@@ -98,7 +98,8 @@ export default function SessionTimer({ onKeepAlive }: SessionTimerProps) {
       const { data } = await supabase
         .from('system_settings')
         .select('session_max_duration_minutes')
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (data?.session_max_duration_minutes) {
         console.log('🟢 SessionTimer: Załadowano max czas sesji:', data.session_max_duration_minutes, 'minut');
