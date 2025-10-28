@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [savedLocation, setSavedLocation] = useState<any | null>(null);
+  const [locationLoaded, setLocationLoaded] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -57,8 +58,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       setUser(data);
 
-      const location = await restoreUserLocation(userId);
-      setSavedLocation(location);
+      if (!locationLoaded) {
+        console.log('[AuthContext] Loading saved location (one time only)');
+        const location = await restoreUserLocation(userId);
+        setSavedLocation(location);
+        setLocationLoaded(true);
+      }
 
       await recordSessionGap(userId, false);
     } catch (error) {
@@ -110,6 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setSession(null);
+      setSavedLocation(null);
+      setLocationLoaded(false);
     }
   };
 

@@ -44,6 +44,7 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
   const [previousTab, setPreviousTab] = useState<'home' | 'new-order' | 'orders' | 'prices' | 'profile' | 'admin'>('home');
   const [autoLogoutTimeout, setAutoLogoutTimeout] = useState(15);
+  const [locationRestored, setLocationRestored] = useState(false);
 
   const handleTabChange = (newTab: typeof activeTab) => {
     if (newTab !== 'profile') {
@@ -163,10 +164,10 @@ function AppContent() {
     },
   });
 
-  // Restore saved location after login
+  // Restore saved location after login (only once)
   useEffect(() => {
-    if (savedLocation && !selectedOrderId && !editingOrderId) {
-      console.log('[App] Restoring saved location:', savedLocation);
+    if (savedLocation && !selectedOrderId && !editingOrderId && !locationRestored) {
+      console.log('[App] Restoring saved location (one time only):', savedLocation);
 
       if (savedLocation.activeTab) {
         setActiveTab(savedLocation.activeTab);
@@ -183,8 +184,17 @@ function AppContent() {
       if (savedLocation.editingOrderId) {
         setEditingOrderId(savedLocation.editingOrderId);
       }
+
+      setLocationRestored(true);
     }
-  }, [savedLocation]);
+  }, [savedLocation, locationRestored, selectedOrderId, editingOrderId]);
+
+  // Reset location restored flag when user changes
+  useEffect(() => {
+    if (!user) {
+      setLocationRestored(false);
+    }
+  }, [user]);
 
   // Save location periodically while user is active
   useEffect(() => {
