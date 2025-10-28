@@ -709,6 +709,32 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <button
+              onClick={() => handleAutoOrderAnalysisDaysChange(7)}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                autoOrderAnalysisDays === 7
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-semibold text-gray-800 mb-1">7 dni</div>
+              <div className="text-sm text-gray-600">1 tydzień</div>
+              <div className="text-xs text-gray-500 mt-1">Bardzo krótki okres</div>
+            </button>
+            <button
+              onClick={() => handleAutoOrderAnalysisDaysChange(14)}
+              disabled={saving}
+              className={`p-4 rounded-lg border-2 transition text-left ${
+                autoOrderAnalysisDays === 14
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="font-semibold text-gray-800 mb-1">14 dni</div>
+              <div className="text-sm text-gray-600">2 tygodnie</div>
+              <div className="text-xs text-gray-500 mt-1">Krótki okres</div>
+            </button>
+            <button
               onClick={() => handleAutoOrderAnalysisDaysChange(90)}
               disabled={saving}
               className={`p-4 rounded-lg border-2 transition text-left ${
