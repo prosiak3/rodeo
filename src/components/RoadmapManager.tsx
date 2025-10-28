@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, Clock, Calendar, AlertCircle, ChevronDown, ChevronUp, Edit, Plus, Trash2, Save, X, Target, TrendingUp } from 'lucide-react';
+import { CheckCircle, Clock, Calendar, AlertCircle, ChevronDown, ChevronUp, Edit, Plus, Trash2, Save, X, Target, TrendingUp, FileText, Code, Bug, Zap, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { showAlert } from '../lib/alerts';
+import ChangelogPanel from './ChangelogPanel';
 
 interface RoadmapFeature {
   id: string;
@@ -28,16 +29,32 @@ interface RoadmapStage {
   features?: RoadmapFeature[];
 }
 
+interface ChangelogEntry {
+  id: string;
+  version: string;
+  title: string;
+  description: string;
+  category: 'feature' | 'improvement' | 'bugfix' | 'breaking' | 'security';
+  file_references: string[];
+  release_date: string;
+  order_index: number;
+  created_at: string;
+  updated_at: string;
+}
+
 interface RoadmapManagerProps {
   isAdmin: boolean;
 }
 
 export default function RoadmapManager({ isAdmin }: RoadmapManagerProps) {
+  const [activeTab, setActiveTab] = useState<'roadmap' | 'changelog'>('roadmap');
   const [stages, setStages] = useState<RoadmapStage[]>([]);
+  const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
   const [editingStage, setEditingStage] = useState<string | null>(null);
   const [editingFeature, setEditingFeature] = useState<string | null>(null);
+  const [editingChangelog, setEditingChangelog] = useState<string | null>(null);
   const [stageForm, setStageForm] = useState({ name: '', description: '', status: 'planned' as const });
   const [featureForm, setFeatureForm] = useState({
     stage_id: '',
@@ -46,9 +63,19 @@ export default function RoadmapManager({ isAdmin }: RoadmapManagerProps) {
     status: 'planned' as const,
     priority: 'medium' as const
   });
+  const [changelogForm, setChangelogForm] = useState({
+    version: '',
+    title: '',
+    description: '',
+    category: 'feature' as const,
+    file_references: [] as string[],
+    release_date: new Date().toISOString().split('T')[0]
+  });
+  const [fileRefInput, setFileRefInput] = useState('');
 
   useEffect(() => {
     loadRoadmap();
+    loadChangelog();
   }, []);
 
   const loadRoadmap = async () => {
@@ -80,6 +107,22 @@ export default function RoadmapManager({ isAdmin }: RoadmapManagerProps) {
       showAlert('Błąd wczytywania roadmapy', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadChangelog = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('changelog_entries')
+        .select('*')
+        .order('release_date', { ascending: false })
+        .order('order_index');
+
+      if (error) throw error;
+      setChangelog(data || []);
+    } catch (error) {
+      console.error('Error loading changelog:', error);
+      showAlert('Błąd wczytywania changelogu', 'error');
     }
   };
 
@@ -284,11 +327,40 @@ export default function RoadmapManager({ isAdmin }: RoadmapManagerProps) {
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg p-8 text-white">
         <div className="flex items-center gap-3 mb-4">
           <TrendingUp className="w-8 h-8" />
-          <h2 className="text-3xl font-bold">Roadmapa Rozwoju Systemu</h2>
+          <h2 className="text-3xl font-bold">Roadmapa i Changelog Systemu</h2>
         </div>
         <p className="text-blue-100 mb-6">
-          Interaktywna wizualizacja postępu wdrażania kolejnych etapów systemu zamówień
+          Interaktywna wizualizacja postępu wdrażania oraz szczegółowa dokumentacja zmian
         </p>
+
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setActiveTab('roadmap')}
+            className={`px-6 py-2 rounded-lg font-medium transition ${
+              activeTab === 'roadmap'
+                ? 'bg-white text-blue-600'
+                : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Roadmapa
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('changelog')}
+            className={`px-6 py-2 rounded-lg font-medium transition ${
+              activeTab === 'changelog'
+                ? 'bg-white text-blue-600'
+                : 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Changelog
+            </div>
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white bg-opacity-20 rounded-lg p-4 backdrop-blur-sm">
@@ -310,8 +382,9 @@ export default function RoadmapManager({ isAdmin }: RoadmapManagerProps) {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {stages.map((stage) => {
+      {activeTab === 'roadmap' && (
+        <div className="space-y-4">
+          {stages.map((stage) => {
           const StatusIcon = getStatusIcon(stage.status);
           const isExpanded = expandedStages.has(stage.id);
 
@@ -558,7 +631,16 @@ export default function RoadmapManager({ isAdmin }: RoadmapManagerProps) {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
+
+      {activeTab === 'changelog' && (
+        <ChangelogPanel
+          entries={changelog}
+          isAdmin={isAdmin}
+          onUpdate={loadChangelog}
+        />
+      )}
     </div>
   );
 }
