@@ -991,9 +991,8 @@ function AppContent() {
         if (tab !== 'prices') {
           setAddingToNotebookOrderId(null);
         }
-        if (tab === 'orders') {
-          setOrdersListFilter(null);
-        }
+        // NIE resetuj filtra jeśli użytkownik kliknął zakładkę orders
+        // Filtr powinien być resetowany tylko przez konkretne akcje
       }} userRole={user.role} />
     </div>
   );
