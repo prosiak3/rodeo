@@ -243,7 +243,7 @@ export default function OrderDetails({ orderId, userRole, userId, onBack, onEdit
           const { data: settings } = await supabase
             .from('system_settings')
             .select('wholesale_emails')
-            .eq('id', 1)
+            .limit(1)
             .maybeSingle();
 
           emailRecipients = settings?.wholesale_emails || ['pcdoctor03@gmail.com'];
