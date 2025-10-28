@@ -19,6 +19,7 @@ import { Grid3x3, List } from 'lucide-react';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
 import EditDraftOrderScreen from './components/EditDraftOrderScreen';
+import { logRecentChanges } from './lib/changelogHelper';
 
 // Lazy load heavy components for better performance
 const StylesDemo = lazy(() => import('./components/StylesDemo'));
@@ -101,6 +102,13 @@ function AppContent() {
     },
     { enabled: !!session }
   );
+
+  // Log recent changes to changelog (only once on app init)
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      logRecentChanges().catch(console.error);
+    }
+  }, [user?.role]);
 
   // Load auto-logout timeout from system settings
   useEffect(() => {
