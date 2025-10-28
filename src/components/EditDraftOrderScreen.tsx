@@ -23,6 +23,7 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   const [transcript, setTranscript] = useState('');
   const [sourceType, setSourceType] = useState<string | null>(null);
   const [showDeleteIcons, setShowDeleteIcons] = useState(false);
+  const [showVoiceInEditDraft, setShowVoiceInEditDraft] = useState(true);
   const productsRef = useRef<Product[]>([]);
 
   useEffect(() => {
@@ -33,12 +34,15 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
   const loadUserPreferences = async () => {
     const { data } = await supabase
       .from('users')
-      .select('show_delete_icons')
+      .select('show_delete_icons, show_voice_in_edit_draft')
       .eq('id', userId)
       .single();
 
     if (data?.show_delete_icons !== null && data?.show_delete_icons !== undefined) {
       setShowDeleteIcons(data.show_delete_icons);
+    }
+    if (data?.show_voice_in_edit_draft !== null && data?.show_voice_in_edit_draft !== undefined) {
+      setShowVoiceInEditDraft(data.show_voice_in_edit_draft);
     }
   };
 
@@ -455,31 +459,33 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
       </div>
 
       <div className="p-4 space-y-4">
-        <div className="bg-white rounded-xl shadow-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Dodaj głosem</h3>
-            <button
-              onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
-              className={`p-3 rounded-full transition-all duration-200 ${
-                isListening
-                  ? 'bg-red-500 text-white animate-pulse shadow-lg'
-                  : 'bg-amber-500 text-white hover:bg-amber-600'
-              }`}
-            >
-              {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-            </button>
+        {showVoiceInEditDraft && (
+          <div className="bg-white rounded-xl shadow-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg">Dodaj głosem</h3>
+              <button
+                onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
+                className={`p-3 rounded-full transition-all duration-200 ${
+                  isListening
+                    ? 'bg-red-500 text-white animate-pulse shadow-lg'
+                    : 'bg-amber-500 text-white hover:bg-amber-600'
+                }`}
+              >
+                {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+              </button>
+            </div>
+            {transcript && (
+              <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                "{transcript}"
+              </div>
+            )}
+            {isListening && (
+              <div className="text-center text-sm text-gray-600 mt-2">
+                Powiedz: "boczek 10 kg" lub "5 kg schabu"
+              </div>
+            )}
           </div>
-          {transcript && (
-            <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-              "{transcript}"
-            </div>
-          )}
-          {isListening && (
-            <div className="text-center text-sm text-gray-600 mt-2">
-              Powiedz: "boczek 10 kg" lub "5 kg schabu"
-            </div>
-          )}
-        </div>
+        )}
 
         {orderItems.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-4">

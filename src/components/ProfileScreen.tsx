@@ -42,6 +42,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const [orderDetailsStatusExpanded, setOrderDetailsStatusExpanded] = useState<boolean>((user as any).order_details_status_expanded ?? false);
   const [showNotebookButtonLabels, setShowNotebookButtonLabels] = useState<boolean>((user as any).show_notebook_button_labels ?? false);
   const [showDeleteIcons, setShowDeleteIcons] = useState<boolean>((user as any).show_delete_icons ?? false);
+  const [showVoiceInEditDraft, setShowVoiceInEditDraft] = useState<boolean>((user as any).show_voice_in_edit_draft ?? true);
   const [afterAutoLogout, setAfterAutoLogout] = useState<string>((user as any).after_auto_logout_return_to || 'last_location');
   const [saving, setSaving] = useState(false);
   const [profilePicture, setProfilePicture] = useState<string>((user as any).profile_picture_url || '');
@@ -346,6 +347,26 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
       showAlert('Ustawienia zapisane!', 'success');
     } catch (error) {
       console.error('Error updating delete icons settings:', error);
+      showAlert('Błąd podczas zapisywania ustawień', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleVoiceInEditDraftToggle = async () => {
+    setSaving(true);
+    try {
+      const newValue = !showVoiceInEditDraft;
+      const { error } = await supabase
+        .from('users')
+        .update({ show_voice_in_edit_draft: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setShowVoiceInEditDraft(newValue);
+      showAlert('Ustawienia zapisane!', 'success');
+    } catch (error) {
+      console.error('Error updating voice in edit draft settings:', error);
       showAlert('Błąd podczas zapisywania ustawień', 'error');
     } finally {
       setSaving(false);
@@ -1216,6 +1237,28 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                     showDeleteIcons ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Mic className="w-5 h-5 text-amber-600" />
+                <div>
+                  <div className="font-semibold text-gray-800">Dodawanie głosem w edycji</div>
+                  <div className="text-sm text-gray-600">Wyświetlaj sekcję &quot;Dodaj głosem&quot; w edycji szkicu zamówienia</div>
+                </div>
+              </div>
+              <button
+                onClick={handleVoiceInEditDraftToggle}
+                disabled={saving}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  showVoiceInEditDraft ? 'bg-amber-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    showVoiceInEditDraft ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
