@@ -498,27 +498,34 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                       <div className="text-sm text-gray-600">{item.unit_price.toFixed(2)}{item.unit && item.unit !== 'kg' ? ` / 1${item.unit}` : ''}</div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => updateQuantity(item.id, parseFloat(e.target.value) || 0)}
-                      className="w-16 text-center border border-gray-300 rounded-lg py-1"
-                      step="0.1"
-                      min="0"
-                    />
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition"
-                    >
-                      +
-                    </button>
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="w-8 h-8 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => updateQuantity(item.id, parseFloat(e.target.value) || 0)}
+                          className="w-16 text-center border border-gray-300 rounded-lg py-1"
+                          step="0.1"
+                          min="0"
+                        />
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="w-8 h-8 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition"
+                        >
+                          +
+                        </button>
+                      </div>
+                      {sourceType !== 'voice' && (
+                        <div className="font-bold text-amber-600 text-sm">{item.total_price.toFixed(2)} PLN</div>
+                      )}
+                    </div>
                     {showDeleteIcons && (
                       <button
                         onClick={() => removeItem(item.id)}
@@ -528,11 +535,6 @@ export default function EditDraftOrderScreen({ orderId, userId, onSave, onCancel
                       </button>
                     )}
                   </div>
-                  {sourceType !== 'voice' && (
-                    <div className="text-right min-w-[80px]">
-                      <div className="font-bold text-amber-600">{item.total_price.toFixed(2)} PLN</div>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
