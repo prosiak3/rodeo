@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload, Smartphone, Tablet, Monitor, Phone, Save, X, Bell } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload, Smartphone, Tablet, Monitor, Phone, Save, X, Bell, CheckCircle, Circle } from 'lucide-react';
 import { User, supabase, FontSize } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { ThemeStyle, THEME_CONFIGS } from '../types/themes';
@@ -683,12 +683,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleFontSizeChange('small')}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 fontSize === 'small'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               } disabled:opacity-50`}
             >
+              {fontSize === 'small' && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1 text-sm">Mały</div>
               <div className="text-xs text-gray-600">14px - Kompaktowy</div>
               <div className="text-xs text-gray-500 mt-2">Przykładowy tekst</div>
@@ -696,12 +699,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleFontSizeChange('medium')}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 fontSize === 'medium'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               } disabled:opacity-50`}
             >
+              {fontSize === 'medium' && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1 text-base">Średni</div>
               <div className="text-sm text-gray-600">16px - Standardowy</div>
               <div className="text-sm text-gray-500 mt-2">Przykładowy tekst</div>
@@ -709,12 +715,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleFontSizeChange('large')}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 fontSize === 'large'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               } disabled:opacity-50`}
             >
+              {fontSize === 'large' && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1 text-lg">Duży</div>
               <div className="text-base text-gray-600">18px - Wygodny</div>
               <div className="text-base text-gray-500 mt-2">Przykładowy tekst</div>
@@ -722,12 +731,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleFontSizeChange('extra-large')}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 fontSize === 'extra-large'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               } disabled:opacity-50`}
             >
+              {fontSize === 'extra-large' && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1 text-xl">Bardzo duży</div>
               <div className="text-lg text-gray-600">20px - Maksymalny</div>
               <div className="text-lg text-gray-500 mt-2">Przykładowy tekst</div>
@@ -753,12 +765,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleAutoOrderAnalysisDaysChange(7)}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 autoOrderAnalysisDays === 7
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
+              {autoOrderAnalysisDays === 7 && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1">7 dni</div>
               <div className="text-sm text-gray-600">1 tydzień</div>
               <div className="text-xs text-gray-500 mt-1">Bardzo krótki okres</div>
@@ -766,12 +781,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleAutoOrderAnalysisDaysChange(14)}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 autoOrderAnalysisDays === 14
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
+              {autoOrderAnalysisDays === 14 && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1">14 dni</div>
               <div className="text-sm text-gray-600">2 tygodnie</div>
               <div className="text-xs text-gray-500 mt-1">Krótki okres</div>
@@ -779,12 +797,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleAutoOrderAnalysisDaysChange(90)}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 autoOrderAnalysisDays === 90
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
+              {autoOrderAnalysisDays === 90 && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1">90 dni</div>
               <div className="text-sm text-gray-600">3 miesiące</div>
               <div className="text-xs text-gray-500 mt-1">Szybka reakcja na zmiany</div>
@@ -792,12 +813,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleAutoOrderAnalysisDaysChange(180)}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 autoOrderAnalysisDays === 180
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
+              {autoOrderAnalysisDays === 180 && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1">180 dni</div>
               <div className="text-sm text-gray-600">6 miesięcy (domyślnie)</div>
               <div className="text-xs text-gray-500 mt-1">Zrównoważony okres</div>
@@ -805,12 +829,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleAutoOrderAnalysisDaysChange(270)}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 autoOrderAnalysisDays === 270
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
+              {autoOrderAnalysisDays === 270 && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1">270 dni</div>
               <div className="text-sm text-gray-600">9 miesięcy</div>
               <div className="text-xs text-gray-500 mt-1">Więcej danych historycznych</div>
@@ -843,60 +870,88 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleAfterAutoLogoutChange('last_location')}
               disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+              className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                 afterAutoLogout === 'last_location'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <Clock className="w-5 h-5 text-amber-600" />
-                <div className="font-semibold text-gray-800">Wróć gdzie byłem (domyślnie)</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                  <div className="font-semibold text-gray-800">Wróć gdzie byłem (domyślnie)</div>
+                </div>
+                {afterAutoLogout === 'last_location' ? (
+                  <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                )}
               </div>
               <div className="text-sm text-gray-600">Aplikacja zapamięta gdzie skończyłeś i wróci Cię tam po zalogowaniu</div>
             </button>
             <button
               onClick={() => handleAfterAutoLogoutChange('home')}
               disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+              className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                 afterAutoLogout === 'home'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <Home className="w-5 h-5 text-amber-600" />
-                <div className="font-semibold text-gray-800">Strona główna</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <Home className="w-5 h-5 text-amber-600" />
+                  <div className="font-semibold text-gray-800">Strona główna</div>
+                </div>
+                {afterAutoLogout === 'home' ? (
+                  <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                )}
               </div>
               <div className="text-sm text-gray-600">Po zalogowaniu przejdź do ekranu głównego</div>
             </button>
             <button
               onClick={() => handleAfterAutoLogoutChange('orders')}
               disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+              className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                 afterAutoLogout === 'orders'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <ShoppingBag className="w-5 h-5 text-amber-600" />
-                <div className="font-semibold text-gray-800">Moje zamówienia</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <ShoppingBag className="w-5 h-5 text-amber-600" />
+                  <div className="font-semibold text-gray-800">Moje zamówienia</div>
+                </div>
+                {afterAutoLogout === 'orders' ? (
+                  <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                )}
               </div>
               <div className="text-sm text-gray-600">Po zalogowaniu przejdź do listy zamówień</div>
             </button>
             <button
               onClick={() => handleAfterAutoLogoutChange('prices')}
               disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+              className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                 afterAutoLogout === 'prices'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <List className="w-5 h-5 text-amber-600" />
-                <div className="font-semibold text-gray-800">Cennik</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <List className="w-5 h-5 text-amber-600" />
+                  <div className="font-semibold text-gray-800">Cennik</div>
+                </div>
+                {afterAutoLogout === 'prices' ? (
+                  <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                )}
               </div>
               <div className="text-sm text-gray-600">Po zalogowaniu przejdź do cennika produktów</div>
             </button>
@@ -1164,18 +1219,25 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleOrderModeLayoutChange('grid')}
               disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+              className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                 orderModeLayout === 'grid'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <Grid3x3 className="w-5 h-5 text-amber-600" />
-                <div>
-                  <div className="font-semibold text-gray-800 mb-1">Siatka</div>
-                  <div className="text-sm text-gray-600">Przyciski ułożone w siatce 2 kolumny</div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Grid3x3 className="w-5 h-5 text-amber-600" />
+                  <div>
+                    <div className="font-semibold text-gray-800 mb-1">Siatka</div>
+                    <div className="text-sm text-gray-600">Przyciski ułożone w siatce 2 kolumny</div>
+                  </div>
                 </div>
+                {orderModeLayout === 'grid' ? (
+                  <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                )}
               </div>
             </button>
           </div>
@@ -1319,25 +1381,39 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleNotebookModeChange('multiple')}
               disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+              className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                 notebookMode === 'multiple'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="font-semibold text-gray-800 mb-1">Twórz nowy notatnik za każdym razem</div>
+              <div className="flex items-center justify-between mb-1">
+                <div className="font-semibold text-gray-800">Twórz nowy notatnik za każdym razem</div>
+                {notebookMode === 'multiple' ? (
+                  <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                )}
+              </div>
               <div className="text-sm text-gray-600">Każde wejście w cennik tworzy nowy notatnik</div>
             </button>
             <button
               onClick={() => handleNotebookModeChange('single')}
               disabled={saving}
-              className={`w-full p-4 rounded-lg border-2 transition text-left ${
+              className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                 notebookMode === 'single'
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="font-semibold text-gray-800 mb-1">Dodawaj do jednego notatnika</div>
+              <div className="flex items-center justify-between mb-1">
+                <div className="font-semibold text-gray-800">Dodawaj do jednego notatnika</div>
+                {notebookMode === 'single' ? (
+                  <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                ) : (
+                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                )}
+              </div>
               <div className="text-sm text-gray-600">Wszystkie produkty trafiają do tego samego notatnika (bez duplikatów)</div>
             </button>
           </div>
@@ -1354,25 +1430,39 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
               <button
                 onClick={handleCollaborationToggle}
                 disabled={saving}
-                className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                   allowCollaboration
                     ? 'border-amber-500 bg-amber-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="font-semibold text-gray-800 mb-1">✅ Tak, pozwól innym edytować</div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-semibold text-gray-800">✅ Tak, pozwól innym edytować</div>
+                  {allowCollaboration ? (
+                    <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                  ) : (
+                    <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                  )}
+                </div>
                 <div className="text-sm text-gray-600">Inni kierownicy i handlowcy z Twojego sklepu mogą edytować Twój koszyk</div>
               </button>
               <button
                 onClick={handleCollaborationToggle}
                 disabled={saving}
-                className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                   !allowCollaboration
                     ? 'border-amber-500 bg-amber-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="font-semibold text-gray-800 mb-1">❌ Nie, tylko ja mogę edytować</div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-semibold text-gray-800">❌ Nie, tylko ja mogę edytować</div>
+                  {!allowCollaboration ? (
+                    <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                  ) : (
+                    <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                  )}
+                </div>
                 <div className="text-sm text-gray-600">Tylko Ty możesz edytować swój koszyk zamówień</div>
               </button>
             </div>
@@ -1441,25 +1531,39 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
               <button
                 onClick={handleShowAllFiltersToggle}
                 disabled={saving}
-                className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                   !showAllFilters
                     ? 'border-amber-500 bg-amber-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="font-semibold text-gray-800 mb-1">Uproszczony widok</div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-semibold text-gray-800">Uproszczony widok</div>
+                  {!showAllFilters ? (
+                    <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                  ) : (
+                    <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                  )}
+                </div>
                 <div className="text-sm text-gray-600">Pokazuj tylko filtry: Koszyk i Wysłane</div>
               </button>
               <button
                 onClick={handleShowAllFiltersToggle}
                 disabled={saving}
-                className={`w-full p-4 rounded-lg border-2 transition text-left ${
+                className={`w-full p-4 rounded-lg border-2 transition text-left relative ${
                   showAllFilters
                     ? 'border-amber-500 bg-amber-50'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="font-semibold text-gray-800 mb-1">Wszystkie filtry</div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-semibold text-gray-800">Wszystkie filtry</div>
+                  {showAllFilters ? (
+                    <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                  ) : (
+                    <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
+                  )}
+                </div>
                 <div className="text-sm text-gray-600">Pokazuj wszystkie statusy zamówień</div>
               </button>
             </div>
