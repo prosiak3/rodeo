@@ -513,16 +513,16 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const DeviceIcon = deviceIcons[deviceType];
 
   return (
-    <div className="bg-gray-50">
-      <div className="p-6 space-y-6">
+    <div className="bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-start gap-3">
             <DeviceIcon className="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="font-semibold text-blue-900 mb-1">
+              <h3 className="font-semibold text-blue-900 mb-1 text-left">
                 Ustawienia dla urządzenia: {deviceNames[deviceType]}
               </h3>
-              <p className="text-sm text-blue-700">
+              <p className="text-sm text-blue-700 text-left">
                 Twoje preferencje są zapisywane osobno dla każdego typu urządzenia.
                 Możesz mieć inne ustawienia na telefonie, tablecie i komputerze -
                 będą automatycznie przełączane gdy zmienisz urządzenie.
