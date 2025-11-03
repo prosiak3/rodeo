@@ -3,14 +3,32 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+  }
+
   html {
     font-size: 112.5%;
     -webkit-tap-highlight-color: transparent;
+    height: 100%;
+    width: 100%;
   }
 
   body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+    width: 100%;
+    overscroll-behavior-y: none;
+    touch-action: pan-x pan-y;
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
   }
 
   * {
@@ -26,6 +44,11 @@
     -moz-user-select: text;
     -ms-user-select: text;
     user-select: text;
+    font-size: 16px;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    font-size: 16px;
   }
 
   *::-webkit-scrollbar {
@@ -37,9 +60,53 @@
     scrollbar-width: none;
   }
 
-  /* Dark mode base styles */
+  /* Dark mode base styles with true black for OLED */
   .dark {
     color-scheme: dark;
+  }
+
+  .dark body {
+    background-color: #000000;
+  }
+
+  .dark .bg-gray-50 {
+    background-color: #000000;
+  }
+
+  .dark .bg-gray-100 {
+    background-color: #1a1a1a;
+  }
+
+  .dark .bg-white {
+    background-color: #121212;
+  }
+
+  .dark .text-gray-900 {
+    color: #e5e5e5;
+  }
+
+  .dark .text-gray-800 {
+    color: #d4d4d4;
+  }
+
+  .dark .text-gray-700 {
+    color: #a3a3a3;
+  }
+
+  .dark .text-gray-600 {
+    color: #737373;
+  }
+
+  .dark .text-gray-500 {
+    color: #525252;
+  }
+
+  .dark .border-gray-200 {
+    border-color: #262626;
+  }
+
+  .dark .border-gray-300 {
+    border-color: #404040;
   }
 
   /* Screen reader only - visually hidden but accessible */
@@ -54,9 +121,70 @@
     white-space: nowrap;
     border-width: 0;
   }
+
+  /* Safe Area utilities */
+  .safe-area-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+
+  .safe-area-left {
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+
+  .safe-area-right {
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+
+  /* Minimum touch target size for mobile */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 @layer utilities {
+  /* Mobile optimizations */
+  .touch-optimized {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+  }
+
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Landscape mode optimizations */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .landscape-compact {
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+
+    .landscape-hide {
+      display: none !important;
+    }
+  }
+
+  /* Performance optimizations */
+  .will-change-transform {
+    will-change: transform;
+  }
+
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
   @keyframes fade-in {
     from {
       opacity: 0;

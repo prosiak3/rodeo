@@ -5,10 +5,37 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#ffffff",
   "theme_color": "#f59e0b",
-  "orientation": "portrait",
+  "orientation": "any",
   "categories": ["business", "productivity"],
+  "dir": "ltr",
+  "lang": "pl",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Nowe zamówienie",
+      "short_name": "Nowe",
+      "description": "Utwórz nowe zamówienie",
+      "url": "/#new-order",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Moje zamówienia",
+      "short_name": "Zamówienia",
+      "description": "Wyświetl swoje zamówienia",
+      "url": "/#orders",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Cennik",
+      "short_name": "Cennik",
+      "description": "Przeglądaj cennik produktów",
+      "url": "/#prices",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -33,6 +60,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
