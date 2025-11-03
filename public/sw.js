@@ -1,5 +1,7 @@
-// Service Worker for RODEO - Push Notifications & Analytics
-const CACHE_NAME = 'rodeo-v1';
+// Service Worker for RODEO - Push Notifications, Analytics & Auto-Update
+const APP_VERSION = '1.0.0';
+const BUILD_NUMBER = 1;
+const CACHE_NAME = `rodeo-v${BUILD_NUMBER}`;
 const SUPABASE_URL = 'https://your-project.supabase.co'; // Will be replaced dynamically
 
 // Check if we're in development mode
@@ -7,21 +9,62 @@ const isDevelopment = self.location.hostname === 'localhost' ||
                       self.location.hostname === '127.0.0.1' ||
                       self.location.hostname.includes('webcontainer');
 
+// Update detection state
+let updateAvailable = false;
+let waitingWorker = null;
+
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
-  self.skipWaiting();
+  console.log(`[SW] Installing version ${APP_VERSION} (build ${BUILD_NUMBER})...`);
+
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW] Cache opened');
+      return cache.addAll([
+        '/',
+        '/index.html',
+        '/manifest.json',
+        '/icon-192.png',
+        '/icon-512.png',
+      ]).catch((err) => {
+        console.warn('[SW] Cache addAll failed (non-critical):', err);
+      });
+    }).then(() => {
+      console.log('[SW] Installation complete - waiting for activation');
+    })
+  );
+
+  // Don't auto-activate, wait for user confirmation
+  // self.skipWaiting() is called from message handler when user accepts update
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
+  console.log(`[SW] Activating version ${APP_VERSION}...`);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
+      console.log('[SW] Cleaning old caches:', cacheNames);
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+          .filter((name) => name !== CACHE_NAME && name.startsWith('rodeo-'))
+          .map((name) => {
+            console.log('[SW] Deleting old cache:', name);
+            return caches.delete(name);
+          })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      console.log('[SW] Taking control of all clients');
+      return self.clients.claim();
+    }).then(() => {
+      // Notify all clients about successful activation
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: 'SW_ACTIVATED',
+            version: APP_VERSION,
+            buildNumber: BUILD_NUMBER,
+          });
+        });
+      });
+    })
   );
 });
 
@@ -332,5 +375,29 @@ self.addEventListener('message', (event) => {
 
   if (event.data.type === 'SYNC_PUSH_QUEUE') {
     sendQueuedInteractions();
+  }
+
+  // Handle update confirmation from user
+  if (event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] User accepted update, activating new version');
+    self.skipWaiting();
+  }
+
+  // Check current version
+  if (event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({
+      type: 'VERSION_INFO',
+      version: APP_VERSION,
+      buildNumber: BUILD_NUMBER,
+    });
+  }
+
+  // Force update check
+  if (event.data.type === 'CHECK_FOR_UPDATE') {
+    self.registration.update().then(() => {
+      console.log('[SW] Manual update check completed');
+    }).catch((err) => {
+      console.error('[SW] Manual update check failed:', err);
+    });
   }
 });
