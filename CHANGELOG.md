@@ -1,5 +1,133 @@
 # Historia zmian RODEO
 
+## [1.7.0] - 2024-11-03
+
+### ✨ Nowe funkcje
+
+#### System Automatycznych Aktualizacji
+- **Auto-Update przy starcie aplikacji**
+  - Automatyczne wykrywanie nowych wersji 2s po zalogowaniu
+  - Instalacja bez interakcji użytkownika (jeśli włączone)
+  - Pomijanie aktualizacji przy wolnym połączeniu (2G, slow-2G)
+  - Pełne logowanie procesu do bazy danych
+  - Hook: `useUpdateChecker.tsx`
+
+- **Okresowe sprawdzanie aktualizacji**
+  - Automatyczne sprawdzanie co 15 minut w tle
+  - Sprawdzanie po powrocie do aplikacji (visibility change)
+  - Sprawdzanie po przywróceniu połączenia (online event)
+  - Respektowanie preferencji użytkownika
+  - Hook: `usePeriodicUpdateCheck.tsx`
+
+- **Powiadomienia o aktualizacjach**
+  - Elegancki modal z informacjami o nowej wersji
+  - Wyświetlanie changelog z nowościami
+  - Opcje: Zainstaluj / Odłóż 1h / Odłóż 24h
+  - Komponent: `UpdateNotification.tsx`
+
+- **Progress Modal**
+  - Wizualizacja etapów instalacji
+  - Etapy: downloading → installing → activating → completed
+  - Pasek postępu z procentami
+  - Obsługa błędów z opcją ręcznego odświeżenia
+  - Komponent: `UpdateProgressModal.tsx`
+
+- **Aktualizacje krytyczne**
+  - Wymuszona instalacja dla krytycznych wersji
+  - Countdown 30 sekund przed automatyczną instalacją
+  - Brak możliwości odrzucenia
+  - Czerwony alert w UI
+
+- **Funkcja odkładania aktualizacji**
+  - Możliwość odłożenia na 1 godzinę lub 24 godziny
+  - Maksymalnie 3 odrzucenia, potem wymuszenie
+  - Śledzenie licznika odrzuceń w bazie danych
+
+- **Preferencje użytkownika**
+  - `auto_update_enabled` - włącz/wyłącz auto-update przy starcie
+  - `periodic_check_enabled` - włącz/wyłącz sprawdzanie co 15 min
+  - Domyślnie oba włączone (true)
+  - Tabela: `user_update_preferences`
+
+- **Version Manager**
+  - Centralna biblioteka zarządzania wersjami
+  - Sprawdzanie dostępności aktualizacji (RPC: `check_for_updates`)
+  - Porównywanie wersji semantycznych
+  - Wykrywanie typów połączenia
+  - Plik: `src/lib/versionManager.ts`
+
+- **Service Worker Integration**
+  - Bezpieczna instalacja nowej wersji
+  - Zarządzanie cache (`rodeo-v{buildNumber}`)
+  - Komunikacja z aplikacją via postMessage
+  - Aktywacja z `SKIP_WAITING` message
+  - Plik: `public/sw.js`
+
+### 🗄️ Migracje bazy danych
+
+- `20251103140000_add_app_version_management.sql`
+  - Tabela `app_versions` - wersje aplikacji z changelog
+  - Tabela `user_update_preferences` - preferencje aktualizacji
+  - Tabela `user_update_logs` - historia aktualizacji
+  - RPC `check_for_updates(current_version, current_build)` - sprawdzanie
+  - RPC `get_latest_version()` - pobieranie najnowszej wersji
+  - Pełne polityki RLS dla wszystkich tabel
+
+### 📝 Dokumentacja
+
+- **UPDATE_SYSTEM.md** - pełna dokumentacja techniczna systemu aktualizacji
+  - Architektura i komponenty
+  - Przepływy aktualizacji (scenariusze)
+  - Struktura bazy danych
+  - Integracja z Service Worker
+  - Przewodnik testowania
+  - FAQ
+
+- **Komentarze w kodzie**
+  - JSDoc dla `useUpdateChecker.tsx`
+  - JSDoc dla `usePeriodicUpdateCheck.tsx`
+  - JSDoc dla `UpdateNotification.tsx`
+  - JSDoc dla `UpdateProgressModal.tsx`
+  - JSDoc dla `versionManager.ts`
+
+- **Aktualizacja rodeo.prompt**
+  - Dodano sekcję "System Automatycznych Aktualizacji"
+  - Zaktualizowano listę komponentów
+  - Zaktualizowano listę hooków
+  - Zaktualizowano listę bibliotek pomocniczych
+
+### ⚡ Wydajność
+
+- **Smart Connection Detection**
+  - Wykrywanie wolnych połączeń (2G, slow-2G)
+  - Pomijanie aktualizacji przy wolnym połączeniu
+  - Automatyczna próba ponowna gdy połączenie się poprawi
+
+- **Batch Processing**
+  - Logowanie aktualizacji nie blokuje UI
+  - Asynchroniczne operacje bazodanowe
+
+### 🔒 Bezpieczeństwo
+
+- **RLS Policies**
+  - Użytkownicy: pełny dostęp do własnych preferencji i logów
+  - Analitycy: read-only do wszystkich logów
+  - Admini: pełny dostęp
+
+- **Version Verification**
+  - Porównywanie wersji semantycznych
+  - Weryfikacja build number
+  - Hash plików dla integralności (assets_hash)
+
+### 🧪 Testowanie
+
+- Scenariusze testowe w dokumentacji
+- Instrukcje testowania lokalnego
+- Testy wolnego połączenia
+- Testy aktualizacji krytycznych
+
+---
+
 ## [1.1.2] - 2025-10-19 (noc)
 
 ### ✨ Nowe funkcje

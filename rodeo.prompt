@@ -1,14 +1,26 @@
 # RODEO - System Zarządzania Zamówieniami Mięsno-Wędliniarskimi
 
-**Wersja:** 1.6.1
-**Data aktualizacji:** 28.10.2024
+**Wersja:** 1.7.0
+**Data aktualizacji:** 03.11.2024
 **Status:** Production Ready ✅
 
 ## Opis Aplikacji
 
 RODEO to zaawansowana aplikacja PWA (Progressive Web App) do zarządzania zamówieniami w branży mięsno-wędliniarskiej. Oferuje wielokanałowe składanie zamówień (głos, cennik, manual, auto-AI), zarządzanie 400+ produktami, analitykę sprzedaży, prognozowanie popytu AI i kompletny system zarządzania hurtownią.
 
-## Główne Funkcjonalności v1.6.1
+## Główne Funkcjonalności v1.7.0
+
+### 🔄 System Automatycznych Aktualizacji (NOWE v1.7.0)
+1. **Auto-Update przy starcie** - automatyczna instalacja przy logowaniu
+2. **Periodic checks** - sprawdzanie co 15 minut w tle
+3. **Smart detection** - wykrywa wolne połączenia (2G) i pomija
+4. **User preferences** - możliwość wyłączenia auto-update
+5. **Update notifications** - modalne powiadomienia z changelog
+6. **Critical updates** - wymuszone instalacje z countdown 30s
+7. **Postpone feature** - odłóż na 1h lub 24h (max 3 razy)
+8. **Full logging** - wszystkie aktualizacje w bazie danych
+9. **Service Worker** - bezpieczna instalacja i aktywacja
+10. **Progress modal** - wizualizacja etapów instalacji
 
 ### 🛒 Systemy Składania Zamówień
 1. **Zamówienie głosowe** - rozpoznawanie mowy z ML, automatyczne parsowanie
@@ -161,6 +173,14 @@ RODEO to zaawansowana aplikacja PWA (Progressive Web App) do zarządzania zamów
 
 ## Komponenty Kluczowe
 
+### System Aktualizacji (v1.7.0)
+- **useUpdateChecker.tsx** - auto-update przy starcie
+- **usePeriodicUpdateCheck.tsx** - sprawdzanie co 15 min
+- **UpdateNotification.tsx** - modal z powiadomieniem
+- **UpdateProgressModal.tsx** - progress bar instalacji
+- **versionManager.ts** - centralna logika zarządzania
+- **sw.js** - Service Worker (instalacja, cache, aktywacja)
+
 ### Główne Ekrany
 - **App.tsx** - routing, nawigacja, auto-logout, tracking
 - **AuthContext.tsx** - autentykacja, sesje, zapisywanie lokalizacji
@@ -216,6 +236,8 @@ RODEO to zaawansowana aplikacja PWA (Progressive Web App) do zarządzania zamów
 
 ## Custom Hooks
 
+- **useUpdateChecker.tsx** - auto-update przy starcie aplikacji
+- **usePeriodicUpdateCheck.tsx** - okresowe sprawdzanie aktualizacji (15 min)
 - **useUserTracking.tsx** - śledzenie użytkowników (batch)
 - **useAutoLogout.tsx** - auto-wylogowanie + save location
 - **useDevicePreferences.tsx** - preferencje per urządzenie
@@ -228,6 +250,7 @@ RODEO to zaawansowana aplikacja PWA (Progressive Web App) do zarządzania zamów
 
 ## Biblioteki Pomocnicze (src/lib/)
 
+- **versionManager.ts** - zarządzanie wersjami i aktualizacjami
 - **supabase.ts** - klient Supabase, typy
 - **changelogHelper.ts** - auto-logging zmian
 - **embeddingsManager.ts** - ML embeddings produktów
@@ -500,6 +523,7 @@ Lokalizacja: `supabase/migrations/`
 
 ### Pliki:
 - `README.md` - główna dokumentacja
+- `UPDATE_SYSTEM.md` - system automatycznych aktualizacji (v1.7.0)
 - `CHANGELOG_GUIDE.md` - przewodnik dodawania zmian
 - `ANALYTICS_SYSTEM.md` - system analityki
 - `EMAIL_SETUP.md` - konfiguracja emaili
@@ -510,9 +534,23 @@ Lokalizacja: `supabase/migrations/`
 - `backup-system-20251028.tar.gz` - pełny backup
 - Automatyczne tworzenie przy większych zmianach
 
-## Najważniejsze Zmiany v1.6.1
+## Najważniejsze Zmiany v1.7.0
 
 ### Nowe w tej wersji:
+1. **System Automatycznych Aktualizacji** - pełna automatyzacja z wykrywaniem
+2. **Auto-Update przy starcie** - instalacja bez interakcji użytkownika
+3. **Periodic Checks** - sprawdzanie co 15 minut w tle
+4. **Update Notifications** - eleganckie modalne powiadomienia
+5. **Progress Modal** - wizualizacja postępu instalacji
+6. **Smart Connection Detection** - pomija aktualizacje na 2G
+7. **User Preferences** - pełna kontrola nad auto-update
+8. **Critical Updates** - wymuszone z countdown 30s
+9. **Postpone Feature** - odłóż na 1h/24h (max 3x)
+10. **Full Logging** - historia w user_update_logs
+11. **Service Worker Integration** - bezpieczna instalacja
+12. **Dokumentacja techniczna** - UPDATE_SYSTEM.md
+
+### V1.6.1:
 1. **Automatyczne logowanie zmian** - changelogHelper.ts
 2. **System Changelog** - ChangelogPanel.tsx
 3. **Integracja z Roadmap** - zakładki Roadmap + Changelog

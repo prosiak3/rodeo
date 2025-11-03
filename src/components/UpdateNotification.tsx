@@ -3,6 +3,23 @@ import { X, Download, Clock, AlertCircle, Sparkles } from 'lucide-react';
 import { UpdateCheckResult } from '../lib/versionManager';
 import Modal from './Modal';
 
+/**
+ * Komponent powiadomienia o dostępnej aktualizacji aplikacji.
+ *
+ * Funkcjonalność:
+ * - Wyświetla modal z informacjami o nowej wersji
+ * - Pokazuje changelog z nowościami
+ * - Obsługuje aktualizacje krytyczne (automatyczny countdown 30s)
+ * - Umożliwia odłożenie aktualizacji (1h lub 24h)
+ * - Wymusza instalację dla aktualizacji krytycznych
+ * - Informuje o limicie odrzuceń (3 razy)
+ *
+ * Typy aktualizacji:
+ * - Normalna: może być odłożona lub odrzucona
+ * - Krytyczna: automatyczna instalacja po 30s countdown
+ *
+ * @param {UpdateNotificationProps} props - Właściwości komponentu
+ */
 interface UpdateNotificationProps {
   updateInfo: UpdateCheckResult;
   onAccept: () => void;

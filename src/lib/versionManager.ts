@@ -1,6 +1,33 @@
 import { supabase } from './supabase';
 import packageJson from '../../package.json';
 
+/**
+ * VersionManager - Centralny menedżer wersji i aktualizacji aplikacji RODEO.
+ *
+ * Odpowiedzialności:
+ * - Sprawdzanie dostępności nowych wersji w bazie danych Supabase
+ * - Zarządzanie preferencjami użytkownika dotyczącymi aktualizacji
+ * - Logowanie wszystkich prób aktualizacji (sukces/porażka)
+ * - Obsługa odłożonych aktualizacji
+ * - Wykrywanie typów połączenia (unikanie aktualizacji na 2G)
+ * - Porównywanie wersji semantycznych
+ *
+ * Przepływ aktualizacji:
+ * 1. checkForUpdates() - sprawdza czy jest nowsza wersja
+ * 2. getUserPreferences() - pobiera ustawienia użytkownika
+ * 3. logUpdate() - zapisuje rozpoczęcie aktualizacji
+ * 4. updateLogStatus() - aktualizuje status (downloading/installing/completed/failed)
+ * 5. setStoredVersion() - zapisuje nową wersję w localStorage
+ *
+ * Tabele Supabase:
+ * - app_versions - wersje aplikacji (version, build_number, changelog, is_critical)
+ * - user_update_preferences - preferencje użytkownika (auto_update, periodic_check, postponed)
+ * - user_update_logs - historia aktualizacji (from_version, to_version, status, device_info)
+ */
+
+/**
+ * Informacje o wersji aplikacji w bazie danych.
+ */
 export interface AppVersion {
   version: string;
   build_number: number;

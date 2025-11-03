@@ -2,8 +2,41 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { VersionManager, UpdateCheckResult } from '../lib/versionManager';
 
+/**
+ * Interwał między automatycznymi sprawdzeniami aktualizacji.
+ * 15 minut = 900,000 milisekund
+ */
 const CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
 
+/**
+ * Hook do okresowego sprawdzania dostępności aktualizacji w tle.
+ *
+ * Funkcjonalność:
+ * - Automatyczne sprawdzanie co 15 minut
+ * - Sprawdzanie po powrocie do aplikacji (visibility change)
+ * - Sprawdzanie po przywróceniu połączenia internetowego
+ * - Respektowanie preferencji użytkownika (periodic_check_enabled)
+ * - Obsługa odłożonych aktualizacji (postpone)
+ * - Wymuszanie aktualizacji krytycznych lub po 3 odrzuceniach
+ * - Wyświetlanie powiadomień użytkownikowi
+ *
+ * Tryby interakcji użytkownika:
+ * - acceptUpdate() - użytkownik akceptuje aktualizację
+ * - postponeUpdate(duration) - odłóż na 1h lub 24h
+ * - dismissUpdate() - zamknij powiadomienie
+ *
+ * Logika wymuszania:
+ * - Aktualizacje krytyczne nie mogą być odrzucone
+ * - Po 3 odrzuceniach aktualizacja jest wymuszana
+ *
+ * @returns {Object} - Stan i funkcje zarządzania aktualizacjami
+ * @returns {UpdateCheckResult | null} availableUpdate - Informacje o dostępnej aktualizacji
+ * @returns {boolean} isChecking - Czy obecnie trwa sprawdzanie
+ * @returns {Function} dismissUpdate - Zamknij powiadomienie
+ * @returns {Function} postponeUpdate - Odłóż aktualizację
+ * @returns {Function} acceptUpdate - Zaakceptuj aktualizację
+ * @returns {Function} checkForUpdate - Ręczne sprawdzenie aktualizacji
+ */
 export function usePeriodicUpdateCheck() {
   const { user } = useAuth();
   const [availableUpdate, setAvailableUpdate] = useState<UpdateCheckResult | null>(null);

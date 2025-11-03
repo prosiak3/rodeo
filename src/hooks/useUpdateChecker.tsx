@@ -2,6 +2,30 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { VersionManager } from '../lib/versionManager';
 
+/**
+ * Hook do automatycznego sprawdzania i instalowania aktualizacji przy starcie aplikacji.
+ *
+ * Funkcjonalność:
+ * - Automatycznie sprawdza dostępność aktualizacji 2 sekundy po zalogowaniu
+ * - Instaluje aktualizacje automatycznie jeśli użytkownik ma włączoną opcję auto_update
+ * - Pomija aktualizację przy wolnym połączeniu (2G)
+ * - Loguje wszystkie etapy procesu aktualizacji do bazy danych
+ * - Używa Service Worker do bezpiecznej instalacji nowej wersji
+ * - Automatycznie odświeża aplikację po zakończeniu aktualizacji
+ *
+ * Proces aktualizacji:
+ * 1. Sprawdza preferencje użytkownika (auto_update_enabled)
+ * 2. Pobiera informacje o najnowszej wersji z Supabase
+ * 3. Weryfikuje typ połączenia (pomija przy 2G)
+ * 4. Loguje rozpoczęcie aktualizacji
+ * 5. Wywołuje Service Worker update
+ * 6. Czeka na instalację i aktywację
+ * 7. Odświeża aplikację
+ *
+ * @returns {Object} - Stan sprawdzania i wykrywania aktualizacji
+ * @returns {boolean} isChecking - Czy obecnie trwa sprawdzanie
+ * @returns {boolean} updateDetected - Czy wykryto dostępną aktualizację
+ */
 export function useUpdateChecker() {
   const { user } = useAuth();
   const [isChecking, setIsChecking] = useState(false);

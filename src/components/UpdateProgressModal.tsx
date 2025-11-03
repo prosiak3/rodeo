@@ -2,6 +2,26 @@ import { useEffect, useState } from 'react';
 import { Download, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import Modal from './Modal';
 
+/**
+ * Modal pokazujący postęp instalacji aktualizacji.
+ *
+ * Funkcjonalność:
+ * - Animowany pasek postępu
+ * - Etapy: pobieranie → instalowanie → aktywowanie → zakończono
+ * - Ikony i komunikaty dla każdego etapu
+ * - Automatyczne odświeżenie aplikacji po zakończeniu
+ * - Obsługa błędów z opcją ręcznego odświeżenia
+ * - Komunikacja z Service Worker
+ *
+ * Etapy aktualizacji:
+ * 1. downloading (0-100%) - pobieranie nowych plików
+ * 2. installing (0-100%) - instalowanie aktualizacji
+ * 3. activating (100%) - aktywowanie nowej wersji
+ * 4. completed - sukces, za chwilę reload
+ * 5. error - błąd, opcja ręcznego reloadu
+ *
+ * @param {UpdateProgressModalProps} props - Właściwości komponentu
+ */
 interface UpdateProgressModalProps {
   isVisible: boolean;
   version: string;
