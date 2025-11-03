@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload, Smartphone, Tablet, Monitor, Phone, Save, X } from 'lucide-react';
+import { User as UserIcon, Mail, Building, Shield, LogOut, Settings, Filter, Users, Eye, EyeOff, Palette, Mic, ListOrdered, Copy, Edit, Plus, Grid3x3, List, Sparkles, Trash2, ChevronDown, Clock, Home, ShoppingBag, Wand2, Type, Camera, Upload, Smartphone, Tablet, Monitor, Phone, Save, X, Bell } from 'lucide-react';
 import { User, supabase, FontSize } from '../lib/supabase';
 import { useTheme, Theme } from '../contexts/ThemeContext';
 import { ThemeStyle, THEME_CONFIGS } from '../types/themes';
