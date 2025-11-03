@@ -845,12 +845,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
             <button
               onClick={() => handleAutoOrderAnalysisDaysChange(365)}
               disabled={saving}
-              className={`p-4 rounded-lg border-2 transition text-left ${
+              className={`p-4 rounded-lg border-2 transition text-left relative ${
                 autoOrderAnalysisDays === 365
                   ? 'border-amber-500 bg-amber-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
+              {autoOrderAnalysisDays === 365 && (
+                <CheckCircle className="w-5 h-5 text-amber-600 absolute top-2 right-2" />
+              )}
               <div className="font-semibold text-gray-800 mb-1">365 dni</div>
               <div className="text-sm text-gray-600">1 rok</div>
               <div className="text-xs text-gray-500 mt-1">Pełny cykl roczny</div>
@@ -876,18 +879,16 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-amber-600" />
+              <div className="flex items-center gap-3 mb-2">
+                <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div className="flex-1">
                   <div className="font-semibold text-gray-800">Wróć gdzie byłem (domyślnie)</div>
+                  <div className="text-sm text-gray-600 mt-1">Aplikacja zapamięta gdzie skończyłeś i wróci Cię tam po zalogowaniu</div>
                 </div>
-                {afterAutoLogout === 'last_location' ? (
+                {afterAutoLogout === 'last_location' && (
                   <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                ) : (
-                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                 )}
               </div>
-              <div className="text-sm text-gray-600">Aplikacja zapamięta gdzie skończyłeś i wróci Cię tam po zalogowaniu</div>
             </button>
             <button
               onClick={() => handleAfterAutoLogoutChange('home')}
@@ -898,18 +899,16 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <Home className="w-5 h-5 text-amber-600" />
+              <div className="flex items-center gap-3">
+                <Home className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div className="flex-1">
                   <div className="font-semibold text-gray-800">Strona główna</div>
+                  <div className="text-sm text-gray-600 mt-1">Po zalogowaniu przejdź do ekranu głównego</div>
                 </div>
-                {afterAutoLogout === 'home' ? (
+                {afterAutoLogout === 'home' && (
                   <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                ) : (
-                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                 )}
               </div>
-              <div className="text-sm text-gray-600">Po zalogowaniu przejdź do ekranu głównego</div>
             </button>
             <button
               onClick={() => handleAfterAutoLogoutChange('orders')}
@@ -920,18 +919,16 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <ShoppingBag className="w-5 h-5 text-amber-600" />
+              <div className="flex items-center gap-3">
+                <ShoppingBag className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div className="flex-1">
                   <div className="font-semibold text-gray-800">Moje zamówienia</div>
+                  <div className="text-sm text-gray-600 mt-1">Po zalogowaniu przejdź do listy zamówień</div>
                 </div>
-                {afterAutoLogout === 'orders' ? (
+                {afterAutoLogout === 'orders' && (
                   <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                ) : (
-                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                 )}
               </div>
-              <div className="text-sm text-gray-600">Po zalogowaniu przejdź do listy zamówień</div>
             </button>
             <button
               onClick={() => handleAfterAutoLogoutChange('prices')}
@@ -942,18 +939,16 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <List className="w-5 h-5 text-amber-600" />
+              <div className="flex items-center gap-3">
+                <List className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div className="flex-1">
                   <div className="font-semibold text-gray-800">Cennik</div>
+                  <div className="text-sm text-gray-600 mt-1">Po zalogowaniu przejdź do cennika produktów</div>
                 </div>
-                {afterAutoLogout === 'prices' ? (
+                {afterAutoLogout === 'prices' && (
                   <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                ) : (
-                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                 )}
               </div>
-              <div className="text-sm text-gray-600">Po zalogowaniu przejdź do cennika produktów</div>
             </button>
           </div>
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1209,11 +1204,14 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
               }`}
             >
               <div className="flex items-center gap-3">
-                <List className="w-5 h-5 text-amber-600" />
-                <div>
+                <List className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div className="flex-1">
                   <div className="font-semibold text-gray-800 mb-1">Lista (domyślnie)</div>
                   <div className="text-sm text-gray-600">Przyciski ułożone jeden pod drugim</div>
                 </div>
+                {orderModeLayout === 'list' && (
+                  <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+                )}
               </div>
             </button>
             <button
@@ -1225,18 +1223,14 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Grid3x3 className="w-5 h-5 text-amber-600" />
-                  <div>
-                    <div className="font-semibold text-gray-800 mb-1">Siatka</div>
-                    <div className="text-sm text-gray-600">Przyciski ułożone w siatce 2 kolumny</div>
-                  </div>
+              <div className="flex items-center gap-3">
+                <Grid3x3 className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 mb-1">Siatka</div>
+                  <div className="text-sm text-gray-600">Przyciski ułożone w siatce 2 kolumny</div>
                 </div>
-                {orderModeLayout === 'grid' ? (
+                {orderModeLayout === 'grid' && (
                   <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                ) : (
-                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                 )}
               </div>
             </button>
@@ -1387,15 +1381,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <div className="font-semibold text-gray-800">Twórz nowy notatnik za każdym razem</div>
-                {notebookMode === 'multiple' ? (
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 mb-1">Twórz nowy notatnik za każdym razem</div>
+                  <div className="text-sm text-gray-600">Każde wejście w cennik tworzy nowy notatnik</div>
+                </div>
+                {notebookMode === 'multiple' && (
                   <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                ) : (
-                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                 )}
               </div>
-              <div className="text-sm text-gray-600">Każde wejście w cennik tworzy nowy notatnik</div>
             </button>
             <button
               onClick={() => handleNotebookModeChange('single')}
@@ -1406,15 +1400,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <div className="font-semibold text-gray-800">Dodawaj do jednego notatnika</div>
-                {notebookMode === 'single' ? (
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-800 mb-1">Dodawaj do jednego notatnika</div>
+                  <div className="text-sm text-gray-600">Wszystkie produkty trafiają do tego samego notatnika (bez duplikatów)</div>
+                </div>
+                {notebookMode === 'single' && (
                   <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                ) : (
-                  <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                 )}
               </div>
-              <div className="text-sm text-gray-600">Wszystkie produkty trafiają do tego samego notatnika (bez duplikatów)</div>
             </button>
           </div>
         </div>
@@ -1436,15 +1430,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="font-semibold text-gray-800">✅ Tak, pozwól innym edytować</div>
-                  {allowCollaboration ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800 mb-1">✅ Tak, pozwól innym edytować</div>
+                    <div className="text-sm text-gray-600">Inni kierownicy i handlowcy z Twojego sklepu mogą edytować Twój koszyk</div>
+                  </div>
+                  {allowCollaboration && (
                     <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                   )}
                 </div>
-                <div className="text-sm text-gray-600">Inni kierownicy i handlowcy z Twojego sklepu mogą edytować Twój koszyk</div>
               </button>
               <button
                 onClick={handleCollaborationToggle}
@@ -1455,15 +1449,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="font-semibold text-gray-800">❌ Nie, tylko ja mogę edytować</div>
-                  {!allowCollaboration ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800 mb-1">❌ Nie, tylko ja mogę edytować</div>
+                    <div className="text-sm text-gray-600">Tylko Ty możesz edytować swój koszyk zamówień</div>
+                  </div>
+                  {!allowCollaboration && (
                     <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                   )}
                 </div>
-                <div className="text-sm text-gray-600">Tylko Ty możesz edytować swój koszyk zamówień</div>
               </button>
             </div>
           </div>
@@ -1537,15 +1531,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="font-semibold text-gray-800">Uproszczony widok</div>
-                  {!showAllFilters ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800 mb-1">Uproszczony widok</div>
+                    <div className="text-sm text-gray-600">Pokazuj tylko filtry: Koszyk i Wysłane</div>
+                  </div>
+                  {!showAllFilters && (
                     <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                   )}
                 </div>
-                <div className="text-sm text-gray-600">Pokazuj tylko filtry: Koszyk i Wysłane</div>
               </button>
               <button
                 onClick={handleShowAllFiltersToggle}
@@ -1556,15 +1550,15 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="font-semibold text-gray-800">Wszystkie filtry</div>
-                  {showAllFilters ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800 mb-1">Wszystkie filtry</div>
+                    <div className="text-sm text-gray-600">Pokazuj wszystkie statusy zamówień</div>
+                  </div>
+                  {showAllFilters && (
                     <CheckCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-                  ) : (
-                    <Circle className="w-6 h-6 text-gray-300 flex-shrink-0" />
                   )}
                 </div>
-                <div className="text-sm text-gray-600">Pokazuj wszystkie statusy zamówień</div>
               </button>
             </div>
           </div>
