@@ -514,7 +514,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
 
   return (
     <div className="bg-gray-50">
-      <div className="p-6 space-y-6">
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-start gap-3">
             <DeviceIcon className="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0" />
