@@ -148,23 +148,17 @@ export default function LoginScreen({ onLogin, onCreateTestUsers }: LoginScreenP
                 </button>
 
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm font-semibold text-blue-900 mb-3">2. Zaloguj się jako:</p>
-                  <div className="space-y-3">
+                  <p className="text-sm font-medium text-blue-900 mb-3">2. Zaloguj się jako:</p>
+                  <div className="space-y-2">
                     {testUsers.map((user) => (
                       <button
                         key={user.email}
                         onClick={() => handleQuickLogin(user.email, user.password)}
-                        className="w-full text-left p-4 bg-white rounded-lg hover:bg-blue-100 transition border border-blue-200"
+                        className="w-full text-left p-3 bg-white rounded-lg hover:bg-blue-50 transition border border-blue-100"
                       >
-                        <div className="font-bold text-gray-900 mb-2 text-base">{user.role}</div>
-                        <div className="space-y-1">
-                          <div className="text-sm text-gray-600">
-                            <span className="font-medium">Email:</span> {user.email}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            <span className="font-medium">Hasło:</span> {user.password}
-                          </div>
-                        </div>
+                        <p className="text-sm font-medium text-gray-800">{user.role}</p>
+                        <p className="text-xs text-gray-600">{user.email}</p>
+                        <p className="text-xs text-gray-500">Hasło: {user.password}</p>
                       </button>
                     ))}
                   </div>
