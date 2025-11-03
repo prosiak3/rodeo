@@ -5,6 +5,7 @@ const CACHE_NAME = `rodeo-v${BUILD_NUMBER}`;
 const SUPABASE_URL = 'https://your-project.supabase.co'; // Will be replaced dynamically
 
 // Check if we're in development mode
+// WebContainer environments (like StackBlitz) have restrictions on Service Worker APIs
 const isDevelopment = self.location.hostname === 'localhost' ||
                       self.location.hostname === '127.0.0.1' ||
                       self.location.hostname.includes('webcontainer');
@@ -52,17 +53,27 @@ self.addEventListener('activate', (event) => {
       );
     }).then(() => {
       console.log('[SW] Taking control of all clients');
-      return self.clients.claim();
+      return self.clients.claim().catch((error) => {
+        console.warn('[SW] Could not claim clients (non-critical in dev):', error);
+        return Promise.resolve();
+      });
     }).then(() => {
       // Notify all clients about successful activation
       return self.clients.matchAll().then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({
-            type: 'SW_ACTIVATED',
-            version: APP_VERSION,
-            buildNumber: BUILD_NUMBER,
-          });
+          try {
+            client.postMessage({
+              type: 'SW_ACTIVATED',
+              version: APP_VERSION,
+              buildNumber: BUILD_NUMBER,
+            });
+          } catch (error) {
+            console.warn('[SW] Could not post message to client (non-critical):', error);
+          }
         });
+      }).catch((error) => {
+        console.warn('[SW] Could not match clients (non-critical in dev):', error);
+        return Promise.resolve();
       });
     })
   );
@@ -136,15 +147,32 @@ self.addEventListener('notificationclick', async (event) => {
             url: url,
             data: notification.data,
           });
-          return client.focus();
+
+          // Try to focus, but catch errors in development environments
+          try {
+            return client.focus();
+          } catch (error) {
+            console.warn('[SW] Could not focus client (non-critical in dev):', error);
+            return Promise.resolve();
+          }
         }
       }
 
-      // Open new window with notification context
-      if (clients.openWindow) {
-        const targetUrl = `${self.location.origin}${url}?notification=${notificationId}`;
-        return clients.openWindow(targetUrl);
+      // Open new window with notification context (only in production)
+      if (clients.openWindow && !isDevelopment) {
+        try {
+          const targetUrl = `${self.location.origin}${url}?notification=${notificationId}`;
+          return clients.openWindow(targetUrl);
+        } catch (error) {
+          console.warn('[SW] Could not open window (non-critical in dev):', error);
+          return Promise.resolve();
+        }
       }
+
+      return Promise.resolve();
+    }).catch((error) => {
+      console.warn('[SW] Navigation error (non-critical):', error);
+      return Promise.resolve();
     })
   );
 });
