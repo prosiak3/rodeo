@@ -63,14 +63,10 @@ export default function ProductCard({ product, onSelect, children, priceLayout =
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onClick={handleClick}
-      className={`bg-white rounded-lg shadow p-4 transition-all duration-200 ${hasPromo || is10Plus1 ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${
-        onSelect ? 'cursor-pointer hover:shadow-lg active:scale-[0.98] active:shadow-md' : ''
+      className={`bg-white rounded-lg shadow p-3 transition ${hasPromo || is10Plus1 ? 'bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300' : ''} ${
+        onSelect ? 'cursor-pointer hover:shadow-lg' : ''
       }`}
-      style={{
-        touchAction: 'pan-y',
-        minHeight: '80px',
-        WebkitTapHighlightColor: 'transparent',
-      }}
+      style={{ touchAction: 'pan-y' }}
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">

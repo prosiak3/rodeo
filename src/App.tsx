@@ -15,10 +15,6 @@ import { supabase, OrderStatus } from './lib/supabase';
 import { useUserTracking, closeCurrentSession } from './hooks/useUserTracking';
 import { useAutoLogout, saveUserLocation } from './hooks/useAutoLogout';
 import useKeyboardShortcuts from './hooks/useKeyboardShortcuts';
-import { useUpdateChecker } from './hooks/useUpdateChecker';
-import { usePeriodicUpdateCheck } from './hooks/usePeriodicUpdateCheck';
-import UpdateNotification from './components/UpdateNotification';
-import UpdateProgressModal from './components/UpdateProgressModal';
 import { Grid3x3, List } from 'lucide-react';
 import OrdersList from './components/OrdersList';
 import OrderDetails from './components/OrderDetails';
@@ -42,6 +38,7 @@ const DriverScreen = lazy(() => import('./components/DriverScreen'));
 
 function AppContent() {
   const { session, user, loading, signIn, signOut, savedLocation } = useAuth();
+  const { uiTheme } = useTheme();
   const [showStylesDemo, setShowStylesDemo] = useState(() => {
     return window.location.hash === '#styles-demo';
   });
@@ -69,17 +66,6 @@ function AppContent() {
   const [ordersListFilter, setOrdersListFilter] = useState<OrderStatus | 'all' | null>(null);
   const [aiPreloaded, setAiPreloaded] = useState(false);
   const [analystView, setAnalystView] = useState<'behavior' | 'sales'>('behavior');
-
-  // Update system hooks
-  const { isChecking: isCheckingStartupUpdate } = useUpdateChecker();
-  const {
-    availableUpdate,
-    isChecking: isCheckingPeriodicUpdate,
-    acceptUpdate,
-    postponeUpdate,
-    dismissUpdate,
-  } = usePeriodicUpdateCheck();
-  const [showUpdateProgress, setShowUpdateProgress] = useState(false);
 
   // Initialize user tracking
   useUserTracking(
@@ -727,7 +713,7 @@ function AppContent() {
         userEmail={user.email}
         userProfilePicture={(user as any).profile_picture_url}
       />
-      <div className="flex-1 overflow-y-auto" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 76px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}>
+      <div className="flex-1 overflow-y-auto pt-[70px] sm:pt-20 pb-14 sm:pb-20">
         <Suspense fallback={<div className="p-6"><SkeletonList items={5} /></div>}>
         {activeTab === 'home' && (() => {
           const HomeScreenComponent = getHomeScreenComponent();
@@ -1023,34 +1009,6 @@ function AppContent() {
           setOrdersListFilter(null);
         }
       }} userRole={user.role} />
-
-      {availableUpdate && (
-        <UpdateNotification
-          updateInfo={availableUpdate}
-          onAccept={async () => {
-            const accepted = await acceptUpdate();
-            if (accepted) {
-              setShowUpdateProgress(true);
-            }
-          }}
-          onPostpone={postponeUpdate}
-          onDismiss={dismissUpdate}
-        />
-      )}
-
-      {showUpdateProgress && availableUpdate && (
-        <UpdateProgressModal
-          isVisible={showUpdateProgress}
-          version={availableUpdate.latest_version}
-          onComplete={() => {
-            setShowUpdateProgress(false);
-          }}
-          onError={(error) => {
-            console.error('Update error:', error);
-            setShowUpdateProgress(false);
-          }}
-        />
-      )}
     </div>
   );
 }

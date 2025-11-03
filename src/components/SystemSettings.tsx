@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, Users, Filter, Mail, Send, Plus, X, Clock, Download, History } from 'lucide-react';
+import { Settings, Save, Users, Filter, Mail, Send, Plus, X, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { VersionManager } from '../lib/versionManager';
 
 interface SystemSettingsProps {
   userId: string;
@@ -61,28 +60,10 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
   const [testingEmail, setTestingEmail] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showVersionInfo, setShowVersionInfo] = useState(false);
-  const [updateHistory, setUpdateHistory] = useState<any[]>([]);
 
   useEffect(() => {
     loadSettings();
-    loadUpdateHistory();
   }, []);
-
-  const loadUpdateHistory = async () => {
-    const history = await VersionManager.getUpdateHistory(userId, 5);
-    setUpdateHistory(history);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('pl-PL', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   const loadSettings = async () => {
     setLoading(true);
@@ -626,109 +607,6 @@ export default function SystemSettings({ userId }: SystemSettingsProps) {
           <p className="text-sm text-yellow-800">
             <strong>Uwaga:</strong> Przycisk "Zastosuj do wszystkich użytkowników" nadpisze indywidualne preferencje wszystkich użytkowników w systemie.
           </p>
-        </div>
-
-        <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Download className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Wersja Aplikacji
-              </h3>
-            </div>
-            <button
-              onClick={() => setShowVersionInfo(!showVersionInfo)}
-              className="text-sm text-amber-600 dark:text-amber-400 hover:underline"
-            >
-              {showVersionInfo ? 'Ukryj szczegóły' : 'Pokaż szczegóły'}
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="p-3 bg-white dark:bg-slate-700 rounded-lg">
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Aktualna wersja</p>
-              <p className="text-lg font-semibold text-slate-900 dark:text-white">
-                {VersionManager.getCurrentVersion()}
-              </p>
-            </div>
-            <div className="p-3 bg-white dark:bg-slate-700 rounded-lg">
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Numer build</p>
-              <p className="text-lg font-semibold text-slate-900 dark:text-white">
-                #{VersionManager.getCurrentBuild()}
-              </p>
-            </div>
-          </div>
-
-          {showVersionInfo && (
-            <div className="space-y-4">
-              <div className="p-3 bg-white dark:bg-slate-700 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <History className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
-                    Historia aktualizacji
-                  </h4>
-                </div>
-                {updateHistory.length > 0 ? (
-                  <div className="space-y-2">
-                    {updateHistory.map((update, idx) => (
-                      <div
-                        key={idx}
-                        className="p-2 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-600"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-slate-900 dark:text-white">
-                            {update.from_version || 'Instalacja'} → {update.to_version}
-                          </span>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded ${
-                              update.update_status === 'completed'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                : update.update_status === 'failed'
-                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                            }`}
-                          >
-                            {update.update_status === 'completed'
-                              ? 'Ukończona'
-                              : update.update_status === 'failed'
-                              ? 'Błąd'
-                              : 'W trakcie'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                          <span>
-                            {update.update_type === 'auto_on_startup'
-                              ? 'Auto (start)'
-                              : update.update_type === 'user_accepted'
-                              ? 'Zaakceptowana'
-                              : update.update_type === 'forced'
-                              ? 'Wymuszona'
-                              : 'Okresowa'}
-                          </span>
-                          <span>{formatDate(update.created_at)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Brak historii aktualizacji
-                  </p>
-                )}
-              </div>
-
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>System automatycznej aktualizacji:</strong>
-                  <br />
-                  • Aplikacja sprawdza aktualizacje przy każdym uruchomieniu
-                  <br />
-                  • Dodatkowe sprawdzanie co 15 minut podczas pracy
-                  <br />• Użytkownik ma możliwość odłożenia aktualizacji lub natychmiastowej instalacji
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

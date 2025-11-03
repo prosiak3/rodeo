@@ -47,21 +47,19 @@ export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeS
           />
         )}
 
-        <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+        <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="font-semibold text-lg mb-4">Szybkie akcje</h3>
           <div className="space-y-3">
             <button
               onClick={() => onVoiceOrder?.()}
-              className="w-full px-6 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 active:scale-[0.98] transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer flex items-center justify-center gap-3 text-base"
-              style={{ minHeight: '64px', WebkitTapHighlightColor: 'transparent' }}
+              className="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-700 transition shadow cursor-pointer flex items-center justify-center gap-2 text-base"
             >
-              <Mic className="w-6 h-6" />
+              <Mic className="w-5 h-5" />
               Zamówienie głosowe
             </button>
             <button
               onClick={() => onNavigate?.('orders')}
-              className="w-full px-6 py-5 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 active:bg-gray-100 active:scale-[0.98] transition-all duration-200 cursor-pointer text-left shadow hover:shadow-md"
-              style={{ minHeight: '64px', WebkitTapHighlightColor: 'transparent' }}
+              className="w-full px-6 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition cursor-pointer text-left"
             >
               <div className="font-semibold text-base">Moje zamówienia</div>
               <div className="text-sm text-gray-500 mt-1">Sprawdź swoje zamówienia</div>
@@ -69,8 +67,7 @@ export default function HomeScreen({ onNavigate, onVoiceOrder, userRole }: HomeS
             {userRole === 'admin' && (
               <button
                 onClick={() => onNavigate?.('admin')}
-                className="w-full px-6 py-5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 active:scale-[0.98] transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer text-base"
-                style={{ minHeight: '64px', WebkitTapHighlightColor: 'transparent' }}
+                className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition shadow cursor-pointer text-base"
               >
                 Panel administracyjny
               </button>

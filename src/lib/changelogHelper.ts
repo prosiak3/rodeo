@@ -1,32 +1,13 @@
-/**
- * Changelog Helper - Automatyczne logowanie zmian w systemie
- *
- * Ten moduł odpowiada za automatyczne dodawanie wpisów do changelogu.
- * Przy każdym zalogowaniu admina, system sprawdza listę zmian i dodaje
- * nowe wpisy do bazy danych, unikając duplikatów.
- *
- * @module changelogHelper
- */
-
 import { supabase } from './supabase';
 
-/**
- * Struktura wpisu changelog
- */
 interface ChangelogEntryInput {
-  version: string;  // Semantic versioning (np. "1.6.0")
-  title: string;    // Krótki tytuł zmiany
-  description: string;  // Szczegółowy opis
+  version: string;
+  title: string;
+  description: string;
   category: 'feature' | 'improvement' | 'bugfix' | 'breaking' | 'security';
-  file_references?: string[];  // Odnośniki do kodu (np. "src/file.ts:123")
+  file_references?: string[];
 }
 
-/**
- * Dodaje pojedynczy wpis do changelogu
- *
- * @param entry - Dane wpisu do dodania
- * @returns Promise<boolean> - true jeśli sukces, false jeśli błąd
- */
 export async function addChangelogEntry(entry: ChangelogEntryInput) {
   try {
     const { error } = await supabase
@@ -54,20 +35,7 @@ export async function addChangelogEntry(entry: ChangelogEntryInput) {
   }
 }
 
-/**
- * Automatycznie loguje ostatnie zmiany do changelogu
- *
- * Funkcja jest wywoływana przy zalogowaniu admina (App.tsx).
- * Sprawdza czy wpisy już istnieją w bazie (po version + title)
- * i dodaje tylko nowe wpisy.
- *
- * Aby dodać nową zmianę:
- * 1. Dodaj wpis na początku tablicy entries (zachowaj kolejność chronologiczną)
- * 2. Wypełnij wszystkie pola: version, title, description, category, file_references
- * 3. System automatycznie doda wpis przy następnym logowaniu admina
- *
- * @returns Promise<number> - liczba dodanych wpisów
- */
+// Automatyczne dodawanie wpisów dla ostatnich zmian
 export async function logRecentChanges() {
   const entries: ChangelogEntryInput[] = [
     {
