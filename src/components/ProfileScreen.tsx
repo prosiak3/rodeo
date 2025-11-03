@@ -513,16 +513,16 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
   const DeviceIcon = deviceIcons[deviceType];
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="bg-gray-50">
+      <div className="p-6 space-y-6">
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
           <div className="flex items-start gap-3">
             <DeviceIcon className="w-6 h-6 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="font-semibold text-blue-900 mb-1 text-left">
+              <h3 className="font-semibold text-blue-900 mb-1">
                 Ustawienia dla urządzenia: {deviceNames[deviceType]}
               </h3>
-              <p className="text-sm text-blue-700 text-left">
+              <p className="text-sm text-blue-700">
                 Twoje preferencje są zapisywane osobno dla każdego typu urządzenia.
                 Możesz mieć inne ustawienia na telefonie, tablecie i komputerze -
                 będą automatycznie przełączane gdy zmienisz urządzenie.
@@ -534,7 +534,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="flex items-center gap-4 mb-6">
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center overflow-hidden">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full overflow-hidden flex items-center justify-center">
                 {profilePicture ? (
                   <img src={profilePicture} alt="Profil" className="w-full h-full object-cover" />
                 ) : (
@@ -543,7 +543,7 @@ export default function ProfileScreen({ user, onSignOut }: ProfileScreenProps) {
               </div>
               <button
                 onClick={() => setShowUrlInput(!showUrlInput)}
-                className="absolute -bottom-1 -right-1 w-8 h-8 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center transition shadow-lg"
+                className="absolute -bottom-1 -right-1 w-8 h-8 bg-amber-500 hover:bg-amber-600 text-white rounded-full transition shadow-lg flex items-center justify-center"
                 title="Zmień zdjęcie"
               >
                 <Camera className="w-4 h-4" />
